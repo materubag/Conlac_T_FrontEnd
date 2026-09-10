@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBF8F1"/>
+      <stop offset="100%" stop-color="#EFE7D5"/>
+    </linearGradient>
+    <linearGradient id="cheeseFresco" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F7F3E6"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#4A3728" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <!-- Background Board -->
+  <rect width="600" height="500" rx="16" fill="url(#bgGrad)"/>
+  <circle cx="300" cy="240" r="170" fill="#E6D7BD" opacity="0.4"/>
+  
+  <!-- Wooden Board Base -->
+  <ellipse cx="300" cy="330" rx="200" ry="40" fill="#D4A373" opacity="0.3" filter="url(#dropShadow)"/>
+  
+  <!-- Queso Fresco Wheel -->
+  <g filter="url(#dropShadow)">
+    <path d="M170,220 C170,200 220,180 300,180 C380,180 430,200 430,220 L430,280 C430,305 380,325 300,325 C220,325 170,305 170,280 Z" fill="#EFE7DA"/>
+    <path d="M170,220 C170,240 220,260 300,260 C380,260 430,240 430,220" fill="none" stroke="#DCD1C0" stroke-width="2"/>
+    <ellipse cx="300" cy="220" rx="130" ry="40" fill="url(#cheeseFresco)"/>
+  </g>
+  
+  <!-- Details & Texture -->
+  <ellipse cx="260" cy="210" rx="14" ry="7" fill="#EADFCE" opacity="0.6"/>
+  <ellipse cx="340" cy="230" rx="18" ry="9" fill="#EADFCE" opacity="0.5"/>
+  <ellipse cx="300" cy="215" rx="10" ry="5" fill="#EADFCE" opacity="0.7"/>
+
+  <!-- Artisan Tag / Stamp -->
+  <rect x="220" y="385" width="160" height="34" rx="17" fill="#184332"/>
+  <text x="300" y="407" fill="#F8F4E9" font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle" letter-spacing="1">QUESO FRESCO</text>
+</svg>

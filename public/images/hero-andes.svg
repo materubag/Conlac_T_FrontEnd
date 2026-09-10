@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8C7A3"/>
+      <stop offset="35%" stop-color="#F4DCC4"/>
+      <stop offset="70%" stop-color="#FDF6ED"/>
+      <stop offset="100%" stop-color="#F8F4E9"/>
+    </linearGradient>
+    <linearGradient id="sunGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F6AE2D" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#D4A373" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mountFar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7B8D83"/>
+      <stop offset="100%" stop-color="#BAC5BD"/>
+    </linearGradient>
+    <linearGradient id="mountMid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3A5C4A"/>
+      <stop offset="100%" stop-color="#7A9A87"/>
+    </linearGradient>
+    <linearGradient id="mountNear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#184332"/>
+      <stop offset="100%" stop-color="#2D6A4F"/>
+    </linearGradient>
+    <linearGradient id="snowCap" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E1EBE6"/>
+    </linearGradient>
+    <linearGradient id="overlayFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F8F4E9" stop-opacity="0.2"/>
+      <stop offset="55%" stop-color="#F8F4E9" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#F8F4E9" stop-opacity="0.98"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="1600" height="900" fill="url(#skyGrad)"/>
+
+  <!-- Sun Glow -->
+  <circle cx="800" cy="300" r="280" fill="url(#sunGlow)"/>
+
+  <!-- Far Andes Mountain Peak (Tungurahua / Carihuairazo) -->
+  <polygon points="800,140 620,460 980,460" fill="url(#mountFar)"/>
+  <!-- Snow peak -->
+  <polygon points="800,140 740,245 780,230 800,260 830,225 860,245" fill="url(#snowCap)"/>
+
+  <!-- Secondary Peaks -->
+  <polygon points="400,220 180,520 620,520" fill="url(#mountFar)" opacity="0.8"/>
+  <polygon points="1200,210 960,530 1440,530" fill="url(#mountFar)" opacity="0.85"/>
+
+  <!-- Mid range Cordillera -->
+  <path d="M-50,560 Q250,380 550,480 T1150,430 T1650,520 L1650,900 L-50,900 Z" fill="url(#mountMid)" opacity="0.75"/>
+
+  <!-- Near Andean Hills (Pilahuín Valley) -->
+  <path d="M-50,620 Q300,470 700,580 T1400,530 T1650,640 L1650,900 L-50,900 Z" fill="url(#mountNear)" opacity="0.9"/>
+
+  <!-- Soft Fog / Mist in Valley -->
+  <path d="M0,580 C300,530 500,600 800,570 C1100,540 1300,600 1600,570 L1600,660 L0,660 Z" fill="#F8F4E9" opacity="0.45"/>
+
+  <!-- Foreground Atmospheric Overlay for text legibility -->
+  <rect width="1600" height="900" fill="url(#overlayFade)"/>
+</svg>
