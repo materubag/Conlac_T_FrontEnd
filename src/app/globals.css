@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/**
+ * ============================================================
+ * SISTEMA DE DISEÑO GLOBAL - CONLAC-T
+ * Consorcio de Lácteos de Tungurahua (Pilahuín, Ecuador)
+ * ============================================================
+ *
+ * Variables de tema en Runtime (:root).
+ * Estas variables pueden ser redefinidas dinámicamente mediante
+ * applyTheme() o un futuro backend/CMS sin recompilar el proyecto.
+ */
+
+:root {
+  /* Color 1: Principal de Marca */
+  --theme-color-primary: #184332;
+  --theme-color-primary-hover: #123427;
+  --theme-color-primary-light: #245742;
+
+  /* Color 2: Fondo Principal / Superficies */
+  --theme-color-background: #F8F4E9;
+  --theme-color-background-surface: #FFFFFF;
+  --theme-color-background-warm: #F4EFE0;
+
+  /* Tertiary: Acentos y Detalles */
+  --theme-color-tertiary: #D4A373;
+  --theme-color-tertiary-hover: #C58F5E;
+  --theme-color-tertiary-light: #E9C9A8;
+
+  /* Neutral: Texto Oscuro y Elementos Secundarios */
+  --theme-color-neutral: #4A3728;
+  --theme-color-neutral-muted: #7A624E;
+  --theme-color-neutral-light: #EFE7DA;
+
+  /* Bordes y Separadores */
+  --theme-color-border: #E2D7C3;
+  --theme-color-border-dark: #C8B99F;
+
+  /* Inverted / Alto Contraste */
+  --theme-color-inverted: #FFFFFF;
+  --theme-color-inverted-text: #184332;
+
+  /* WhatsApp Brand Helper (para contraste y consistencia) */
+  --theme-color-whatsapp: #25D366;
+  --theme-color-whatsapp-hover: #20BA5A;
+}
+
+@theme {
+  --color-primary: var(--theme-color-primary);
+  --color-primary-hover: var(--theme-color-primary-hover);
+  --color-primary-light: var(--theme-color-primary-light);
+
+  --color-background: var(--theme-color-background);
+  --color-surface: var(--theme-color-background-surface);
+  --color-surface-warm: var(--theme-color-background-warm);
+
+  --color-tertiary: var(--theme-color-tertiary);
+  --color-tertiary-hover: var(--theme-color-tertiary-hover);
+  --color-tertiary-light: var(--theme-color-tertiary-light);
+
+  --color-neutral: var(--theme-color-neutral);
+  --color-neutral-muted: var(--theme-color-neutral-muted);
+  --color-neutral-light: var(--theme-color-neutral-light);
+
+  --color-border: var(--theme-color-border);
+  --color-border-dark: var(--theme-color-border-dark);
+
+  --color-inverted: var(--theme-color-inverted);
+  --color-inverted-text: var(--theme-color-inverted-text);
+
+  --color-whatsapp: var(--theme-color-whatsapp);
+  --color-whatsapp-hover: var(--theme-color-whatsapp-hover);
+
+  --font-headline: var(--font-headline), Playfair Display, Georgia, serif;
+  --font-body: var(--font-body), Montserrat, system-ui, sans-serif;
+  --font-label: var(--font-label), Montserrat, system-ui, sans-serif;
+}
+
+/* ============================================================
+   ESTILOS BASE Y ACCESIBILIDAD (WCAG 2.2)
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--theme-color-background);
+  color: var(--theme-color-neutral);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Selección de texto accesible */
+::selection {
+  background-color: var(--theme-color-tertiary);
+  color: var(--theme-color-neutral);
+}
+
+/* Focus visible accesible de alto contraste */
+:focus-visible {
+  outline: 2px solid var(--theme-color-tertiary);
+  outline-offset: 2px;
+}
+
+/* Enlaces sin subrayado por defecto con interacción suave */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Tipografía de títulos */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-headline), Playfair Display, Georgia, serif;
+  color: var(--theme-color-primary);
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+/* Clases de utilidad semántica para tipografía */
+.font-headline {
+  font-family: var(--font-headline), Playfair Display, Georgia, serif;
+}
+
+.font-body {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+}
+
+.font-label {
+  font-family: var(--font-label), Montserrat, system-ui, sans-serif;
+}
+
+/* Sombra suave artesanal */
+.shadow-artisan {
+  box-shadow: 0 4px 20px -2px rgba(74, 55, 40, 0.08);
+}
+
+.shadow-artisan-hover {
+  box-shadow: 0 12px 30px -4px rgba(74, 55, 40, 0.14);
+}
