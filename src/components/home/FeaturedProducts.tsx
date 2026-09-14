@@ -14,14 +14,7 @@ const editorialTagsMap: Record<string, EditorialTag> = {
   "prod-queso-maduro-andino": { text: "Edición Limitada", variant: "outline" },
 };
 
-/**
- * ============================================================
- * PRODUCTOS DESTACADOS - CONLAC-T
- * ============================================================
- * 
- * Server Component que consume datos de lib/data.ts y renderiza
- * la grilla de productos destacados en la portada.
- */
+
 export const FeaturedProducts: React.FC = async () => {
   const products = await getFeaturedProducts();
 

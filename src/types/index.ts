@@ -7,7 +7,7 @@
 
 // ============================================================
 // 1. CONTRATOS DE DOMINIO / BACKEND
-// (No modificar nombres de campos para garantizar compatibilidad futura con Supabase/API)
+// (Estructura base alineada con las entidades del Backend / Supabase)
 // ============================================================
 
 export interface Producto {
@@ -17,7 +17,8 @@ export interface Producto {
   peso?: string;
   precio: number;
   fotos: string[];
-  asociacion?: string;
+  asociacion?: string;       // Nombre de la asociación (retrocompatibilidad)
+  asociacion_id?: string;    // ID de la asociación (relación products.association_id -> associations.id)
   stock: number;
   disponible: boolean;
 }
@@ -25,12 +26,29 @@ export interface Producto {
 export interface Asociacion {
   id: string;
   nombre: string;
+  slug?: string;
   historia?: string;
   fotos: string[];
   video_url?: string;
   sello_sanitario?: string;
   lat?: number;
   lng?: number;
+
+  // Nuevos campos para Sprint 3 (preparados para integración con Backend):
+  sello_arcsa?: string;
+  registro_bpm?: string;
+  numero_familias?: number;
+  altitud_msnm?: number;
+  productos_ids?: string[];
+  horario_atencion?: string;
+  contacto_asociacion?: string;
+  ubicacion_referencia?: string;
+  redes_sociales?: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    whatsapp?: string;
+  };
 }
 
 export interface Receta {

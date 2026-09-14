@@ -1,12 +1,3 @@
-/**
- * ============================================================
- * CONFIGURACIÓN CENTRALIZADA DE LA APLICACIÓN - CONLAC-T
- * ============================================================
- * 
- * Evita acceder a process.env directamente desde componentes individuales.
- * Proporciona valores seguros por defecto para desarrollo y producción.
- */
-
 export const siteConfig = {
   name: process.env.NEXT_PUBLIC_APP_NAME || "CONLAC-T",
   shortName: "CONLAC-T",

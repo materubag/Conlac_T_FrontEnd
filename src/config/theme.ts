@@ -1,18 +1,5 @@
 import { ThemeConfig } from "@/types";
 
-/**
- * ============================================================
- * SISTEMA DE DISEÑO / DESIGN TOKENS - CONLAC-T
- * Consorcio de Lácteos de Tungurahua
- * ============================================================
- * 
- * Identidad visual definitiva:
- * - Color 1 (Primary): #184332 -> Principal: marca, botones primarios, títulos, navegación activa
- * - Color 2 (Background): #F8F4E9 -> Superficie base y fondos claros cálidos
- * - Tertiary: #D4A373 -> Acentos visuales, detalles dorados/tostados, estados destacados
- * - Neutral: #4A3728 -> Tipografía principal oscura, iconografía y secundarios
- */
-
 export const DEFAULT_THEME: ThemeConfig = {
   primary: "#184332",
   primaryHover: "#123427",
@@ -30,11 +17,7 @@ export const DEFAULT_THEME: ThemeConfig = {
   labelFont: "var(--font-label)",
 };
 
-/**
- * Aplica tokens de diseño en tiempo de ejecución (Runtime Theme).
- * Permite que un futuro panel administrativo o backend modifique
- * los colores y tipografías dinámicamente sin reconstruir la aplicación.
- */
+
 export function applyTheme(theme: Partial<ThemeConfig>): void {
   if (typeof document === "undefined") return;
 
