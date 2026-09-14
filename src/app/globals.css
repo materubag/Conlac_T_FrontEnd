@@ -1,15 +1,5 @@
 @import "tailwindcss";
 
-/**
- * ============================================================
- * SISTEMA DE DISEÑO GLOBAL - CONLAC-T
- * Consorcio de Lácteos de Tungurahua (Pilahuín, Ecuador)
- * ============================================================
- *
- * Variables de tema en Runtime (:root).
- * Estas variables pueden ser redefinidas dinámicamente mediante
- * applyTheme() o un futuro backend/CMS sin recompilar el proyecto.
- */
 
 :root {
   /* Color 1: Principal de Marca */
