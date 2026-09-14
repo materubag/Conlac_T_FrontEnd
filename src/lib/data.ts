@@ -3,14 +3,16 @@ import { Producto, Asociacion, Receta, AtractivoTuristico } from "@/types";
 /**
  * ============================================================
  * CAPA DE ACCESO A DATOS (MOCKS Y CONTRATOS) - CONLAC-T
- * Consorcio de Lácteos de Tungurahua
+ * Consorcio de Lácteos de Tungurahua (Pilahuín, Ecuador)
  * ============================================================
  * 
  * NOTA DE ARQUITECTURA:
- * Los componentes consumen exclusivamente las funciones asíncronas
- * (getProducts, getProductById, etc.).
+ * Los componentes consumen exclusivamente las funciones de esta capa.
  * En etapas posteriores (Semana 7+), estas funciones se conectarán
  * a Supabase / PostgreSQL o REST API sin modificar los componentes de la UI.
+ * 
+ * Los valores de registro sanitario, familias y horarios no confirmados
+ * se marcan explícitamente como datos mock / provisionales.
  */
 
 // ============================================================
@@ -25,7 +27,8 @@ export const productosMock: Producto[] = [
     peso: "500 g",
     precio: 3.25,
     fotos: ["/placeholders/product-queso-fresco.svg"],
-    asociacion: "Asociación San Pedro",
+    asociacion: "Asociación El Lindero",
+    asociacion_id: "asoc-el-lindero",
     stock: 20,
     disponible: true,
   },
@@ -36,7 +39,8 @@ export const productosMock: Producto[] = [
     peso: "500 g",
     precio: 3.90,
     fotos: ["/placeholders/product-queso-amasado.svg"],
-    asociacion: "Asociación Chibuleo",
+    asociacion: "Asociación de Lácteos San Francisco de Chibuleo",
+    asociacion_id: "asoc-san-francisco-chibuleo",
     stock: 15,
     disponible: true,
   },
@@ -47,7 +51,8 @@ export const productosMock: Producto[] = [
     peso: "500 g",
     precio: 2.80,
     fotos: ["/placeholders/product-quesillo.svg"],
-    asociacion: "Asociación Pilahuín",
+    asociacion: "Asociación Mulanleo",
+    asociacion_id: "asoc-mulanleo",
     stock: 30,
     disponible: true,
   },
@@ -58,7 +63,8 @@ export const productosMock: Producto[] = [
     peso: "400 g",
     precio: 6.50,
     fotos: ["/placeholders/product-queso-maduro.svg"],
-    asociacion: "Asociación Nueva Vida",
+    asociacion: "Asociación Apukanlla",
+    asociacion_id: "asoc-apukanlla",
     stock: 8,
     disponible: true,
   },
@@ -70,46 +76,103 @@ export const productosMock: Producto[] = [
 
 export const asociacionesMock: Asociacion[] = [
   {
-    id: "asoc-san-pedro",
-    nombre: "Asociación San Pedro",
+    id: "asoc-el-lindero",
+    slug: "asociacion-el-lindero",
+    nombre: "Asociación El Lindero",
     historia:
-      "Ubicada en las faldas del páramo andino de Pilahuín, agrupa a 24 familias dedicadas a la producción de leche de pastoreo de altura y elaboración de queso fresco tradicional con estrictas normas de inocuidad.",
+      "Ubicada en el sector El Lindero en las faldas del páramo andino de Pilahuín, agrupa a familias campesinas dedicadas a la producción de leche de pastoreo de altura y elaboración de queso fresco tradicional con estrictas normas de inocuidad.",
     fotos: ["/placeholders/association-placeholder.svg"],
     sello_sanitario: "BPM-CONLAC-001",
-    lat: -1.2985,
-    lng: -78.7123,
+    sello_arcsa: "ARCSA-BPM-TUN-00124 (Provisional / Mock)",
+    registro_bpm: "BPM-2024-089 (Mock)",
+    numero_familias: 24,
+    altitud_msnm: 3400,
+    lat: -1.298500,
+    lng: -78.712300,
+    ubicacion_referencia: "Sector El Lindero, Parroquia Pilahuín, Cantón Ambato, Tungurahua",
+    productos_ids: ["prod-queso-fresco"],
+    horario_atencion: "Lunes a Viernes: 07h00 - 16h00 (Provisional)",
+    contacto_asociacion: "+593 99 999 9901 (Provisional)",
+    redes_sociales: {
+      whatsapp: "593999999901",
+      facebook: "https://facebook.com",
+    },
   },
   {
-    id: "asoc-chibuleo",
-    nombre: "Asociación Chibuleo",
+    id: "asoc-mulanleo",
+    slug: "asociacion-mulanleo",
+    nombre: "Asociación Mulanleo",
     historia:
-      "Productores indígenas de la comunidad de Chibuleo que preservan la técnica ancestral del queso amasado a mano, garantizando una textura cremosa y sabor auténtico de la sierra tungurahuense.",
+      "Núcleo comunitario productor de Mulanleo en Pilahuín, especializado en derivados lácteos de alta pureza y quesillos tiernos elaborados con ganado adaptado al ecosistema de páramo a más de 3.350 msnm.",
     fotos: ["/placeholders/association-placeholder.svg"],
     sello_sanitario: "BPM-CONLAC-002",
-    lat: -1.3052,
-    lng: -78.6984,
+    sello_arcsa: "ARCSA-BPM-TUN-00125 (Provisional / Mock)",
+    registro_bpm: "BPM-2024-090 (Mock)",
+    numero_familias: 18,
+    altitud_msnm: 3350,
+    lat: -1.289100,
+    lng: -78.725400,
+    ubicacion_referencia: "Comunidad Mulanleo, Parroquia Pilahuín, Tungurahua",
+    productos_ids: ["prod-quesillo"],
+    horario_atencion: "Lunes a Sábado: 08h00 - 15h00 (Provisional)",
+    contacto_asociacion: "+593 99 999 9902 (Provisional)",
+    redes_sociales: {
+      whatsapp: "593999999902",
+    },
   },
   {
-    id: "asoc-pilahuin",
-    nombre: "Asociación Pilahuín",
+    id: "asoc-apukanlla",
+    slug: "asociacion-apukanlla",
+    nombre: "Asociación Apukanlla",
     historia:
-      "Núcleo fundador del consorcio, especializada en quesillo tierno y derivados lácteos de alta pureza provenientes de ganado adaptado al ecosistema de páramo a más de 3.300 msnm.",
+      "Pioneros en la maduración de quesos andinos de cava natural en el sector Apukanlla, aprovechando el microclima frío y seco del páramo para lograr notas aromáticas profundas y cortezas naturales.",
     fotos: ["/placeholders/association-placeholder.svg"],
     sello_sanitario: "BPM-CONLAC-003",
-    lat: -1.2891,
-    lng: -78.7219,
+    sello_arcsa: "ARCSA-BPM-TUN-00126 (Provisional / Mock)",
+    registro_bpm: "BPM-2024-091 (Mock)",
+    numero_familias: 15,
+    altitud_msnm: 3500,
+    lat: -1.305000,
+    lng: -78.701100,
+    ubicacion_referencia: "Sector Apukanlla, Parroquia Pilahuín, Tungurahua",
+    productos_ids: ["prod-queso-maduro-andino"],
+    horario_atencion: "Lunes a Viernes: 08h30 - 16h30 (Provisional)",
+    contacto_asociacion: "+593 99 999 9903 (Provisional)",
+    redes_sociales: {
+      whatsapp: "593999999903",
+    },
   },
   {
-    id: "asoc-nueva-vida",
-    nombre: "Asociación Nueva Vida",
+    id: "asoc-san-francisco-chibuleo",
+    slug: "asociacion-san-francisco-chibuleo",
+    nombre: "Asociación de Lácteos San Francisco de Chibuleo",
     historia:
-      "Pioneros en la maduración de quesos andinos con técnicas europeas adaptadas al microclima de Tungurahua, logrando notas aromáticas profundas y cortezas naturales.",
+      "Productores indígenas de la comunidad de Chibuleo San Francisco que preservan la técnica ancestral del queso amasado a mano, garantizando una textura cremosa y sabor auténtico de la serranía.",
     fotos: ["/placeholders/association-placeholder.svg"],
     sello_sanitario: "BPM-CONLAC-004",
-    lat: -1.2764,
-    lng: -78.7042,
+    sello_arcsa: "ARCSA-BPM-TUN-00127 (Provisional / Mock)",
+    registro_bpm: "BPM-2024-092 (Mock)",
+    numero_familias: 22,
+    altitud_msnm: 3200,
+    lat: -1.276400,
+    lng: -78.704200,
+    ubicacion_referencia: "Pueblo Chibuleo San Francisco, Parroquia Juan Benigno Vela / Pilahuín, Tungurahua",
+    productos_ids: ["prod-queso-amasado"],
+    horario_atencion: "Lunes a Domingo: 07h30 - 17h00 (Provisional)",
+    contacto_asociacion: "+593 99 999 9904 (Provisional)",
+    redes_sociales: {
+      whatsapp: "593999999904",
+    },
   },
 ];
+
+// Mapa de alias para mantener retrocompatibilidad con rutas y slugs previos
+const associationAliasMap: Record<string, string> = {
+  "asoc-san-pedro": "asoc-el-lindero",
+  "asoc-pilahuin": "asoc-mulanleo",
+  "asoc-nueva-vida": "asoc-apukanlla",
+  "asoc-chibuleo": "asoc-san-francisco-chibuleo",
+};
 
 // ============================================================
 // 3. DATOS MOCK DE RECETAS
@@ -119,7 +182,7 @@ export const recetasMock: Receta[] = [
   {
     id: "receta-locro-papa-queso",
     titulo: "Locro de Papa Andino con Queso Fresco",
-    tipo_queso: "Queso Fresco San Pedro",
+    tipo_queso: "Queso Fresco El Lindero",
     tiempo_prep: 45,
     producto_slug: "prod-queso-fresco",
     pasos: [
@@ -132,8 +195,8 @@ export const recetasMock: Receta[] = [
   },
   {
     id: "receta-empanadas-viento-quesillo",
-    titulo: "Empanadas de Viento con Quesillo de Pilahuín",
-    tipo_queso: "Quesillo Pilahuín",
+    titulo: "Empanadas de Viento con Quesillo de Mulanleo",
+    tipo_queso: "Quesillo Mulanleo",
     tiempo_prep: 30,
     producto_slug: "prod-quesillo",
     pasos: [
@@ -146,7 +209,7 @@ export const recetasMock: Receta[] = [
   {
     id: "receta-fondue-maduro-andino",
     titulo: "Tabla & Fondue Rústico de Maduro Andino",
-    tipo_queso: "Queso Maduro Andino",
+    tipo_queso: "Queso Maduro Andino Apukanlla",
     tiempo_prep: 20,
     producto_slug: "prod-queso-maduro-andino",
     pasos: [
@@ -167,7 +230,7 @@ export const atractivosMock: AtractivoTuristico[] = [
     nombre: "Reserva de Producción de Fauna Chimborazo",
     descripcion:
       "Extensos páramos andinos, senderos de alta montaña y avistamiento de vicuñas en su hábitat natural, contiguo a las zonas de pastoreo de Pilahuín.",
-    asociacion_cercana: "Asociación Pilahuín",
+    asociacion_cercana: "Asociación Mulanleo",
     tipo: "Naturaleza & Senderismo",
   },
   {
@@ -175,7 +238,7 @@ export const atractivosMock: AtractivoTuristico[] = [
     nombre: "Ruta Agroecológica del Queso de Páramo",
     descripcion:
       "Recorrido vivencial por las plantas queseras comunitarias para conocer el proceso de ordeño en altura, cuajado artesanal y degustación guiada.",
-    asociacion_cercana: "Asociación San Pedro",
+    asociacion_cercana: "Asociación El Lindero",
     tipo: "Agroturismo & Gastronomía",
   },
   {
@@ -183,20 +246,19 @@ export const atractivosMock: AtractivoTuristico[] = [
     nombre: "Mirador Natural del Volcán Carihuairazo",
     descripcion:
       "Panorámica imponente de los valles interandinos de Tungurahua y senderos botánicos de frailejones y flora nativa de páramo.",
-    asociacion_cercana: "Asociación Nueva Vida",
+    asociacion_cercana: "Asociación Apukanlla",
     tipo: "Paisajismo & Fotografía",
   },
 ];
 
 // ============================================================
-// 5. FUNCIONES ASÍNCRONAS DE CONSULTA (CAPA DE DATOS DESACOPLADA)
+// 5. FUNCIONES DE CONSULTA (CAPA DE DATOS DESACOPLADA)
 // ============================================================
 
 /**
  * Obtiene todos los productos disponibles en catálogo.
  */
 export async function getProducts(): Promise<Producto[]> {
-  // Simulación asíncrona - listo para reemplazar por llamada a API/Supabase
   return Promise.resolve([...productosMock]);
 }
 
@@ -224,11 +286,45 @@ export async function getAssociations(): Promise<Asociacion[]> {
 }
 
 /**
- * Obtiene una asociación por su ID.
+ * Obtiene una asociación por su ID, slug o alias histórico.
  */
-export async function getAssociationById(id: string): Promise<Asociacion | null> {
-  const item = asociacionesMock.find((a) => a.id === id);
+export async function getAssociationById(idOrSlug: string): Promise<Asociacion | null> {
+  const resolvedId = associationAliasMap[idOrSlug] || idOrSlug;
+  const item = asociacionesMock.find(
+    (a) => a.id === resolvedId || a.slug === resolvedId || a.id === idOrSlug || a.slug === idOrSlug
+  );
   return Promise.resolve(item || null);
+}
+
+/**
+ * Obtiene los productos correspondientes a una asociación específica.
+ * [TSK-302 - Sprint 3]
+ * Busca mediante la lista de productos_ids de la asociación o mediante asociacion_id del producto.
+ * Retorna [] si no existen productos asociados o si el ID es inexistente.
+ */
+export function getProductsByAssociationId(associationId: string): Producto[] {
+  if (!associationId) return [];
+
+  const targetId = associationAliasMap[associationId] || associationId;
+
+  // 1. Buscar en la asociación sus productos_ids registrados
+  const assoc = asociacionesMock.find(
+    (a) => a.id === targetId || a.slug === targetId || a.id === associationId || a.slug === associationId
+  );
+
+  if (assoc && assoc.productos_ids && assoc.productos_ids.length > 0) {
+    const matched = productosMock.filter((p) => assoc.productos_ids?.includes(p.id));
+    if (matched.length > 0) return matched;
+  }
+
+  // 2. Fallback: Filtrar por campo asociacion_id o nombre de asociacion en productosMock
+  return productosMock.filter(
+    (p) =>
+      p.asociacion_id === targetId ||
+      p.asociacion_id === associationId ||
+      p.asociacion === targetId ||
+      p.asociacion === associationId
+  );
 }
 
 /**
