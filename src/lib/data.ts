@@ -16,7 +16,22 @@ import { Producto, Asociacion, Receta, AtractivoTuristico } from "@/types";
 // ============================================================
 // 1. DATOS MOCK DE PRODUCTOS
 // ============================================================
-
+interface AssociationFormData {
+  nombre: string;
+  parroquia: string;
+  numero_familias: string;
+  año_fundacion: string;
+  registro_arcsa: string;
+  fecha_emision: string;
+  estado_vigencia: string;
+  foto_principal: string;
+  galeria: string[];
+  video_url: string;
+  lat: string;
+  lng: string;
+  referencia_vial: string;
+  historia: string;
+}
 export const productosMock: Producto[] = [
   {
     id: "prod-queso-fresco",
