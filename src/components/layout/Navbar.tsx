@@ -57,7 +57,7 @@ export const Navbar: React.FC = () => {
       )}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        
+
         {/* ============================================================
             1. LOGO E IDENTIDAD INSTITUCIONAL
             ============================================================ */}
@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
             3. ACCIONES DE DERECHA (CARRITO VISUAL + CTA + TOGGLE MÓVIL)
             ============================================================ */}
         <div className="flex items-center gap-2 sm:gap-3">
-          
+
           {/* Carrito como elemento visual NO funcional para Semana 2 */}
           <div
             className="relative flex items-center justify-center p-2 rounded-xl text-neutral hover:text-primary hover:bg-neutral-light/60 transition-colors cursor-pointer select-none"
@@ -155,7 +155,19 @@ export const Navbar: React.FC = () => {
               Ver tienda
             </Button>
           </div>
+          {/* Acciones de administración y tienda */}
+          <div className="hidden sm:flex items-center gap-2">
+            <Button
+              href="/administracion/asociaciones"
+              variant="outlined"
+              size="sm"
+              className="shadow-sm"
+            >
+              Administración
+            </Button>
 
+           
+          </div>
           {/* Botón Toggle Menú Móvil */}
           <button
             type="button"

@@ -282,8 +282,12 @@ export async function getFeaturedProducts(): Promise<Producto[]> {
  * Obtiene todas las asociaciones productoras.
  */
 export async function getAssociations(): Promise<Asociacion[]> {
+  console.log("Total de asociaciones:", asociacionesMock.length);
+  console.log("Asociaciones:", asociacionesMock);
+
   return Promise.resolve([...asociacionesMock]);
 }
+
 
 /**
  * Obtiene una asociación por su ID, slug o alias histórico.
@@ -295,7 +299,24 @@ export async function getAssociationById(idOrSlug: string): Promise<Asociacion |
   );
   return Promise.resolve(item || null);
 }
+/**
+ * Crea una nueva asociación en el almacenamiento mock.
+ *
+ * En una etapa posterior esta función será reemplazada
+ * por una llamada al backend / Supabase.
+ */
+export async function createAssociation(
+  asociacion: Omit<Asociacion, "id">
+): Promise<Asociacion> {
+  const nuevaAsociacion: Asociacion = {
+    id: `asoc-${Date.now()}`,
+    ...asociacion,
+  };
 
+  asociacionesMock.push(nuevaAsociacion);
+
+  return Promise.resolve(nuevaAsociacion);
+}
 /**
  * Obtiene los productos correspondientes a una asociación específica.
  * [TSK-302 - Sprint 3]
