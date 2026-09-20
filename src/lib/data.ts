@@ -1,24 +1,5 @@
 import { Producto, Asociacion, Receta, AtractivoTuristico } from "@/types";
 
-/**
- * ============================================================
- * CAPA DE ACCESO A DATOS (MOCKS Y CONTRATOS) - CONLAC-T
- * Consorcio de Lácteos de Tungurahua (Pilahuín, Ecuador)
- * ============================================================
- * 
- * NOTA DE ARQUITECTURA:
- * Los componentes consumen exclusivamente las funciones de esta capa.
- * En etapas posteriores (Semana 7+), estas funciones se conectarán
- * a Supabase / PostgreSQL o REST API sin modificar los componentes de la UI.
- * 
- * Los valores de registro sanitario, familias y horarios no confirmados
- * se marcan explícitamente como datos mock / provisionales.
- */
-
-// ============================================================
-// 1. DATOS MOCK DE PRODUCTOS
-// ============================================================
-
 export const productosMock: Producto[] = [
   {
     id: "prod-queso-fresco",
@@ -70,10 +51,6 @@ export const productosMock: Producto[] = [
   },
 ];
 
-// ============================================================
-// 2. DATOS MOCK DE ASOCIACIONES
-// ============================================================
-
 export const asociacionesMock: Asociacion[] = [
   {
     id: "asoc-el-lindero",
@@ -81,7 +58,12 @@ export const asociacionesMock: Asociacion[] = [
     nombre: "Asociación El Lindero",
     historia:
       "Ubicada en el sector El Lindero en las faldas del páramo andino de Pilahuín, agrupa a familias campesinas dedicadas a la producción de leche de pastoreo de altura y elaboración de queso fresco tradicional con estrictas normas de inocuidad.",
-    fotos: ["/placeholders/association-placeholder.svg"],
+    fotos: [
+      "/placeholders/association-placeholder.svg",
+      "/placeholders/association-placeholder.svg",
+      "/placeholders/association-placeholder.svg",
+    ],
+    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     sello_sanitario: "BPM-CONLAC-001",
     sello_arcsa: "ARCSA-BPM-TUN-00124 (Provisional / Mock)",
     registro_bpm: "BPM-2024-089 (Mock)",
@@ -104,7 +86,10 @@ export const asociacionesMock: Asociacion[] = [
     nombre: "Asociación Mulanleo",
     historia:
       "Núcleo comunitario productor de Mulanleo en Pilahuín, especializado en derivados lácteos de alta pureza y quesillos tiernos elaborados con ganado adaptado al ecosistema de páramo a más de 3.350 msnm.",
-    fotos: ["/placeholders/association-placeholder.svg"],
+    fotos: [
+      "/placeholders/association-placeholder.svg",
+      "/placeholders/association-placeholder.svg",
+    ],
     sello_sanitario: "BPM-CONLAC-002",
     sello_arcsa: "ARCSA-BPM-TUN-00125 (Provisional / Mock)",
     registro_bpm: "BPM-2024-090 (Mock)",
@@ -126,7 +111,10 @@ export const asociacionesMock: Asociacion[] = [
     nombre: "Asociación Apukanlla",
     historia:
       "Pioneros en la maduración de quesos andinos de cava natural en el sector Apukanlla, aprovechando el microclima frío y seco del páramo para lograr notas aromáticas profundas y cortezas naturales.",
-    fotos: ["/placeholders/association-placeholder.svg"],
+    fotos: [
+      "/placeholders/association-placeholder.svg",
+      "/placeholders/association-placeholder.svg",
+    ],
     sello_sanitario: "BPM-CONLAC-003",
     sello_arcsa: "ARCSA-BPM-TUN-00126 (Provisional / Mock)",
     registro_bpm: "BPM-2024-091 (Mock)",
@@ -166,17 +154,12 @@ export const asociacionesMock: Asociacion[] = [
   },
 ];
 
-// Mapa de alias para mantener retrocompatibilidad con rutas y slugs previos
 const associationAliasMap: Record<string, string> = {
   "asoc-san-pedro": "asoc-el-lindero",
   "asoc-pilahuin": "asoc-mulanleo",
   "asoc-nueva-vida": "asoc-apukanlla",
   "asoc-chibuleo": "asoc-san-francisco-chibuleo",
 };
-
-// ============================================================
-// 3. DATOS MOCK DE RECETAS
-// ============================================================
 
 export const recetasMock: Receta[] = [
   {
@@ -220,10 +203,6 @@ export const recetasMock: Receta[] = [
   },
 ];
 
-// ============================================================
-// 4. DATOS MOCK DE ATRACTIVOS TURÍSTICOS
-// ============================================================
-
 export const atractivosMock: AtractivoTuristico[] = [
   {
     id: "tur-reserva-chimborazo",
@@ -251,36 +230,20 @@ export const atractivosMock: AtractivoTuristico[] = [
   },
 ];
 
-// ============================================================
-// 5. FUNCIONES DE CONSULTA (CAPA DE DATOS DESACOPLADA)
-// ============================================================
-
-/**
- * Obtiene todos los productos disponibles en catálogo.
- */
 export async function getProducts(): Promise<Producto[]> {
   return Promise.resolve([...productosMock]);
 }
 
-/**
- * Obtiene un producto por su identificador.
- */
 export async function getProductById(id: string): Promise<Producto | null> {
   const item = productosMock.find((p) => p.id === id);
   return Promise.resolve(item || null);
 }
 
-/**
- * Obtiene los productos destacados para la página de inicio.
- */
 export async function getFeaturedProducts(): Promise<Producto[]> {
   const featured = productosMock.filter((p) => p.disponible).slice(0, 4);
   return Promise.resolve(featured);
 }
 
-/**
- * Obtiene todas las asociaciones productoras.
- */
 export async function getAssociations(): Promise<Asociacion[]> {
   console.log("Total de asociaciones:", asociacionesMock.length);
   console.log("Asociaciones:", asociacionesMock);
@@ -288,10 +251,6 @@ export async function getAssociations(): Promise<Asociacion[]> {
   return Promise.resolve([...asociacionesMock]);
 }
 
-
-/**
- * Obtiene una asociación por su ID, slug o alias histórico.
- */
 export async function getAssociationById(idOrSlug: string): Promise<Asociacion | null> {
   const resolvedId = associationAliasMap[idOrSlug] || idOrSlug;
   const item = asociacionesMock.find(
@@ -299,12 +258,7 @@ export async function getAssociationById(idOrSlug: string): Promise<Asociacion |
   );
   return Promise.resolve(item || null);
 }
-/**
- * Crea una nueva asociación en el almacenamiento mock.
- *
- * En una etapa posterior esta función será reemplazada
- * por una llamada al backend / Supabase.
- */
+
 export async function createAssociation(
   asociacion: Omit<Asociacion, "id">
 ): Promise<Asociacion> {
@@ -317,18 +271,12 @@ export async function createAssociation(
 
   return Promise.resolve(nuevaAsociacion);
 }
-/**
- * Obtiene los productos correspondientes a una asociación específica.
- * [TSK-302 - Sprint 3]
- * Busca mediante la lista de productos_ids de la asociación o mediante asociacion_id del producto.
- * Retorna [] si no existen productos asociados o si el ID es inexistente.
- */
+
 export function getProductsByAssociationId(associationId: string): Producto[] {
   if (!associationId) return [];
 
   const targetId = associationAliasMap[associationId] || associationId;
 
-  // 1. Buscar en la asociación sus productos_ids registrados
   const assoc = asociacionesMock.find(
     (a) => a.id === targetId || a.slug === targetId || a.id === associationId || a.slug === associationId
   );
@@ -338,7 +286,6 @@ export function getProductsByAssociationId(associationId: string): Producto[] {
     if (matched.length > 0) return matched;
   }
 
-  // 2. Fallback: Filtrar por campo asociacion_id o nombre de asociacion en productosMock
   return productosMock.filter(
     (p) =>
       p.asociacion_id === targetId ||
@@ -348,16 +295,10 @@ export function getProductsByAssociationId(associationId: string): Producto[] {
   );
 }
 
-/**
- * Obtiene el listado de recetas tradicionales.
- */
 export async function getRecipes(): Promise<Receta[]> {
   return Promise.resolve([...recetasMock]);
 }
 
-/**
- * Obtiene los atractivos turísticos comunitarios.
- */
 export async function getTouristAttractions(): Promise<AtractivoTuristico[]> {
   return Promise.resolve([...atractivosMock]);
 }
