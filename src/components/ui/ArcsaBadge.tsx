@@ -17,14 +17,14 @@ export const ArcsaBadge: React.FC<ArcsaBadgeProps> = ({
   className,
   compact = false,
 }) => {
-  const codigoPrincipal = selloArcsa || selloSanitario;
+  const codigoPrincipal = selloArcsa || selloSanitario || registroBpm;
 
   if (!codigoPrincipal) return null;
 
   const detalles = [
     selloArcsa && `ARCSA: ${selloArcsa}`,
     registroBpm && `BPM: ${registroBpm}`,
-    !selloArcsa && selloSanitario && `Sello Sanitario: ${selloSanitario}`,
+    !selloArcsa && !registroBpm && selloSanitario && `Sello Sanitario: ${selloSanitario}`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -35,7 +35,7 @@ export const ArcsaBadge: React.FC<ArcsaBadgeProps> = ({
         "inline-flex items-center gap-1.5 rounded-full border border-transparent bg-primary px-3 py-1 text-xs font-label font-semibold uppercase tracking-wider text-inverted shadow-sm",
         className
       )}
-      title={`Registro sanitario verificado — ${detalles}`}
+      title={`Registro sanitario declarado por la asociación — ${detalles}`}
     >
       <ShieldCheckIcon className="w-3.5 h-3.5 shrink-0 text-tertiary" />
       {!compact && <span className="hidden sm:inline">Sello Sanitario</span>}

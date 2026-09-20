@@ -63,7 +63,6 @@ export const asociacionesMock: Asociacion[] = [
       "/placeholders/association-placeholder.svg",
       "/placeholders/association-placeholder.svg",
     ],
-    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     sello_sanitario: "BPM-CONLAC-001",
     sello_arcsa: "ARCSA-BPM-TUN-00124 (Provisional / Mock)",
     registro_bpm: "BPM-2024-089 (Mock)",

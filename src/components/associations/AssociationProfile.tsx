@@ -7,7 +7,7 @@ import { ArcsaBadge } from "@/components/ui/ArcsaBadge";
 import { ProductCard } from "@/components/home/ProductCard";
 import { AssociationMapPreview } from "@/components/associations/AssociationMapPreview";
 import { MapPinIcon, UsersIcon, MountainIcon, ClockIcon } from "@/components/ui/Icons";
-import { buildWhatsAppUrl, getYouTubeEmbedUrl } from "@/lib/utils";
+import { buildWhatsAppUrl, getVideoEmbedUrl } from "@/lib/utils";
 import { siteConfig } from "@/lib/config";
 
 interface AssociationProfileProps {
@@ -19,14 +19,15 @@ export const AssociationProfile: React.FC<AssociationProfileProps> = ({
   association,
   products,
 }) => {
-  const embedUrl = getYouTubeEmbedUrl(association.video_url);
+  const embedUrl = getVideoEmbedUrl(association.video_url);
   const whatsappPhone = association.redes_sociales?.whatsapp || association.contacto_asociacion;
   const whatsappUrl = buildWhatsAppUrl({
     phone: whatsappPhone,
     associationName: association.nombre,
   });
-  const gallery = association.fotos.length > 0
-    ? association.fotos
+  const fotosValidas = association.fotos.filter((foto) => foto && foto.trim().length > 0);
+  const gallery = fotosValidas.length > 0
+    ? fotosValidas
     : ["/placeholders/association-placeholder.svg"];
 
   const fichaTecnica = [
@@ -174,7 +175,7 @@ export const AssociationProfile: React.FC<AssociationProfileProps> = ({
         <Button href={whatsappUrl} variant="primary" isExternal>
           Escribir por WhatsApp
         </Button>
-        <Button href="/tienda" variant="outlined">
+        <Button href={`/tienda?asociacion=${association.id}`} variant="outlined">
           Ver quesos de esta asociación
         </Button>
         <Button href="/asociaciones" variant="ghost">

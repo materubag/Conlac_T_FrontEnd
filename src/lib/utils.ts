@@ -49,24 +49,39 @@ export function buildWhatsAppUrl(options?: {
   return `https://wa.me/${cleanPhone}?text=${encodedText}`;
 }
 
-export function getYouTubeEmbedUrl(url?: string): string | null {
+export function getVideoEmbedUrl(url?: string): string | null {
   if (!url) return null;
 
   try {
     const parsed = new URL(url);
-    let videoId: string | null = null;
 
     if (parsed.hostname.includes("youtu.be")) {
-      videoId = parsed.pathname.slice(1);
-    } else if (parsed.hostname.includes("youtube.com")) {
-      if (parsed.pathname.startsWith("/shorts/")) {
-        videoId = parsed.pathname.split("/shorts/")[1];
-      } else {
-        videoId = parsed.searchParams.get("v");
-      }
+      const videoId = parsed.pathname.slice(1);
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
     }
 
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtube-nocookie.com")) {
+      if (parsed.pathname.startsWith("/embed/")) {
+        return url;
+      }
+      if (parsed.pathname.startsWith("/shorts/")) {
+        const videoId = parsed.pathname.split("/shorts/")[1];
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+      }
+      const videoId = parsed.searchParams.get("v");
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
+    if (parsed.hostname.includes("player.vimeo.com")) {
+      return url;
+    }
+
+    if (parsed.hostname.includes("vimeo.com")) {
+      const videoId = parsed.pathname.split("/").filter(Boolean)[0];
+      return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+    }
+
+    return null;
   } catch {
     return null;
   }
