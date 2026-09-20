@@ -16,22 +16,7 @@ import { Producto, Asociacion, Receta, AtractivoTuristico } from "@/types";
 // ============================================================
 // 1. DATOS MOCK DE PRODUCTOS
 // ============================================================
-interface AssociationFormData {
-  nombre: string;
-  parroquia: string;
-  numero_familias: string;
-  año_fundacion: string;
-  registro_arcsa: string;
-  fecha_emision: string;
-  estado_vigencia: string;
-  foto_principal: string;
-  galeria: string[];
-  video_url: string;
-  lat: string;
-  lng: string;
-  referencia_vial: string;
-  historia: string;
-}
+
 export const productosMock: Producto[] = [
   {
     id: "prod-queso-fresco",
@@ -235,8 +220,12 @@ export async function getFeaturedProducts(): Promise<Producto[]> {
  * Obtiene todas las asociaciones productoras.
  */
 export async function getAssociations(): Promise<Asociacion[]> {
+  console.log("Total de asociaciones:", asociacionesMock.length);
+  console.log("Asociaciones:", asociacionesMock);
+
   return Promise.resolve([...asociacionesMock]);
 }
+
 
 /**
  * Obtiene una asociación por su ID.
@@ -245,7 +234,24 @@ export async function getAssociationById(id: string): Promise<Asociacion | null>
   const item = asociacionesMock.find((a) => a.id === id);
   return Promise.resolve(item || null);
 }
+/**
+ * Crea una nueva asociación en el almacenamiento mock.
+ *
+ * En una etapa posterior esta función será reemplazada
+ * por una llamada al backend / Supabase.
+ */
+export async function createAssociation(
+  asociacion: Omit<Asociacion, "id">
+): Promise<Asociacion> {
+  const nuevaAsociacion: Asociacion = {
+    id: `asoc-${Date.now()}`,
+    ...asociacion,
+  };
 
+  asociacionesMock.push(nuevaAsociacion);
+
+  return Promise.resolve(nuevaAsociacion);
+}
 /**
  * Obtiene el listado de recetas tradicionales.
  */

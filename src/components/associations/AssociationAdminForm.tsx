@@ -1,6 +1,7 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
+import { Asociacion } from "@/types";
 
 interface AssociationFormData {
     nombre: string;
@@ -44,15 +45,17 @@ const initialFormData: AssociationFormData = {
     historia: "",
 };
 
+type FormErrors = Partial<Record<keyof AssociationFormData, string>>;
+
 export const AssociationAdminForm: React.FC = () => {
     const [formData, setFormData] =
         useState<AssociationFormData>(initialFormData);
 
-    type FormErrors = Partial<Record<keyof AssociationFormData, string>>;
-
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "success" | "error">(
+        "idle"
+    );
 
     const handleChange = (
         field: keyof AssociationFormData,
@@ -72,6 +75,7 @@ export const AssociationAdminForm: React.FC = () => {
 
         setStatus("idle");
     };
+
     const handleGalleryChange = (index: number, value: string) => {
         setFormData((current) => {
             const galeria = [...current.galeria];
@@ -86,6 +90,7 @@ export const AssociationAdminForm: React.FC = () => {
         setErrors((current) => {
             const updatedErrors = { ...current };
             delete updatedErrors.galeria;
+
             return updatedErrors;
         });
 
@@ -111,10 +116,15 @@ export const AssociationAdminForm: React.FC = () => {
             };
         });
     };
+
     const isValidUrl = (value: string) => {
         try {
             const url = new URL(value);
-            return url.protocol === "http:" || url.protocol === "https:";
+
+            return (
+                url.protocol === "http:" ||
+                url.protocol === "https:"
+            );
         } catch {
             return false;
         }
@@ -124,11 +134,13 @@ export const AssociationAdminForm: React.FC = () => {
         const newErrors: FormErrors = {};
 
         if (!formData.nombre.trim()) {
-            newErrors.nombre = "El nombre de la asociación es obligatorio.";
+            newErrors.nombre =
+                "El nombre de la asociación es obligatorio.";
         }
 
         if (!formData.parroquia.trim()) {
-            newErrors.parroquia = "La parroquia o comunidad es obligatoria.";
+            newErrors.parroquia =
+                "La parroquia o comunidad es obligatoria.";
         }
 
         if (!formData.numero_familias) {
@@ -152,12 +164,18 @@ export const AssociationAdminForm: React.FC = () => {
             }
         }
 
-        if (formData.foto_principal && !isValidUrl(formData.foto_principal)) {
+        if (
+            formData.foto_principal &&
+            !isValidUrl(formData.foto_principal)
+        ) {
             newErrors.foto_principal =
                 "Ingresa una URL válida que comience con http:// o https://.";
         }
 
-        if (formData.video_url && !isValidUrl(formData.video_url)) {
+        if (
+            formData.video_url &&
+            !isValidUrl(formData.video_url)
+        ) {
             newErrors.video_url =
                 "Ingresa una URL válida de YouTube o Vimeo.";
         }
@@ -167,7 +185,11 @@ export const AssociationAdminForm: React.FC = () => {
         } else {
             const lat = Number(formData.lat);
 
-            if (Number.isNaN(lat) || lat < -90 || lat > 90) {
+            if (
+                Number.isNaN(lat) ||
+                lat < -90 ||
+                lat > 90
+            ) {
                 newErrors.lat =
                     "La latitud debe estar entre -90 y 90.";
             }
@@ -178,7 +200,11 @@ export const AssociationAdminForm: React.FC = () => {
         } else {
             const lng = Number(formData.lng);
 
-            if (Number.isNaN(lng) || lng < -180 || lng > 180) {
+            if (
+                Number.isNaN(lng) ||
+                lng < -180 ||
+                lng > 180
+            ) {
                 newErrors.lng =
                     "La longitud debe estar entre -180 y 180.";
             }
@@ -203,7 +229,10 @@ export const AssociationAdminForm: React.FC = () => {
 
         return newErrors;
     };
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+
+    const handleSubmit = async (
+        event: FormEvent<HTMLFormElement>
+    ) => {
         event.preventDefault();
 
         const validationErrors = validateForm();
@@ -218,9 +247,43 @@ export const AssociationAdminForm: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            // Simulación temporal del guardado.
-            // Posteriormente se reemplazará por la llamada al backend/API.
-            await new Promise((resolve) => setTimeout(resolve, 1200));
+            const fotos = [
+                formData.foto_principal.trim(),
+                ...formData.galeria
+                    .map((url) => url.trim())
+                    .filter((url) => url.length > 0),
+            ];
+
+            const asociacion: Omit<Asociacion, "id"> = {
+                nombre: formData.nombre.trim(),
+                historia: formData.historia.trim(),
+                fotos,
+                video_url:
+                    formData.video_url.trim() || undefined,
+                sello_sanitario:
+                    formData.registro_arcsa.trim() || undefined,
+                lat: Number(formData.lat),
+                lng: Number(formData.lng),
+            };
+
+            const response = await fetch(
+                "/api/asociaciones",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(asociacion),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "No se pudo guardar la asociación."
+                );
+            }
+
+            await response.json();
 
             setStatus("success");
         } catch {
@@ -231,11 +294,14 @@ export const AssociationAdminForm: React.FC = () => {
     };
 
     return (
-
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form
+            onSubmit={handleSubmit}
+            className="space-y-8"
+        >
             {/* =====================================================
-          DATOS GENERALES
-      ====================================================== */}
+                DATOS GENERALES
+            ====================================================== */}
+
             <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
                 <div className="mb-6">
                     <span className="font-label text-xs font-semibold uppercase tracking-widest text-primary">
@@ -252,7 +318,9 @@ export const AssociationAdminForm: React.FC = () => {
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
+
                     {/* Nombre */}
+
                     <div className="md:col-span-2">
                         <label
                             htmlFor="nombre"
@@ -267,16 +335,24 @@ export const AssociationAdminForm: React.FC = () => {
                             type="text"
                             value={formData.nombre}
                             onChange={(event) =>
-                                handleChange("nombre", event.target.value)
+                                handleChange(
+                                    "nombre",
+                                    event.target.value
+                                )
                             }
                             placeholder="Ej. Asociación San Pedro"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.nombre
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.nombre)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.nombre
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.nombre
+                            )}
                             aria-describedby={
-                                errors.nombre ? "nombre-error" : undefined
+                                errors.nombre
+                                    ? "nombre-error"
+                                    : undefined
                             }
                         />
 
@@ -292,6 +368,7 @@ export const AssociationAdminForm: React.FC = () => {
                     </div>
 
                     {/* Parroquia */}
+
                     <div>
                         <label
                             htmlFor="parroquia"
@@ -306,14 +383,20 @@ export const AssociationAdminForm: React.FC = () => {
                             type="text"
                             value={formData.parroquia}
                             onChange={(event) =>
-                                handleChange("parroquia", event.target.value)
+                                handleChange(
+                                    "parroquia",
+                                    event.target.value
+                                )
                             }
                             placeholder="Ej. Pilahuín"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.parroquia
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.parroquia)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.parroquia
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.parroquia
+                            )}
                             aria-describedby={
                                 errors.parroquia
                                     ? "parroquia-error"
@@ -333,6 +416,7 @@ export const AssociationAdminForm: React.FC = () => {
                     </div>
 
                     {/* Número de familias */}
+
                     <div>
                         <label
                             htmlFor="numero_familias"
@@ -354,11 +438,14 @@ export const AssociationAdminForm: React.FC = () => {
                                 )
                             }
                             placeholder="Ej. 25"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.numero_familias
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.numero_familias)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.numero_familias
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.numero_familias
+                            )}
                             aria-describedby={
                                 errors.numero_familias
                                     ? "numero-familias-error"
@@ -377,7 +464,8 @@ export const AssociationAdminForm: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Año de fundación */}
+                    {/* Año */}
+
                     <div>
                         <label
                             htmlFor="anio_fundacion"
@@ -400,11 +488,14 @@ export const AssociationAdminForm: React.FC = () => {
                                 )
                             }
                             placeholder="Ej. 2010"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.anio_fundacion
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.anio_fundacion)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.anio_fundacion
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.anio_fundacion
+                            )}
                             aria-describedby={
                                 errors.anio_fundacion
                                     ? "anio-fundacion-error"
@@ -426,8 +517,9 @@ export const AssociationAdminForm: React.FC = () => {
             </section>
 
             {/* =====================================================
-          CERTIFICACIÓN SANITARIA
-      ====================================================== */}
+                CERTIFICACIÓN SANITARIA
+            ====================================================== */}
+
             <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
                 <div className="mb-6">
                     <span className="font-label text-xs font-semibold uppercase tracking-widest text-primary">
@@ -444,7 +536,9 @@ export const AssociationAdminForm: React.FC = () => {
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-3">
-                    {/* Registro ARCSA */}
+
+                    {/* Registro */}
+
                     <div>
                         <label
                             htmlFor="registro_arcsa"
@@ -469,7 +563,8 @@ export const AssociationAdminForm: React.FC = () => {
                         />
                     </div>
 
-                    {/* Fecha de emisión */}
+                    {/* Fecha */}
+
                     <div>
                         <label
                             htmlFor="fecha_emision"
@@ -494,6 +589,7 @@ export const AssociationAdminForm: React.FC = () => {
                     </div>
 
                     {/* Estado */}
+
                     <div>
                         <label
                             htmlFor="estado_vigencia"
@@ -514,18 +610,30 @@ export const AssociationAdminForm: React.FC = () => {
                             }
                             className="w-full rounded-xl border border-border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:border-primary focus:ring-2 focus:ring-tertiary/30"
                         >
-                            <option value="">Seleccionar estado</option>
-                            <option value="vigente">Vigente</option>
-                            <option value="por_vencer">Por vencer</option>
-                            <option value="vencido">Vencido</option>
+                            <option value="">
+                                Seleccionar estado
+                            </option>
+
+                            <option value="vigente">
+                                Vigente
+                            </option>
+
+                            <option value="por_vencer">
+                                Por vencer
+                            </option>
+
+                            <option value="vencido">
+                                Vencido
+                            </option>
                         </select>
                     </div>
                 </div>
             </section>
 
             {/* =====================================================
-          MULTIMEDIA
-      ====================================================== */}
+                MULTIMEDIA
+            ====================================================== */}
+
             <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
                 <div className="mb-6">
                     <span className="font-label text-xs font-semibold uppercase tracking-widest text-primary">
@@ -543,7 +651,9 @@ export const AssociationAdminForm: React.FC = () => {
                 </div>
 
                 <div className="space-y-5">
+
                     {/* Foto principal */}
+
                     <div>
                         <label
                             htmlFor="foto_principal"
@@ -564,11 +674,14 @@ export const AssociationAdminForm: React.FC = () => {
                                 )
                             }
                             placeholder="https://ejemplo.com/foto.jpg"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.foto_principal
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.foto_principal)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.foto_principal
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.foto_principal
+                            )}
                             aria-describedby={
                                 errors.foto_principal
                                     ? "foto-principal-error"
@@ -588,6 +701,7 @@ export const AssociationAdminForm: React.FC = () => {
                     </div>
 
                     {/* Galería */}
+
                     <div>
                         <div className="mb-2 flex items-center justify-between">
                             <label className="block text-sm font-semibold text-neutral">
@@ -604,65 +718,77 @@ export const AssociationAdminForm: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                            {formData.galeria.map((url, index) => (
-                                <div key={index}>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="url"
-                                            value={url}
-                                            onChange={(event) =>
-                                                handleGalleryChange(
-                                                    index,
-                                                    event.target.value
-                                                )
-                                            }
-                                            placeholder="https://ejemplo.com/imagen.jpg"
-                                            aria-label={`URL de imagen ${index + 1
-                                                }`}
-                                            className={`min-w-0 flex-1 rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.galeria
-                                                ? "border-red-400 focus:border-red-500"
-                                                : "border-border focus:border-primary"
-                                                }`}
-                                            aria-invalid={Boolean(
-                                                errors.galeria
-                                            )}
-                                            aria-describedby={
-                                                errors.galeria
-                                                    ? "galeria-error"
-                                                    : undefined
-                                            }
-                                        />
-
-                                        {formData.galeria.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    removeGalleryField(index)
+                            {formData.galeria.map(
+                                (url, index) => (
+                                    <div key={index}>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="url"
+                                                value={url}
+                                                onChange={(event) =>
+                                                    handleGalleryChange(
+                                                        index,
+                                                        event.target.value
+                                                    )
                                                 }
-                                                className="rounded-xl border border-border px-4 text-sm font-semibold text-neutral-muted transition hover:border-red-300 hover:text-red-600"
-                                                aria-label={`Eliminar imagen ${index + 1
-                                                    }`}
-                                            >
-                                                Eliminar
-                                            </button>
-                                        )}
-                                    </div>
+                                                placeholder="https://ejemplo.com/imagen.jpg"
+                                                aria-label={`URL de imagen ${
+                                                    index + 1
+                                                }`}
+                                                className={`min-w-0 flex-1 rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                                    errors.galeria
+                                                        ? "border-red-400 focus:border-red-500"
+                                                        : "border-border focus:border-primary"
+                                                }`}
+                                                aria-invalid={Boolean(
+                                                    errors.galeria
+                                                )}
+                                                aria-describedby={
+                                                    errors.galeria
+                                                        ? "galeria-error"
+                                                        : undefined
+                                                }
+                                            />
 
-                                    {errors.galeria && index === 0 && (
-                                        <p
-                                            id="galeria-error"
-                                            role="alert"
-                                            className="mt-2 text-sm text-red-600"
-                                        >
-                                            {errors.galeria}
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
+                                            {formData.galeria.length >
+                                                1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        removeGalleryField(
+                                                            index
+                                                        )
+                                                    }
+                                                    className="rounded-xl border border-border px-4 text-sm font-semibold text-neutral-muted transition hover:border-red-300 hover:text-red-600"
+                                                    aria-label={`Eliminar imagen ${
+                                                        index + 1
+                                                    }`}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {errors.galeria &&
+                                            index === 0 && (
+                                                <p
+                                                    id="galeria-error"
+                                                    role="alert"
+                                                    className="mt-2 text-sm text-red-600"
+                                                >
+                                                    {
+                                                        errors.galeria
+                                                    }
+                                                </p>
+                                            )}
+                                    </div>
+                                )
+                            )}
                         </div>
                     </div>
 
                     {/* Video */}
+
                     <div>
                         <label
                             htmlFor="video_url"
@@ -677,16 +803,24 @@ export const AssociationAdminForm: React.FC = () => {
                             type="url"
                             value={formData.video_url}
                             onChange={(event) =>
-                                handleChange("video_url", event.target.value)
+                                handleChange(
+                                    "video_url",
+                                    event.target.value
+                                )
                             }
                             placeholder="https://www.youtube.com/..."
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.video_url
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.video_url)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.video_url
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.video_url
+                            )}
                             aria-describedby={
-                                errors.video_url ? "video-url-error" : undefined
+                                errors.video_url
+                                    ? "video-url-error"
+                                    : undefined
                             }
                         />
 
@@ -704,8 +838,9 @@ export const AssociationAdminForm: React.FC = () => {
             </section>
 
             {/* =====================================================
-          UBICACIÓN
-      ====================================================== */}
+                UBICACIÓN
+            ====================================================== */}
+
             <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
                 <div className="mb-6">
                     <span className="font-label text-xs font-semibold uppercase tracking-widest text-primary">
@@ -722,7 +857,9 @@ export const AssociationAdminForm: React.FC = () => {
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
+
                     {/* Latitud */}
+
                     <div>
                         <label
                             htmlFor="lat"
@@ -738,16 +875,24 @@ export const AssociationAdminForm: React.FC = () => {
                             step="any"
                             value={formData.lat}
                             onChange={(event) =>
-                                handleChange("lat", event.target.value)
+                                handleChange(
+                                    "lat",
+                                    event.target.value
+                                )
                             }
                             placeholder="Ej. -1.2985"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.lat
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.lat)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.lat
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.lat
+                            )}
                             aria-describedby={
-                                errors.lat ? "lat-error" : undefined
+                                errors.lat
+                                    ? "lat-error"
+                                    : undefined
                             }
                         />
 
@@ -763,6 +908,7 @@ export const AssociationAdminForm: React.FC = () => {
                     </div>
 
                     {/* Longitud */}
+
                     <div>
                         <label
                             htmlFor="lng"
@@ -778,16 +924,24 @@ export const AssociationAdminForm: React.FC = () => {
                             step="any"
                             value={formData.lng}
                             onChange={(event) =>
-                                handleChange("lng", event.target.value)
+                                handleChange(
+                                    "lng",
+                                    event.target.value
+                                )
                             }
                             placeholder="Ej. -78.7123"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.lng
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.lng)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.lng
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.lng
+                            )}
                             aria-describedby={
-                                errors.lng ? "lng-error" : undefined
+                                errors.lng
+                                    ? "lng-error"
+                                    : undefined
                             }
                         />
 
@@ -803,6 +957,7 @@ export const AssociationAdminForm: React.FC = () => {
                     </div>
 
                     {/* Referencia vial */}
+
                     <div className="md:col-span-2">
                         <label
                             htmlFor="referencia_vial"
@@ -823,11 +978,14 @@ export const AssociationAdminForm: React.FC = () => {
                                 )
                             }
                             placeholder="Ej. Vía Ambato--Guaranda"
-                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.referencia_vial
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-border focus:border-primary"
-                                }`}
-                            aria-invalid={Boolean(errors.referencia_vial)}
+                            className={`w-full rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                                errors.referencia_vial
+                                    ? "border-red-400 focus:border-red-500"
+                                    : "border-border focus:border-primary"
+                            }`}
+                            aria-invalid={Boolean(
+                                errors.referencia_vial
+                            )}
                             aria-describedby={
                                 errors.referencia_vial
                                     ? "referencia-vial-error"
@@ -849,8 +1007,9 @@ export const AssociationAdminForm: React.FC = () => {
             </section>
 
             {/* =====================================================
-          HISTORIA
-      ====================================================== */}
+                HISTORIA
+            ====================================================== */}
+
             <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
                 <div className="mb-6">
                     <span className="font-label text-xs font-semibold uppercase tracking-widest text-primary">
@@ -882,16 +1041,24 @@ export const AssociationAdminForm: React.FC = () => {
                         maxLength={1000}
                         value={formData.historia}
                         onChange={(event) =>
-                            handleChange("historia", event.target.value)
+                            handleChange(
+                                "historia",
+                                event.target.value
+                            )
                         }
                         placeholder="Escribe aquí la historia y descripción de la asociación..."
-                        className={`w-full resize-y rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${errors.historia
-                            ? "border-red-400 focus:border-red-500"
-                            : "border-border focus:border-primary"
-                            }`}
-                        aria-invalid={Boolean(errors.historia)}
+                        className={`w-full resize-y rounded-xl border bg-[#F8F4E9]/40 px-4 py-3 text-sm text-neutral outline-none transition focus:ring-2 focus:ring-tertiary/30 ${
+                            errors.historia
+                                ? "border-red-400 focus:border-red-500"
+                                : "border-border focus:border-primary"
+                        }`}
+                        aria-invalid={Boolean(
+                            errors.historia
+                        )}
                         aria-describedby={
-                            errors.historia ? "historia-error" : undefined
+                            errors.historia
+                                ? "historia-error"
+                                : undefined
                         }
                     />
 
@@ -916,8 +1083,9 @@ export const AssociationAdminForm: React.FC = () => {
             </section>
 
             {/* =====================================================
-          ESTADOS
-      ====================================================== */}
+                ESTADOS
+            ====================================================== */}
+
             {status === "success" && (
                 <div
                     role="status"
@@ -970,8 +1138,9 @@ export const AssociationAdminForm: React.FC = () => {
             )}
 
             {/* =====================================================
-          ACCIONES
-      ====================================================== */}
+                ACCIONES
+            ====================================================== */}
+
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                     type="button"
@@ -999,7 +1168,9 @@ export const AssociationAdminForm: React.FC = () => {
                     )}
 
                     <span>
-                        {isSubmitting ? "Guardando..." : "Guardar asociación"}
+                        {isSubmitting
+                            ? "Guardando..."
+                            : "Guardar asociación"}
                     </span>
                 </button>
             </div>
