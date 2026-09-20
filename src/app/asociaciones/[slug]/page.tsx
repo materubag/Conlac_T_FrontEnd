@@ -1,13 +1,14 @@
 import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAssociationById, getAssociations } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { MapPinIcon } from "@/components/ui/Icons";
+import { AssociationMapPreview } from "@/components/associations/AssociationMapPreview";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -40,15 +41,11 @@ export default async function AssociationDetailPage({ params }: Props) {
   return (
     <div className="py-12 sm:py-16 bg-background">
       <Container>
-        <nav aria-label="Breadcrumb" className="mb-8 text-xs font-label text-neutral-muted">
-          <ol className="flex items-center gap-2">
-            <li><Link href="/" className="hover:text-primary">Inicio</Link></li>
-            <li>/</li>
-            <li><Link href="/asociaciones" className="hover:text-primary">Asociaciones</Link></li>
-            <li>/</li>
-            <li className="font-semibold text-primary">{assoc.nombre}</li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={[
+          { label: "Inicio", href: "/" },
+          { label: "Asociaciones", href: "/asociaciones" },
+          { label: assoc.nombre },
+        ]} />
 
         <div className="bg-surface rounded-2xl p-6 sm:p-10 border border-border space-y-8">
           <div className="relative aspect-[21/9] w-full overflow-hidden rounded-xl bg-neutral-light/50">
@@ -84,6 +81,8 @@ export default async function AssociationDetailPage({ params }: Props) {
               <span>Parroquia Pilahuín, Cantón Ambato, Provincia de Tungurahua</span>
             </div>
           </div>
+
+          <AssociationMapPreview association={assoc} />
 
           <div className="pt-6 border-t border-border flex items-center gap-4">
             <Button href="/tienda" variant="primary">

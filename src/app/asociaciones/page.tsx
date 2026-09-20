@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
 } from "@/components/ui/Icons";
 import type { Asociacion } from "@/types";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,10 @@ export default async function AsociacionesPage() {
   return (
     <div className="py-12 sm:py-16 bg-background">
       <Container>
+        <Breadcrumbs items={[
+          { label: "Inicio", href: "/" },
+          { label: "Asociaciones" },
+        ]} />
         <div className="max-w-2xl mb-12">
           <span className="text-xs font-label uppercase tracking-widest text-tertiary font-semibold">
             Nuestra Gente
