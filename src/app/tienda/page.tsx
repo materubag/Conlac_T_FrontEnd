@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getProducts } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "@/components/home/ProductCard";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Tienda de Quesos Artesanales",
@@ -15,6 +16,10 @@ export default async function TiendaPage() {
   return (
     <div className="py-12 sm:py-16 bg-background">
       <Container>
+        <Breadcrumbs items={[
+          { label: "Inicio", href: "/" },
+          { label: "Tienda" },
+        ]} />
         {/* Cabecera de la sección */}
         <div className="max-w-2xl mb-12">
           <span className="text-xs font-label uppercase tracking-widest text-tertiary font-semibold">

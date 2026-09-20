@@ -3,12 +3,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductById, getProducts } from "@/lib/data";
+import { getAssociationById, getProductById, getProducts } from "@/lib/data";
 import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { WhatsAppIcon, ShieldCheckIcon } from "@/components/ui/Icons";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -38,6 +39,9 @@ export default async function ProductDetailPage({ params }: Props) {
     notFound();
   }
 
+  const association = product.asociacion_id
+    ? await getAssociationById(product.asociacion_id)
+    : null;
   const imageSrc = product.fotos[0] || "/placeholders/product-queso-fresco.svg";
   const whatsappUrl = buildWhatsAppUrl({
     productName: `${product.nombre} (${product.asociacion || "CONLAC-T"})`,
@@ -47,19 +51,11 @@ export default async function ProductDetailPage({ params }: Props) {
     <div className="py-12 sm:py-16 bg-background">
       <Container>
         {/* Migas de pan / Navegación */}
-        <nav aria-label="Breadcrumb" className="mb-8 text-xs font-label text-neutral-muted">
-          <ol className="flex items-center gap-2">
-            <li>
-              <Link href="/" className="hover:text-primary">Inicio</Link>
-            </li>
-            <li>/</li>
-            <li>
-              <Link href="/tienda" className="hover:text-primary">Tienda</Link>
-            </li>
-            <li>/</li>
-            <li className="font-semibold text-primary">{product.nombre}</li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={[
+          { label: "Inicio", href: "/" },
+          { label: "Tienda", href: "/tienda" },
+          { label: product.nombre },
+        ]} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12 bg-surface rounded-2xl p-6 sm:p-10 border border-border">
           {/* Imagen del producto */}
@@ -91,6 +87,17 @@ export default async function ProductDetailPage({ params }: Props) {
               <h1 className="font-headline text-3xl sm:text-4xl font-bold text-primary">
                 {product.nombre}
               </h1>
+
+              {association && (
+                <p className="text-sm text-primary">
+                  <Link
+                    href={`/asociaciones/${encodeURIComponent(association.slug || association.id)}`}
+                    className="rounded hover:underline focus-visible:ring-2 focus-visible:ring-tertiary"
+                  >
+                    Conoce a {association.nombre}
+                  </Link>
+                </p>
+              )}
 
               {product.tipo_queso && (
                 <p className="text-base text-neutral-muted">
