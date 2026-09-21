@@ -1,14 +1,10 @@
 import React from "react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getAssociationById, getAssociations } from "@/lib/data";
+import { getAssociationById, getAssociations, getProductsByAssociationId } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { MapPinIcon } from "@/components/ui/Icons";
-import { AssociationMapPreview } from "@/components/associations/AssociationMapPreview";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { AssociationProfile } from "@/components/associations/AssociationProfile";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -38,6 +34,8 @@ export default async function AssociationDetailPage({ params }: Props) {
     notFound();
   }
 
+  const products = getProductsByAssociationId(assoc.id);
+
   return (
     <div className="py-12 sm:py-16 bg-background">
       <Container>
@@ -47,6 +45,7 @@ export default async function AssociationDetailPage({ params }: Props) {
           { label: assoc.nombre },
         ]} />
 
+<<<<<<< HEAD
         <div className="bg-surface rounded-2xl p-6 sm:p-10 border border-border space-y-8">
           <div className="relative aspect-[21/9] w-full overflow-hidden rounded-xl bg-neutral-light/50">
             <Image
@@ -93,6 +92,9 @@ export default async function AssociationDetailPage({ params }: Props) {
             </Button>
           </div>
         </div>
+=======
+        <AssociationProfile association={assoc} products={products} />
+>>>>>>> 4a07f4e75b104efc79c27861a55d84db92e6bd4b
       </Container>
     </div>
   );

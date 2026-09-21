@@ -1,15 +1,9 @@
 import React from "react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Container } from "@/components/ui/Container";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import {
-  ArrowRightIcon,
-  ShieldCheckIcon,
-} from "@/components/ui/Icons";
-import type { Asociacion } from "@/types";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { AssociationCard } from "@/components/associations/AssociationCard";
+import type { Asociacion } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -60,64 +54,12 @@ export default async function AsociacionesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {associations.map((assoc) => (
-            <article
+          {associations.map((assoc, index) => (
+            <AssociationCard
               key={assoc.id}
-              className="flex flex-col justify-between overflow-hidden rounded-2xl bg-surface border border-border p-6 sm:p-8 shadow-sm hover:border-tertiary/70 transition-all"
-            >
-              <div className="space-y-4">
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-neutral-light/50">
-                  <Image
-                    src={
-                      assoc.fotos[0] ||
-                      "/placeholders/association-placeholder.svg"
-                    }
-                    alt={`Planta y comunidad de ${assoc.nombre}`}
-                    fill
-                    className="object-cover object-center"
-                  />
-
-                  {assoc.sello_sanitario && (
-                    <div className="absolute top-3 right-3">
-                      <Badge variant="primary">
-                        {assoc.sello_sanitario}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <h2 className="font-headline text-2xl font-bold text-primary">
-                  {assoc.nombre}
-                </h2>
-
-                {assoc.historia && (
-                  <p className="text-sm text-neutral-muted leading-relaxed">
-                    {assoc.historia}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-                  <ShieldCheckIcon className="w-4 h-4 text-tertiary" />
-
-                  <span>
-                    Socio Fundador CONLAC-T
-                  </span>
-                </div>
-
-                <Button
-                  href={`/asociaciones/${assoc.id}`}
-                  variant="outlined"
-                  size="sm"
-                  className="group/button"
-                >
-                  <span className="group-hover/button:text-inverted">Ver perfil</span>
-
-                  <ArrowRightIcon className="w-3.5 h-3.5 group-hover/button:text-inverted" />
-                </Button>
-              </div>
-            </article>
+              association={assoc}
+              priorityImage={index < 2}
+            />
           ))}
         </div>
       </Container>
