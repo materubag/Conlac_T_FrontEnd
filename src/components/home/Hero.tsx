@@ -70,8 +70,8 @@ export const Hero: React.FC = () => {
               size="lg"
               className="w-full sm:w-auto shadow-md"
             >
-              <span>Ver productos</span>
-              <ArrowRightIcon className="w-4 h-4" />
+              <span className="text-white">Ver productos</span>
+              <ArrowRightIcon className="w-4 h-4 text-white" />
             </Button>
 
             <Button
@@ -79,9 +79,9 @@ export const Hero: React.FC = () => {
               variant="outlined"
               size="lg"
               isExternal
-              className="w-full sm:w-auto bg-surface/60 backdrop-blur-xs"
+              className="group w-full sm:w-auto bg-surface/60 backdrop-blur-xs"
             >
-              <WhatsAppIcon className="w-5 h-5 text-primary" />
+              <WhatsAppIcon className="w-5 h-5 text-primary group-hover:text-white" />
               <span>Comprar por WhatsApp</span>
             </Button>
           </div>

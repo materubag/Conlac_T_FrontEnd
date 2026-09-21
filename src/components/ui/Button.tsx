@@ -26,11 +26,11 @@ export type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-inverted hover:bg-primary-hover active:bg-primary-light shadow-sm focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2",
+    "bg-primary text-inverted hover:bg-primary-hover hover:!text-white active:bg-primary-light shadow-sm focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2",
   secondary:
     "bg-neutral text-inverted hover:bg-neutral-muted active:opacity-90 shadow-sm focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2",
   outlined:
-    "bg-transparent text-primary border-2 border-primary hover:bg-primary hover:text-inverted active:opacity-90 focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2",
+    "bg-transparent text-primary border-2 border-primary hover:bg-primary hover:!text-white active:opacity-90 focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2",
   inverted:
     "bg-inverted text-primary hover:bg-neutral-light active:opacity-90 shadow-sm focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2",
   ghost:

@@ -133,16 +133,17 @@ export default async function ProductDetailPage({ params }: Props) {
                 isExternal
                 fullWidth
               >
-                <WhatsAppIcon className="w-5 h-5" />
-                <span>Pedir por WhatsApp</span>
+                <WhatsAppIcon className="w-5 h-5 text-white" />
+                <span className="text-white">Pedir por WhatsApp</span>
               </Button>
 
               <Button
                 href="/tienda"
                 variant="outlined"
                 size="lg"
+                className="group"
               >
-                <span>Volver a la tienda</span>
+                <span className="group-hover:text-inverted">Volver a la tienda</span>
               </Button>
             </div>
           </div>

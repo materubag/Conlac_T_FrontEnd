@@ -86,10 +86,10 @@ export default async function AssociationDetailPage({ params }: Props) {
 
           <div className="pt-6 border-t border-border flex items-center gap-4">
             <Button href="/tienda" variant="primary">
-              Ver quesos de esta asociación
+              <span className="text-inverted">Ver quesos de esta asociación</span>
             </Button>
-            <Button href="/asociaciones" variant="outlined">
-              Volver a asociaciones
+            <Button href="/asociaciones" variant="outlined" className="group/button">
+              <span className="group-hover/button:text-inverted">Volver a asociaciones</span>
             </Button>
           </div>
         </div>

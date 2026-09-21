@@ -122,18 +122,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               variant="outlined"
               size="sm"
               isExternal
+              className="group/button"
               aria-label={`Consultar disponibilidad de ${product.nombre} por WhatsApp`}
             >
-              Consultar
+              <span className="text-primary group-hover/button:text-inverted">Consultar</span>
             </Button>
 
             <Button
               href={`/tienda/${product.id}`}
               variant="primary"
               size="sm"
+              className="group"
               aria-label={`Ver detalles de ${product.nombre}`}
             >
-              Ver detalle
+              <span className="text-inverted">Ver detalle</span>
             </Button>
           </div>
         </div>

@@ -110,10 +110,11 @@ export default async function AsociacionesPage() {
                   href={`/asociaciones/${assoc.id}`}
                   variant="outlined"
                   size="sm"
+                  className="group/button"
                 >
-                  <span>Ver perfil</span>
+                  <span className="group-hover/button:text-inverted">Ver perfil</span>
 
-                  <ArrowRightIcon className="w-3.5 h-3.5" />
+                  <ArrowRightIcon className="w-3.5 h-3.5 group-hover/button:text-inverted" />
                 </Button>
               </div>
             </article>
