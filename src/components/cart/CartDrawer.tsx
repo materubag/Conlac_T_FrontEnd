@@ -3,12 +3,14 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/utils";
 import { CloseIcon, CartIcon } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 
 export const CartDrawer: React.FC = () => {
+  const router = useRouter();
   const {
     items,
     totalItems,
@@ -21,6 +23,12 @@ export const CartDrawer: React.FC = () => {
     notification,
     clearNotification,
   } = useCart();
+
+  const goToCheckout = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    router.push("/checkout");
+    closeCart();
+  };
 
   // Cerrar con Escape
   useEffect(() => {
@@ -269,7 +277,7 @@ export const CartDrawer: React.FC = () => {
                   variant="primary"
                   size="md"
                   fullWidth
-                  onClick={closeCart}
+                  onClick={goToCheckout}
                 >
                   Continuar al checkout
                 </Button>

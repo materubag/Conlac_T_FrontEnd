@@ -84,7 +84,7 @@ export default function CheckoutPage() {
     try {
       // Mapear items con variante_id obligatoria
       const orderItems = items.map((item) => ({
-        producto_id: item.id,
+        producto_id: item.producto_id || item.id,
         variante_id: item.variante_id || "ba000000-0000-0000-0000-000000000001",
         cantidad: item.cantidad,
         precio_unitario: item.precio,

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { siteConfig } from "@/lib/config";
 import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
@@ -57,9 +56,11 @@ function SeguimientoContent() {
   };
 
   useEffect(() => {
-    if (initialPedido) {
-      fetchOrder(initialPedido);
-    }
+    if (!initialPedido) return;
+    const timeoutId = window.setTimeout(() => {
+      void fetchOrder(initialPedido);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [initialPedido]);
 
   const handleSubmit = (e: React.FormEvent) => {

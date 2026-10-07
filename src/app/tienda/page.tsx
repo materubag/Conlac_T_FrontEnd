@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { getAssociationById } from "@/lib/data";
+import { getAssociationById, normalizeBackendProduct } from "@/lib/data";
 import { siteConfig } from "@/lib/config";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "@/components/home/ProductCard";
@@ -49,12 +49,15 @@ async function fetchProductsFromBackend(associationFilter?: string): Promise<{
 
     const data: Producto[] = await res.json();
     return {
-      products: data.map((item) => ({
-        ...item,
-        fotos: Array.isArray(item.fotos) && item.fotos.length > 0
-          ? item.fotos
-          : ["/placeholders/product-queso-fresco.svg"],
-      })),
+      products: data.map((item) => {
+        const normalized = normalizeBackendProduct(item);
+        return {
+          ...normalized,
+          fotos: normalized.fotos.length > 0
+            ? normalized.fotos
+            : ["/placeholders/product-queso-fresco.svg"],
+        };
+      }),
       error: null,
       apiUrl,
     };
