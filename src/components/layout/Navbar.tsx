@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { CartIcon, MenuIcon, CloseIcon } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 /**
  * ============================================================
@@ -26,6 +27,7 @@ import { useCart } from "@/context/CartContext";
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { totalItems, toggleCart } = useCart();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -163,18 +165,49 @@ export const Navbar: React.FC = () => {
               Ver tienda
             </Button>
           </div>
-          {/* Acciones de administración y tienda */}
+          {/* Acciones de usuario según autenticación y rol */}
           <div className="hidden sm:flex items-center gap-2">
-            <Button
-              href="/administracion/asociaciones"
-              variant="outlined"
-              size="sm"
-              className="shadow-sm"
-            >
-              Administración
-            </Button>
+            {!isAuthenticated ? (
+              <Button
+                href="/login"
+                variant="outlined"
+                size="sm"
+                className="shadow-sm"
+              >
+                Ingresar
+              </Button>
+            ) : (
+              <>
+                <Button
+                  href="/mi-cuenta"
+                  variant="outlined"
+                  size="sm"
+                  className="shadow-sm"
+                >
+                  Mi cuenta
+                </Button>
 
-           
+                {isAdmin && (
+                  <Button
+                    href="/administracion"
+                    variant="outlined"
+                    size="sm"
+                    className="shadow-sm border-amber-600 text-amber-900 bg-amber-50/70"
+                  >
+                    Administración
+                  </Button>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="text-xs text-neutral-muted hover:text-red-700"
+                >
+                  Salir
+                </Button>
+              </>
+            )}
           </div>
           {/* Botón Toggle Menú Móvil */}
           <button
@@ -241,21 +274,82 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className="pt-6 mt-6 border-t border-border/80 flex flex-col gap-3">
+            {!isAuthenticated ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  href="/login"
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Ingresar
+                </Button>
+                <Button
+                  href="/registro"
+                  variant="outlined"
+                  size="md"
+                  fullWidth
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Crear Cuenta
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button
+                  href="/mi-cuenta"
+                  variant="outlined"
+                  size="md"
+                  fullWidth
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Mi Cuenta
+                </Button>
+                <Button
+                  href="/mis-pedidos"
+                  variant="outlined"
+                  size="md"
+                  fullWidth
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Mis Pedidos
+                </Button>
+                {isAdmin && (
+                  <Button
+                    href="/administracion"
+                    variant="primary"
+                    size="md"
+                    fullWidth
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Panel de Administración
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  fullWidth
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-red-700"
+                >
+                  Cerrar Sesión
+                </Button>
+              </div>
+            )}
+
             <Button
               href="/tienda"
-              variant="primary"
-              size="lg"
+              variant="outlined"
+              size="sm"
               fullWidth
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Explorar Tienda Completa
+              Explorar Catálogo
             </Button>
-
-            <div className="text-center">
-              <p className="text-xs text-neutral-muted">
-                {siteConfig.location.address}
-              </p>
-            </div>
           </div>
         </div>
       )}

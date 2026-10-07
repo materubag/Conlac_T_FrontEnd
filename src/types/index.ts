@@ -251,3 +251,22 @@ export interface ThemeConfig {
   bodyFont: string;
   labelFont: string;
 }
+
+// ============================================================
+// 3. TIPOS DE AUTENTICACIÓN Y PERFIL DE USUARIO
+// ============================================================
+
+export type UserRole = "admin" | "customer";
+
+export interface UserProfile {
+  id: string; // UUID de auth.users / profiles
+  full_name: string;
+  role: UserRole;
+  is_active: boolean;
+  email?: string;
+  phone?: string;
+  tax_id?: string;
+  address?: string;
+  created_at?: string;
+  updated_at?: string;
+}

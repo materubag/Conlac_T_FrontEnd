@@ -2,6 +2,8 @@
 
 import React, { FormEvent, useState } from "react";
 import type { Asociacion } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { siteConfig } from "@/lib/config";
 
 interface AssociationFormData {
   nombre: string;
@@ -55,6 +57,7 @@ function isValidUrl(value: string): boolean {
 }
 
 export function AssociationAdminForm() {
+  const { getAccessToken } = useAuth();
   const [formData, setFormData] =
     useState<AssociationFormData>(initialFormData);
 
@@ -345,24 +348,57 @@ export function AssociationAdminForm() {
         lng: Number(formData.lng),
       };
 
-      const response = await fetch(
-        "/api/asociaciones",
-        {
+      let saved = false;
+      const token = await getAccessToken();
+
+      if (token) {
+        try {
+          const backendRes = await fetch(`${siteConfig.backendUrl}/admin/associations`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              nombre: asociacion.nombre,
+              slug: formData.nombre
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, ""),
+              descripcion_corta: formData.parroquia ? `Filial ubicada en ${formData.parroquia}` : undefined,
+              historia: formData.historia.trim() || undefined,
+              ubicacion: formData.parroquia.trim() || undefined,
+              ubicacion_referencia: formData.referencia_vial.trim() || undefined,
+              fotos: fotos.length > 0 ? fotos : undefined,
+              lat: formData.lat ? Number(formData.lat) : undefined,
+              lng: formData.lng ? Number(formData.lng) : undefined,
+              registro_arcsa: formData.registro_arcsa.trim() || undefined,
+              video_url: formData.video_url.trim() || undefined,
+              is_published: true,
+            }),
+          });
+          if (backendRes.ok) {
+            saved = true;
+          }
+        } catch {
+          // Si el endpoint de backend no responde, continuar al mock local
+        }
+      }
+
+      if (!saved) {
+        const response = await fetch("/api/asociaciones", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(asociacion),
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo guardar la asociación.");
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          "No se pudo guardar la asociación."
-        );
       }
-
-      await response.json();
 
       setStatus("success");
       setShowValidationMessage(false);

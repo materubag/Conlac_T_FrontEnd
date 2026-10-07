@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { siteConfig } from "@/lib/config";
 import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
@@ -36,6 +37,7 @@ const SHIPPING_ZONES = [
 
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, clearCart } = useCart();
+  const { user, profile, isAuthenticated, getAccessToken } = useAuth();
 
   // Estados del formulario
   const [nombre, setNombre] = useState("");
@@ -47,6 +49,18 @@ export default function CheckoutPage() {
   const [direccionEntrega, setDireccionEntrega] = useState("");
   const [metodoPago, setMetodoPago] = useState<"transferencia" | "payphone">("transferencia");
   const [notasCliente, setNotasCliente] = useState("");
+
+  // Precargar datos del usuario si está autenticado
+  useEffect(() => {
+    if (user) {
+      if (!nombre) {
+        setNombre(profile?.full_name || user.user_metadata?.full_name || "");
+      }
+      if (!email && user.email) {
+        setEmail(user.email);
+      }
+    }
+  }, [user, profile, nombre, email]);
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,12 +120,20 @@ export default function CheckoutPage() {
         items: orderItems,
       };
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      // Adjuntar token JWT si el usuario tiene sesión activa
+      const token = await getAccessToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${siteConfig.backendUrl}/orders`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -257,6 +279,17 @@ export default function CheckoutPage() {
                 <ArrowRightIcon className="w-4 h-4" />
               </Button>
 
+              {isAuthenticated && (
+                <Button
+                  href="/mis-pedidos"
+                  variant="outlined"
+                  size="md"
+                  fullWidth
+                >
+                  <span>Ver en Mis Pedidos</span>
+                </Button>
+              )}
+
               <Button
                 href={whatsappOrderMsg}
                 variant="outlined"
@@ -343,6 +376,28 @@ export default function CheckoutPage() {
               <h2 className="font-headline text-xl font-bold text-primary border-b border-border pb-3">
                 1. Datos del Cliente
               </h2>
+
+              {/* Banner de estado de sesión (Invitado vs Autenticado) */}
+              {isAuthenticated ? (
+                <div className="rounded-xl bg-tertiary/10 border border-tertiary/30 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
+                  <div className="text-primary">
+                    <span className="font-bold">Sesión iniciada:</span> Realizando pedido como{" "}
+                    <span className="font-semibold text-tertiary">{profile?.full_name || user?.email}</span> ({user?.email}).
+                  </div>
+                  <Link href="/mis-pedidos" className="text-tertiary hover:underline font-bold self-start sm:self-auto shrink-0">
+                    Ver mis pedidos →
+                  </Link>
+                </div>
+              ) : (
+                <div className="rounded-xl bg-surface-alt/60 border border-border p-3.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
+                  <div className="text-neutral-muted">
+                    <span className="font-semibold text-primary">Modo Invitado:</span> Puedes comprar sin registrarte. Los detalles de tu pedido se enviarán a tu correo y podrás rastrearlo con tu código.
+                  </div>
+                  <Link href="/login?redirect=/checkout" className="text-tertiary hover:underline font-bold self-start sm:self-auto shrink-0">
+                    ¿Tienes cuenta? Ingresa aquí →
+                  </Link>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
