@@ -31,19 +31,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 1. Cargar desde localStorage tras montaje en cliente para evitar hydration mismatches
   useEffect(() => {
+    let storedItems: CartItem[] | null = null;
     try {
       const saved = localStorage.getItem(CART_STORAGE_KEY);
       if (saved) {
         const parsed: CartItem[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          setItems(parsed);
+          storedItems = parsed;
         }
       }
     } catch {
       // Ignorar error al parsear localStorage
-    } finally {
-      setIsInitialized(true);
     }
+
+    const frame = window.requestAnimationFrame(() => {
+      if (storedItems) setItems(storedItems);
+      setIsInitialized(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   // 2. Persistir en localStorage cuando los items cambian (solo después de haber inicializado)
@@ -87,6 +93,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (product: Producto | CartItem, quantity: number = 1): { success: boolean; message: string } => {
       const qty = Math.max(1, quantity);
       const stock = typeof product.stock === "number" ? product.stock : 99;
+      const productId = "producto_id" in product && product.producto_id
+        ? product.producto_id
+        : product.id;
+      const defaultVariantMap: Record<string, string> = {
+        "b0000000-0000-0000-0000-000000000001": "ba000000-0000-0000-0000-000000000001",
+        "queso-fresco-artesanal-el-lindero": "ba000000-0000-0000-0000-000000000001",
+        "prod-queso-fresco": "ba000000-0000-0000-0000-000000000001",
+        "b0000000-0000-0000-0000-000000000002": "ba000000-0000-0000-0000-000000000003",
+        "queso-de-hoja-tradicional-mulanleo": "ba000000-0000-0000-0000-000000000003",
+        "prod-queso-amasado": "ba000000-0000-0000-0000-000000000003",
+        "prod-quesillo": "ba000000-0000-0000-0000-000000000003",
+        "b0000000-0000-0000-0000-000000000003": "ba000000-0000-0000-0000-000000000004",
+        "queso-andino-con-oregano-silvestre": "ba000000-0000-0000-0000-000000000004",
+        "prod-queso-maduro-andino": "ba000000-0000-0000-0000-000000000004",
+      };
+      const variantId = ("variante_id" in product && product.variante_id)
+        ? product.variante_id
+        : ("presentaciones" in product && product.presentaciones?.[0]?.id)
+          || defaultVariantMap[productId]
+          || ("slug" in product && product.slug ? defaultVariantMap[product.slug] : undefined);
+      const cartLineId = variantId ? `${productId}::${variantId}` : productId;
 
       if (stock <= 0) {
         const msg = `Lo sentimos, "${product.nombre}" se encuentra temporalmente agotado.`;
@@ -98,7 +125,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let returnMsg = "";
 
       setItems((prevItems) => {
-        const existingIndex = prevItems.findIndex((item) => item.id === product.id);
+        const existingIndex = prevItems.findIndex((item) => item.id === cartLineId);
 
         if (existingIndex > -1) {
           const currentItem = prevItems[existingIndex];
@@ -127,29 +154,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return prevItems;
           }
 
-          // Resolver variante_id obligatoria para la orden en backend
-          const defaultVariantMap: Record<string, string> = {
-            "b0000000-0000-0000-0000-000000000001": "ba000000-0000-0000-0000-000000000001",
-            "queso-fresco-artesanal-el-lindero": "ba000000-0000-0000-0000-000000000001",
-            "prod-queso-fresco": "ba000000-0000-0000-0000-000000000001",
-            "b0000000-0000-0000-0000-000000000002": "ba000000-0000-0000-0000-000000000003",
-            "queso-de-hoja-tradicional-mulanleo": "ba000000-0000-0000-0000-000000000003",
-            "prod-queso-amasado": "ba000000-0000-0000-0000-000000000003",
-            "prod-quesillo": "ba000000-0000-0000-0000-000000000003",
-            "b0000000-0000-0000-0000-000000000003": "ba000000-0000-0000-0000-000000000004",
-            "queso-andino-con-oregano-silvestre": "ba000000-0000-0000-0000-000000000004",
-            "prod-queso-maduro-andino": "ba000000-0000-0000-0000-000000000004",
-          };
-
-          let variantId: string | undefined = undefined;
-          if ("variante_id" in product && product.variante_id) {
-            variantId = product.variante_id;
-          } else if ("presentaciones" in product && Array.isArray(product.presentaciones) && product.presentaciones.length > 0) {
-            variantId = product.presentaciones[0].id;
-          } else {
-            variantId = defaultVariantMap[product.id] || (product.slug ? defaultVariantMap[product.slug] : undefined);
-          }
-
           // Resolver imagen con fallback seguro
           let fotoUrl = "/placeholders/product-queso-fresco.svg";
           if ("imagen" in product && product.imagen) {
@@ -159,7 +163,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           const newItem: CartItem = {
-            id: product.id,
+            id: cartLineId,
+            producto_id: productId,
             variante_id: variantId,
             slug: product.slug,
             nombre: product.nombre,
@@ -181,6 +186,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     []
   );
+
+  const removeItem = useCallback((productId: string) => {
+    setItems((prevItems) => {
+      const removed = prevItems.find((i) => i.id === productId);
+      if (removed) {
+        setNotification({
+          message: `"${removed.nombre}" fue eliminado del carrito.`,
+          type: "warning",
+        });
+      }
+      return prevItems.filter((item) => item.id !== productId);
+    });
+  }, []);
 
   const updateQuantity = useCallback(
     (productId: string, quantity: number): { success: boolean; message?: string } => {
@@ -209,21 +227,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { success, message: returnMsg };
     },
-    []
+    [removeItem]
   );
-
-  const removeItem = useCallback((productId: string) => {
-    setItems((prevItems) => {
-      const removed = prevItems.find((i) => i.id === productId);
-      if (removed) {
-        setNotification({
-          message: `"${removed.nombre}" fue eliminado del carrito.`,
-          type: "warning",
-        });
-      }
-      return prevItems.filter((item) => item.id !== productId);
-    });
-  }, []);
 
   const clearCart = useCallback(() => {
     setItems([]);

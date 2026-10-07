@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/config";
-import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
+import { normalizeBackendProduct } from "@/lib/data";
+import { buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { WhatsAppIcon, ShieldCheckIcon } from "@/components/ui/Icons";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { ProductPurchaseOptions } from "@/components/cart/ProductPurchaseOptions";
 import type { Producto, Asociacion } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ async function fetchProductFromBackend(slugOrId: string): Promise<{
     const data: Producto = await res.json();
     return {
       product: {
-        ...data,
+        ...normalizeBackendProduct(data),
         fotos: Array.isArray(data.fotos) && data.fotos.length > 0
           ? data.fotos
           : ["/placeholders/product-queso-fresco.svg"],
@@ -130,6 +131,7 @@ export default async function ProductDetailPage({ params }: Props) {
     : null;
 
   const imageSrc = product.fotos[0] || "/placeholders/product-queso-fresco.svg";
+  const isAvailable = product.disponible && product.stock > 0;
   const whatsappUrl = buildWhatsAppUrl({
     productName: `${product.nombre} (${product.asociacion || "CONLAC-T"})`,
   });
@@ -177,8 +179,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.peso && (
                   <Badge variant="outline">{product.peso}</Badge>
                 )}
-                <Badge variant={product.disponible ? "highlight" : "secondary"}>
-                  {product.disponible ? "Disponible" : "Agotado"}
+                <Badge variant={isAvailable ? "highlight" : "secondary"}>
+                  {isAvailable ? "Disponible" : "Agotado"}
                 </Badge>
               </div>
 
@@ -203,13 +205,6 @@ export default async function ProductDetailPage({ params }: Props) {
                 </p>
               )}
 
-              <div className="pt-2">
-                <span className="text-xs uppercase font-label tracking-wider text-neutral-muted">Precio unitario</span>
-                <p className="font-headline text-3xl font-bold text-primary">
-                  {formatPrice(product.precio)}
-                </p>
-              </div>
-
               <div className="pt-4 border-t border-border space-y-2 text-xs text-neutral-muted">
                 <div className="flex items-center gap-2">
                   <ShieldCheckIcon className="w-4 h-4 text-tertiary" />
@@ -217,19 +212,14 @@ export default async function ProductDetailPage({ params }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <span>Stock disponible para entrega inmediata: {product.stock} unidades</span>
+                  <span>Presentaciones y existencias disponibles para entrega</span>
                 </div>
               </div>
             </div>
 
             {/* Acciones y Carrito */}
             <div className="pt-6 border-t border-border space-y-4">
-              <AddToCartButton
-                product={product}
-                showQuantitySelector={true}
-                size="lg"
-                variant="primary"
-              />
+              <ProductPurchaseOptions product={product} />
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button

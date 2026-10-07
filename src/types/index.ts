@@ -33,6 +33,7 @@ export interface Producto {
   stock: number;
   disponible: boolean;
   presentaciones?: PresentacionProducto[];
+  variante_id?: string;
 }
 export interface Asociacion {
   id: string;
@@ -151,7 +152,8 @@ export interface ContactMessageResponse {
 }
 
 export interface CartItem {
-  id: string; // ID del producto
+  id: string; // Clave de carrito (producto + variante cuando corresponda)
+  producto_id?: string;
   variante_id?: string; // UUID de la variante/presentación requerida por el backend
   slug?: string;
   nombre: string;
