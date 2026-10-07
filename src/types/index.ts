@@ -34,33 +34,54 @@ export interface Producto {
   disponible: boolean;
   presentaciones?: PresentacionProducto[];
 }
-
 export interface Asociacion {
   id: string;
-  nombre: string;
   slug?: string;
+
+  nombre: string;
+  descripcion_corta?: string;
   historia?: string;
+
+  ubicacion?: string;
+  ubicacion_referencia?: string;
+
   fotos: string[];
+
   video_url?: string;
+
   sello_sanitario?: string;
+  registro_arcsa?: string;
+  sello_arcsa?: string;
+  registro_agrocalidad?: string;
+  registro_bpm?: string;
+
   lat?: number;
   lng?: number;
 
-  // Nuevos campos para Sprint 3 (preparados para integración con Backend):
-  sello_arcsa?: string;
-  registro_bpm?: string;
-  numero_familias?: number;
-  altitud_msnm?: number;
-  productos_ids?: string[];
-  horario_atencion?: string;
+  whatsapp?: string;
   contacto_asociacion?: string;
-  ubicacion_referencia?: string;
+
+  instagram_url?: string;
+  tiktok_url?: string;
+  facebook_url?: string;
+
   redes_sociales?: {
     facebook?: string;
     instagram?: string;
     tiktok?: string;
     whatsapp?: string;
   };
+
+  numero_familias?: number;
+  altitud_msnm?: number;
+  horario_atencion?: string;
+
+  productos_ids?: string[];
+
+  is_published?: boolean;
+
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Testimonial {
@@ -248,4 +269,83 @@ export interface ThemeConfig {
   headlineFont: string;
   bodyFont: string;
   labelFont: string;
+}
+
+
+export interface AssociationFormData {
+  slug: string;
+  name: string;
+  shortDescription: string;
+  history: string;
+
+  locationText: string;
+  latitude: string;
+  longitude: string;
+
+  arcsaRegistration: string;
+  agrocalidadRegistration: string;
+  sanitarySealText: string;
+
+  videoUrl: string;
+
+  instagramUrl: string;
+  tiktokUrl: string;
+  facebookUrl: string;
+  whatsapp: string;
+
+  isPublished: boolean;
+}
+export interface AssociationResponse {
+  id: string;
+
+  slug: string;
+  nombre: string;
+  descripcion_corta?: string;
+  historia?: string;
+
+  ubicacion?: string;
+
+  video_url?: string;
+
+  sello_sanitario?: string;
+  registro_arcsa?: string;
+  registro_agrocalidad?: string;
+
+  lat?: number;
+  lng?: number;
+
+  whatsapp?: string;
+
+  instagram_url?: string;
+  tiktok_url?: string;
+  facebook_url?: string;
+
+  is_published: boolean;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAssociationRequest {
+  slug: string;
+  name: string;
+  shortDescription?: string;
+  history?: string;
+
+  locationText?: string;
+  latitude?: number;
+  longitude?: number;
+
+  arcsaRegistration?: string;
+  agrocalidadRegistration?: string;
+  sanitarySealText?: string;
+
+  videoUrl?: string;
+
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  facebookUrl?: string;
+  whatsapp?: string;
+
+  isPublished: boolean;
 }
