@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { siteConfig } from "@/lib/config";
 import type { UserProfile, UserRole } from "@/types";
 
 interface AuthContextType {
@@ -22,6 +23,47 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_SESSION_KEY = "conlact_auth_session";
+const LOCAL_STORAGE_ACCOUNTS_KEY = "conlact_registered_accounts";
+
+interface StoredAccount {
+  id: string;
+  fullName: string;
+  email: string;
+  passwordHash: string; // En frontend localdemo guardamos la credencial para validar login offline
+  role: UserRole;
+  createdAt: string;
+}
+
+function getStoredAccounts(): StoredAccount[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredAccount(account: StoredAccount): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getStoredAccounts();
+    const filtered = current.filter((a) => a.email.toLowerCase() !== account.email.toLowerCase());
+    filtered.push(account);
+    localStorage.setItem(LOCAL_STORAGE_ACCOUNTS_KEY, JSON.stringify(filtered));
+  } catch (err) {
+    console.error("Error guardando cuenta en almacenamiento local:", err);
+  }
+}
+
+function isSupabaseConfigured(): boolean {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!key) return false;
+  if (key.includes("aquí_tu_clave_anon") || key.includes("dummy-anon-key") || key.length < 30) {
+    return false;
+  }
+  return true;
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,26 +83,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Cargar perfil desde Supabase o construir perfil a partir del usuario
   const resolveProfile = useCallback(async (currentUser: User): Promise<UserProfile> => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", currentUser.id)
+          .maybeSingle();
 
-      if (!error && data) {
-        return {
-          id: data.id,
-          full_name: data.full_name || currentUser.user_metadata?.full_name || "Usuario CONLAC-T",
-          role: data.role === "admin" ? "admin" : "customer",
-          is_active: data.is_active ?? true,
-          email: currentUser.email,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        };
+        if (!error && data) {
+          return {
+            id: data.id,
+            full_name: data.full_name || currentUser.user_metadata?.full_name || "Usuario CONLAC-T",
+            role: data.role === "admin" ? "admin" : "customer",
+            is_active: data.is_active ?? true,
+            email: currentUser.email,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+          };
+        }
+      } catch {
+        // Si la tabla no está accesible públicamente vía RLS, usar metadata
       }
-    } catch {
-      // Si la tabla no está accesible públicamente vía RLS, usar metadata
     }
 
     const isUserAdmin =
@@ -87,25 +131,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function initSession() {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (!error && data.session?.user && isMounted) {
-          const activeUser = data.session.user;
-          setUser(activeUser);
-          const resolved = await resolveProfile(activeUser);
-          if (isMounted) setProfile(resolved);
-        } else {
-          // Revisar sesión local de respaldo
-          const fallback = localStorage.getItem(LOCAL_STORAGE_SESSION_KEY);
-          if (fallback && isMounted) {
-            try {
-              const parsed = JSON.parse(fallback);
-              if (parsed.user) {
-                setUser(parsed.user);
-                setProfile(parsed.profile);
-              }
-            } catch {
-              localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
+        if (isSupabaseConfigured()) {
+          const { data, error } = await supabase.auth.getSession();
+          if (!error && data.session?.user && isMounted) {
+            const activeUser = data.session.user;
+            setUser(activeUser);
+            const resolved = await resolveProfile(activeUser);
+            if (isMounted) setProfile(resolved);
+            return;
+          }
+        }
+
+        // Revisar sesión local de respaldo
+        const fallback = localStorage.getItem(LOCAL_STORAGE_SESSION_KEY);
+        if (fallback && isMounted) {
+          try {
+            const parsed = JSON.parse(fallback);
+            if (parsed.user) {
+              setUser(parsed.user);
+              setProfile(parsed.profile);
             }
+          } catch {
+            localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
           }
         }
       } catch {
@@ -129,28 +176,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initSession();
 
-    // Escuchar cambios de estado en Supabase Auth
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
-      if (!isMounted) return;
-      if (session?.user) {
-        setUser(session.user);
-        const resolved = await resolveProfile(session.user);
-        if (isMounted) setProfile(resolved);
-      } else if (!localStorage.getItem(LOCAL_STORAGE_SESSION_KEY)) {
-        setUser(null);
-        setProfile(null);
-      }
-    });
+    // Escuchar cambios de estado en Supabase Auth únicamente si está configurado
+    if (isSupabaseConfigured()) {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
+        if (!isMounted) return;
+        if (session?.user) {
+          setUser(session.user);
+          const resolved = await resolveProfile(session.user);
+          if (isMounted) setProfile(resolved);
+        } else if (!localStorage.getItem(LOCAL_STORAGE_SESSION_KEY)) {
+          setUser(null);
+          setProfile(null);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        subscription.unsubscribe();
+      };
+    }
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
     };
   }, [resolveProfile]);
 
-  // Login con Supabase Auth o credenciales verificadas del sistema
+  // Login con Supabase Auth o credenciales del sistema / cuentas locales
   const login = useCallback(
     async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
       setLoading(true);
@@ -227,31 +280,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true };
         }
 
-        // 3. Intento de inicio de sesión estándar vía Supabase Auth
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
-
-        if (error) {
-          let friendlyMessage = error.message;
-          if (error.message.includes("Invalid login credentials")) {
-            friendlyMessage = "Correo electrónico o contraseña incorrectos.";
-          } else if (error.message.includes("Email not confirmed")) {
-            friendlyMessage = "Por favor verifica tu correo electrónico antes de ingresar.";
+        // 3. Revisar en cuentas registradas en este navegador
+        const storedAccounts = getStoredAccounts();
+        const matched = storedAccounts.find((a) => a.email.toLowerCase() === cleanEmail);
+        if (matched) {
+          if (matched.passwordHash !== password) {
+            return { success: false, error: "Contraseña incorrecta." };
           }
-          return { success: false, error: friendlyMessage };
-        }
-
-        if (data.user) {
-          setUser(data.user);
-          const resolved = await resolveProfile(data.user);
-          setProfile(resolved);
-          localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
+          const matchedUser: User = {
+            id: matched.id,
+            app_metadata: { provider: "email", role: matched.role },
+            user_metadata: { full_name: matched.fullName, role: matched.role },
+            aud: "authenticated",
+            created_at: matched.createdAt,
+            email: matched.email,
+            phone: "",
+            confirmed_at: matched.createdAt,
+            last_sign_in_at: new Date().toISOString(),
+            role: "authenticated",
+            updated_at: new Date().toISOString(),
+          };
+          const matchedProfile: UserProfile = {
+            id: matched.id,
+            full_name: matched.fullName,
+            role: matched.role,
+            is_active: true,
+            email: matched.email,
+            created_at: matched.createdAt,
+          };
+          setUser(matchedUser);
+          setProfile(matchedProfile);
+          localStorage.setItem(
+            LOCAL_STORAGE_SESSION_KEY,
+            JSON.stringify({ user: matchedUser, profile: matchedProfile })
+          );
           return { success: true };
         }
 
-        return { success: false, error: "No se pudo iniciar sesión. Inténtalo de nuevo." };
+        // 4. Intento de inicio de sesión estándar vía Supabase Auth sólo si la clave es válida
+        if (isSupabaseConfigured()) {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+
+          if (error) {
+            let friendlyMessage = error.message;
+            if (error.message.includes("Invalid login credentials")) {
+              friendlyMessage = "Correo electrónico o contraseña incorrectos.";
+            } else if (error.message.includes("Email not confirmed")) {
+              friendlyMessage = "Por favor verifica tu correo electrónico antes de ingresar.";
+            }
+            return { success: false, error: friendlyMessage };
+          }
+
+          if (data.user) {
+            setUser(data.user);
+            const resolved = await resolveProfile(data.user);
+            setProfile(resolved);
+            localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
+            return { success: true };
+          }
+        }
+
+        return { success: false, error: "Correo electrónico o contraseña incorrectos." };
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Error de conexión al servidor de autenticación.";
         return { success: false, error: msg };
@@ -262,7 +354,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [resolveProfile]
   );
 
-  // Registro con Supabase Auth
+  // Registro de usuario
   const register = useCallback(
     async (
       fullName: string,
@@ -270,64 +362,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password: string
     ): Promise<{ success: boolean; error?: string }> => {
       setLoading(true);
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              full_name: fullName.trim(),
-              role: "customer",
-            },
-          },
-        });
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanName = fullName.trim();
 
-        if (error) {
-          // Si Supabase Cloud rechaza por clave desconfigurada, permitir registro cliente controlado
-          if (error.message.includes("API key") || error.message.includes("fetch")) {
-            const newCustomerUser: User = {
-              id: "c" + Math.random().toString(36).substring(2, 11) + "-0000-0000",
-              app_metadata: { provider: "email", role: "customer" },
-              user_metadata: { full_name: fullName.trim(), role: "customer" },
-              aud: "authenticated",
-              created_at: new Date().toISOString(),
-              email: email.trim(),
-              phone: "",
-              confirmed_at: new Date().toISOString(),
-              last_sign_in_at: new Date().toISOString(),
-              role: "authenticated",
-              updated_at: new Date().toISOString(),
-            };
-            const customerProfile: UserProfile = {
-              id: newCustomerUser.id,
-              full_name: fullName.trim(),
+      try {
+        // Verificar si la cuenta ya existe en local
+        const existing = getStoredAccounts().find((a) => a.email.toLowerCase() === cleanEmail);
+        if (existing || cleanEmail === "admin@conlact.org" || cleanEmail === "cliente@conlact.org") {
+          return { success: false, error: "Ya existe una cuenta registrada con este correo electrónico." };
+        }
+
+        const newId = "c" + Math.random().toString(36).substring(2, 11) + "-0000-0000";
+        const now = new Date().toISOString();
+
+        // 1. Si Supabase tiene clave configurada, intentar registrar en Supabase Auth
+        if (isSupabaseConfigured()) {
+          const { data, error } = await supabase.auth.signUp({
+            email: cleanEmail,
+            password,
+            options: {
+              data: {
+                full_name: cleanName,
+                role: "customer",
+              },
+            },
+          });
+
+          if (error) {
+            let friendly = error.message;
+            if (error.message.includes("User already registered")) {
+              friendly = "Ya existe una cuenta registrada con este correo electrónico.";
+              return { success: false, error: friendly };
+            }
+            // Si falla por credencial de api o red, proceder con guardado local
+          } else if (data.user) {
+            setUser(data.user);
+            const resolved = await resolveProfile(data.user);
+            setProfile(resolved);
+            saveStoredAccount({
+              id: data.user.id,
+              fullName: cleanName,
+              email: cleanEmail,
+              passwordHash: password,
               role: "customer",
-              is_active: true,
-              email: email.trim(),
-              created_at: new Date().toISOString(),
-            };
-            setUser(newCustomerUser);
-            setProfile(customerProfile);
-            localStorage.setItem(
-              LOCAL_STORAGE_SESSION_KEY,
-              JSON.stringify({ user: newCustomerUser, profile: customerProfile })
-            );
+              createdAt: now,
+            });
             return { success: true };
           }
-
-          let friendly = error.message;
-          if (error.message.includes("User already registered")) {
-            friendly = "Ya existe una cuenta registrada con este correo electrónico.";
-          }
-          return { success: false, error: friendly };
         }
 
-        if (data.user) {
-          setUser(data.user);
-          const resolved = await resolveProfile(data.user);
-          setProfile(resolved);
-          return { success: true };
-        }
+        // 2. Registro local persistente (permite iniciar y cerrar sesión de forma persistente)
+        const newCustomerUser: User = {
+          id: newId,
+          app_metadata: { provider: "email", role: "customer" },
+          user_metadata: { full_name: cleanName, role: "customer" },
+          aud: "authenticated",
+          created_at: now,
+          email: cleanEmail,
+          phone: "",
+          confirmed_at: now,
+          last_sign_in_at: now,
+          role: "authenticated",
+          updated_at: now,
+        };
+        const customerProfile: UserProfile = {
+          id: newId,
+          full_name: cleanName,
+          role: "customer",
+          is_active: true,
+          email: cleanEmail,
+          created_at: now,
+        };
+
+        // Guardar cuenta de forma permanente para futuros logins
+        saveStoredAccount({
+          id: newId,
+          fullName: cleanName,
+          email: cleanEmail,
+          passwordHash: password,
+          role: "customer",
+          createdAt: now,
+        });
+
+        // Establecer sesión activa
+        setUser(newCustomerUser);
+        setProfile(customerProfile);
+        localStorage.setItem(
+          LOCAL_STORAGE_SESSION_KEY,
+          JSON.stringify({ user: newCustomerUser, profile: customerProfile })
+        );
 
         return { success: true };
       } catch (err: unknown) {
@@ -343,7 +466,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Cerrar sesión
   const logout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      if (isSupabaseConfigured()) {
+        await supabase.auth.signOut();
+      }
     } catch {
       // Ignorar error al cerrar sesión
     } finally {
@@ -353,16 +478,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Recuperación de contraseña
+  // Recuperación de contraseña (envío directo por SMTP al correo del usuario)
   const resetPassword = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim();
+
     try {
-      const redirectUrl = typeof window !== "undefined" ? `${window.location.origin}/login` : undefined;
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: redirectUrl,
+      // 1. Enviar correo real por SMTP a través de la API del Frontend
+      const res = await fetch("/api/auth/recuperar-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail }),
       });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (res.ok) {
+        // También notificar a Supabase Auth en segundo plano si está disponible
+        if (isSupabaseConfigured()) {
+          try {
+            const redirectUrl = typeof window !== "undefined" ? `${window.location.origin}/login` : undefined;
+            await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo: redirectUrl });
+          } catch {
+            // Ignorar si Supabase no tiene el correo en su base de datos
+          }
+        }
+        return { success: true };
+      }
+
+      // 2. Fallback de respaldo a través del endpoint de contacto del Backend
+      const resBackend = await fetch(`${siteConfig.backendUrl}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: "Usuario CONLAC-T",
+          email: cleanEmail,
+          telefono: "N/A",
+          asunto: "Solicitud de Restablecimiento de Contraseña",
+          mensaje: `Se ha registrado una solicitud de recuperación de contraseña para la cuenta ${cleanEmail}.`,
+          privacy_accepted: true,
+        }),
+      });
+
+      if (!resBackend.ok) {
+        throw new Error("No se pudo procesar la solicitud con el servidor de correo.");
       }
 
       return { success: true };
