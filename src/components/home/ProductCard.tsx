@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProductCardProps } from "@/types";
-import { formatPrice, cn, buildWhatsAppUrl } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
@@ -23,10 +23,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const imageSrc = product.fotos?.[0] || "/placeholders/product-queso-fresco.svg";
   const productDetailHref = `/tienda/${product.slug || product.id}`;
-  const whatsappInquiryUrl = buildWhatsAppUrl({
-    productName: `${product.nombre} (${product.asociacion || "CONLAC-T"})`,
-  });
-
+  const isAvailable = product.disponible && product.stock > 0;
   return (
     <article
       className={cn(
@@ -56,11 +53,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {editorialTag.text}
             </Badge>
           )}
-          {product.stock <= 10 && product.stock > 0 && (
+          {!isAvailable ? (
+            <Badge variant="secondary">Agotado</Badge>
+          ) : product.presentaciones?.[0]?.is_low_stock || product.stock <= 10 ? (
             <Badge variant="highlight">
               Stock limitado
             </Badge>
-          )}
+          ) : null}
         </div>
 
         {/* Peso del producto */}

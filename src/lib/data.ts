@@ -1,4 +1,45 @@
-import { Producto, Asociacion, Receta, AtractivoTuristico } from "@/types";
+import { Producto, PresentacionProducto, Asociacion, Receta, AtractivoTuristico } from "@/types";
+import { siteConfig } from "@/lib/config";
+
+export function normalizeBackendProduct(product: Producto): Producto {
+  const presentations: PresentacionProducto[] = Array.isArray(product.presentaciones)
+    ? product.presentaciones.map((presentation) => ({
+        ...presentation,
+        precio: Number(presentation.precio ?? 0),
+        stock: Number(presentation.stock ?? 0),
+      }))
+    : [];
+  const primaryPresentation = presentations[0];
+
+  return {
+    ...product,
+    fotos: Array.isArray(product.fotos) ? product.fotos.filter(Boolean) : [],
+    precio: Number(primaryPresentation?.precio ?? product.precio ?? 0),
+    stock: Number(primaryPresentation?.stock ?? product.stock ?? 0),
+    peso: primaryPresentation?.nombre_presentacion ?? product.peso,
+    disponible: Boolean(product.disponible),
+    presentaciones: presentations,
+    variante_id: primaryPresentation?.id,
+  };
+}
+
+async function fetchBackendProducts(): Promise<Producto[] | null> {
+  try {
+    const response = await fetch(`${siteConfig.backendUrl}/products`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!response.ok) return null;
+
+    const products: Producto[] = await response.json();
+    if (!Array.isArray(products)) return null;
+
+    return products.map(normalizeBackendProduct);
+  } catch {
+    return null;
+  }
+}
 
 export const productosMock: Producto[] = [
   {
@@ -230,16 +271,32 @@ export const atractivosMock: AtractivoTuristico[] = [
 ];
 
 export async function getProducts(): Promise<Producto[]> {
-  return Promise.resolve([...productosMock]);
+  return (await fetchBackendProducts()) ?? [...productosMock];
 }
 
 export async function getProductById(id: string): Promise<Producto | null> {
+  try {
+    const response = await fetch(`${siteConfig.backendUrl}/products/${encodeURIComponent(id)}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (response.ok) {
+      const product: Producto = await response.json();
+      return normalizeBackendProduct(product);
+    }
+  } catch {
+    // Use demo data if the local API is not running.
+  }
+
   const item = productosMock.find((p) => p.id === id);
   return Promise.resolve(item || null);
 }
 
 export async function getFeaturedProducts(): Promise<Producto[]> {
-  const featured = productosMock.filter((p) => p.disponible).slice(0, 4);
+  const featured = ((await fetchBackendProducts()) ?? productosMock)
+    .filter((p) => p.disponible)
+    .slice(0, 4);
   return Promise.resolve(featured);
 }
 
