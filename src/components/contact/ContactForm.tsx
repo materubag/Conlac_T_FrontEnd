@@ -1,10 +1,8 @@
 "use client";
-
-import React, { useState } from "react";
-import { siteConfig } from "@/lib/config";
 import { Button } from "@/components/ui/Button";
-import type { ContactMessageRequest, ContactMessageResponse } from "@/types";
-
+import { sendContactMessage } from "@/services/contacto/contactService";
+import type { ContactMessageRequest } from "@/types";
+import React, { useState } from "react";
 export const ContactForm: React.FC = () => {
   const [formData, setFormData] = useState<ContactMessageRequest>({
     nombre: "",
@@ -45,38 +43,22 @@ export const ContactForm: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`${siteConfig.backendUrl}/contact`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          nombre: formData.nombre.trim(),
-          email: formData.email.trim(),
-          telefono: formData.telefono?.trim() || "",
-          asunto: formData.asunto.trim(),
-          mensaje: formData.mensaje.trim(),
-          privacy_accepted: Boolean(formData.privacy_accepted),
-        }),
+      const data = await sendContactMessage({
+        nombre: formData.nombre.trim(),
+        email: formData.email.trim(),
+        telefono: formData.telefono?.trim() || "",
+        asunto: formData.asunto.trim(),
+        mensaje: formData.mensaje.trim(),
+        privacy_accepted: Boolean(
+          formData.privacy_accepted
+        ),
       });
 
-      if (!res.ok) {
-        let errorDetail = `Error ${res.status}`;
-        try {
-          const errJson = await res.json();
-          if (errJson.message) errorDetail = errJson.message;
-        } catch {
-          // respuesta no JSON
-        }
-        throw new Error(errorDetail);
-      }
-
-      const data: ContactMessageResponse = await res.json();
       setSuccessMessage(
-        data.message || "Mensaje enviado exitosamente. Nos comunicaremos a la brevedad."
+        data.message ||
+        "Mensaje enviado exitosamente. Nos comunicaremos a la brevedad."
       );
-      // Limpiar formulario tras éxito
+
       setFormData({
         nombre: "",
         email: "",

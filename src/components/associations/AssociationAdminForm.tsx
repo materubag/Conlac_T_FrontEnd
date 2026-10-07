@@ -1,63 +1,38 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import type { Asociacion } from "@/types";
-import { useAuth } from "@/context/AuthContext";
-import { siteConfig } from "@/lib/config";
-
-interface AssociationFormData {
-  nombre: string;
-  parroquia: string;
-  numero_familias: string;
-  anio_fundacion: string;
-  registro_arcsa: string;
-  fecha_emision: string;
-  estado_vigencia: string;
-  foto_principal: string;
-  galeria: string[];
-  video_url: string;
-  lat: string;
-  lng: string;
-  referencia_vial: string;
-  historia: string;
-}
+import type { AssociationFormData } from "@/types/index";
+import { createAssociation } from "@/services/asociaciones/associationService";
 
 type FormErrors = Partial<
   Record<keyof AssociationFormData, string>
 >;
 
 const initialFormData: AssociationFormData = {
-  nombre: "",
-  parroquia: "",
-  numero_familias: "",
-  anio_fundacion: "",
-  registro_arcsa: "",
-  fecha_emision: "",
-  estado_vigencia: "",
-  foto_principal: "",
-  galeria: [""],
-  video_url: "",
-  lat: "",
-  lng: "",
-  referencia_vial: "",
-  historia: "",
+  slug: "",
+  name: "",
+  shortDescription: "",
+  history: "",
+
+  locationText: "",
+  latitude: "",
+  longitude: "",
+
+  arcsaRegistration: "",
+  agrocalidadRegistration: "",
+  sanitarySealText: "",
+
+  videoUrl: "",
+
+  instagramUrl: "",
+  tiktokUrl: "",
+  facebookUrl: "",
+  whatsapp: "",
+
+  isPublished: false,
 };
 
-function isValidUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-
-    return (
-      url.protocol === "http:" ||
-      url.protocol === "https:"
-    );
-  } catch {
-    return false;
-  }
-}
-
 export function AssociationAdminForm() {
-  const { getAccessToken } = useAuth();
   const [formData, setFormData] =
     useState<AssociationFormData>(initialFormData);
 
@@ -71,14 +46,11 @@ export function AssociationAdminForm() {
     "idle" | "success" | "error"
   >("idle");
 
-  const [showValidationMessage, setShowValidationMessage] =
-    useState(false);
-
-  const currentYear = new Date().getFullYear();
-
-  const updateField = (
-    field: keyof AssociationFormData,
-    value: string
+  const updateField = <
+    K extends keyof AssociationFormData
+  >(
+    field: K,
+    value: AssociationFormData[K]
   ) => {
     setFormData((previous) => ({
       ...previous,
@@ -93,210 +65,171 @@ export function AssociationAdminForm() {
     setStatus("idle");
   };
 
-  const updateGalleryImage = (
-    index: number,
-    value: string
-  ) => {
-    setFormData((previous) => {
-      const gallery = [...previous.galeria];
-
-      gallery[index] = value;
-
-      return {
-        ...previous,
-        galeria: gallery,
-      };
-    });
-
-    setErrors((previous) => ({
-      ...previous,
-      galeria: undefined,
-    }));
-
-    setStatus("idle");
-  };
-
-  const addGalleryImage = () => {
-    setFormData((previous) => ({
-      ...previous,
-      galeria: [...previous.galeria, ""],
-    }));
-  };
-
-  const removeGalleryImage = (index: number) => {
-    setFormData((previous) => {
-      const gallery = previous.galeria.filter(
-        (_, galleryIndex) =>
-          galleryIndex !== index
-      );
-
-      return {
-        ...previous,
-        galeria:
-          gallery.length > 0 ? gallery : [""],
-      };
-    });
-
-    setErrors((previous) => ({
-      ...previous,
-      galeria: undefined,
-    }));
-  };
-
   const validateForm = (): FormErrors => {
     const validationErrors: FormErrors = {};
 
-    // Datos generales
+    // ============================
+    // NOMBRE
+    // ============================
 
-    if (!formData.nombre.trim()) {
-      validationErrors.nombre =
+    if (!formData.name.trim()) {
+      validationErrors.name =
         "El nombre de la asociación es obligatorio.";
     }
 
-    if (!formData.parroquia.trim()) {
-      validationErrors.parroquia =
-        "La parroquia o comunidad es obligatoria.";
-    }
+    // ============================
+    // SLUG
+    // ============================
 
-    if (!formData.numero_familias.trim()) {
-      validationErrors.numero_familias =
-        "El número de familias socias es obligatorio.";
-    } else {
-      const families = Number(
-        formData.numero_familias
-      );
-
-      if (
-        !Number.isInteger(families) ||
-        families < 1
-      ) {
-        validationErrors.numero_familias =
-          "Ingrese un número entero mayor o igual a 1.";
-      }
-    }
-
-    if (!formData.anio_fundacion.trim()) {
-      validationErrors.anio_fundacion =
-        "El año de fundación es obligatorio.";
-    } else {
-      const year = Number(
-        formData.anio_fundacion
-      );
-
-      if (
-        !Number.isInteger(year) ||
-        year < 1900 ||
-        year > currentYear
-      ) {
-        validationErrors.anio_fundacion =
-          "Ingrese un año entre 1900 y " +
-          currentYear +
-          ".";
-      }
-    }
-
-    // Certificación sanitaria
-
-    if (
-      formData.registro_arcsa.trim() &&
-      formData.registro_arcsa.trim().length < 3
-    ) {
-      validationErrors.registro_arcsa =
-        "Ingrese un código ARCSA/BPM válido.";
-    }
-
-    if (formData.fecha_emision.trim()) {
-      const emissionDate = new Date(
-        formData.fecha_emision + "T00:00:00"
-      );
-
-      if (Number.isNaN(emissionDate.getTime())) {
-        validationErrors.fecha_emision =
-          "Ingrese una fecha válida.";
-      }
-    }
-
-    // Multimedia
-
-    if (
-      formData.foto_principal.trim() &&
-      !isValidUrl(
-        formData.foto_principal.trim()
+    if (!formData.slug.trim()) {
+      validationErrors.slug =
+        "El slug es obligatorio.";
+    } else if (
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(
+        formData.slug.trim()
       )
     ) {
-      validationErrors.foto_principal =
-        "Ingrese una URL válida que comience con http:// o https://.";
+      validationErrors.slug =
+        "El slug solo puede contener letras minúsculas, números y guiones.";
     }
+
+    // ============================
+    // DESCRIPCIÓN
+    // ============================
 
     if (
-      formData.video_url.trim() &&
-      !isValidUrl(formData.video_url.trim())
+      formData.shortDescription.trim() &&
+      formData.shortDescription.trim().length < 10
     ) {
-      validationErrors.video_url =
-        "Ingrese una URL válida de YouTube o Vimeo.";
+      validationErrors.shortDescription =
+        "La descripción debe tener al menos 10 caracteres.";
     }
 
-    const invalidGalleryUrl =
-      formData.galeria.some(
-        (url) =>
-          url.trim().length > 0 &&
-          !isValidUrl(url.trim())
+    // ============================
+    // HISTORIA
+    // ============================
+
+    if (!formData.history.trim()) {
+      validationErrors.history =
+        "La historia de la asociación es obligatoria.";
+    }
+
+    // ============================
+    // UBICACIÓN
+    // ============================
+
+    if (!formData.locationText.trim()) {
+      validationErrors.locationText =
+        "La ubicación es obligatoria.";
+    }
+
+    // ============================
+    // LATITUD
+    // ============================
+
+    if (formData.latitude.trim()) {
+      const latitude = Number(
+        formData.latitude
       );
-
-    if (invalidGalleryUrl) {
-      validationErrors.galeria =
-        "Una o más imágenes de la galería tienen una URL inválida.";
-    }
-
-    // Ubicación
-
-    if (!formData.lat.trim()) {
-      validationErrors.lat =
-        "La latitud es obligatoria.";
-    } else {
-      const latitude = Number(formData.lat);
 
       if (
         Number.isNaN(latitude) ||
         latitude < -90 ||
         latitude > 90
       ) {
-        validationErrors.lat =
+        validationErrors.latitude =
           "La latitud debe estar entre -90 y 90.";
       }
     }
 
-    if (!formData.lng.trim()) {
-      validationErrors.lng =
-        "La longitud es obligatoria.";
-    } else {
-      const longitude = Number(formData.lng);
+    // ============================
+    // LONGITUD
+    // ============================
+
+    if (formData.longitude.trim()) {
+      const longitude = Number(
+        formData.longitude
+      );
 
       if (
         Number.isNaN(longitude) ||
         longitude < -180 ||
         longitude > 180
       ) {
-        validationErrors.lng =
+        validationErrors.longitude =
           "La longitud debe estar entre -180 y 180.";
       }
     }
 
-    if (!formData.referencia_vial.trim()) {
-      validationErrors.referencia_vial =
-        "La referencia vial es obligatoria.";
+    // ============================
+    // VIDEO
+    // ============================
+
+    if (formData.videoUrl.trim()) {
+      try {
+        new URL(formData.videoUrl.trim());
+      } catch {
+        validationErrors.videoUrl =
+          "Ingrese una URL de video válida.";
+      }
     }
 
-    // Historia
+    // ============================
+    // INSTAGRAM
+    // ============================
 
-    if (!formData.historia.trim()) {
-      validationErrors.historia =
-        "La historia y descripción son obligatorias.";
-    } else if (
-      formData.historia.trim().length < 20
-    ) {
-      validationErrors.historia =
-        "La descripción debe tener al menos 20 caracteres.";
+    if (formData.instagramUrl.trim()) {
+      try {
+        new URL(formData.instagramUrl.trim());
+      } catch {
+        validationErrors.instagramUrl =
+          "Ingrese una URL válida de Instagram.";
+      }
+    }
+
+    // ============================
+    // TIKTOK
+    // ============================
+
+    if (formData.tiktokUrl.trim()) {
+      try {
+        new URL(formData.tiktokUrl.trim());
+      } catch {
+        validationErrors.tiktokUrl =
+          "Ingrese una URL válida de TikTok.";
+      }
+    }
+
+    // ============================
+    // FACEBOOK
+    // ============================
+
+    if (formData.facebookUrl.trim()) {
+      try {
+        new URL(formData.facebookUrl.trim());
+      } catch {
+        validationErrors.facebookUrl =
+          "Ingrese una URL válida de Facebook.";
+      }
+    }
+
+    // ============================
+    // WHATSAPP
+    // ============================
+
+    if (formData.whatsapp.trim()) {
+      const whatsapp = formData.whatsapp.replace(
+        /\D/g,
+        ""
+      );
+
+      if (
+        whatsapp.length < 10 ||
+        whatsapp.length > 15
+      ) {
+        validationErrors.whatsapp =
+          "Ingrese un número de WhatsApp válido.";
+      }
     }
 
     return validationErrors;
@@ -310,106 +243,81 @@ export function AssociationAdminForm() {
     const validationErrors = validateForm();
 
     setErrors(validationErrors);
-    setStatus("idle");
 
-    const hasErrors =
-      Object.keys(validationErrors).length > 0;
-
-    setShowValidationMessage(hasErrors);
-
-    if (hasErrors) {
+    if (
+      Object.keys(validationErrors).length > 0
+    ) {
+      setStatus("idle");
       return;
     }
 
     setIsSubmitting(true);
-
+    setStatus("idle");
     try {
-      const fotos = [
-        formData.foto_principal.trim(),
-        ...formData.galeria
-          .map((url) => url.trim())
-          .filter((url) => url.length > 0),
-      ];
+      const association = {
+        slug: formData.slug.trim(),
+        name: formData.name.trim(),
+        shortDescription:
+          formData.shortDescription.trim() || undefined,
+        history:
+          formData.history.trim() || undefined,
 
-      const asociacion: Omit<
-        Asociacion,
-        "id"
-      > = {
-        nombre: formData.nombre.trim(),
-        historia: formData.historia.trim(),
-        fotos,
-        video_url:
-          formData.video_url.trim() ||
-          undefined,
-        sello_sanitario:
-          formData.registro_arcsa.trim() ||
-          undefined,
-        lat: Number(formData.lat),
-        lng: Number(formData.lng),
+        locationText:
+          formData.locationText.trim() || undefined,
+
+        latitude:
+          formData.latitude.trim()
+            ? Number(formData.latitude)
+            : undefined,
+
+        longitude:
+          formData.longitude.trim()
+            ? Number(formData.longitude)
+            : undefined,
+
+        arcsaRegistration:
+          formData.arcsaRegistration.trim() || undefined,
+
+        agrocalidadRegistration:
+          formData.agrocalidadRegistration.trim() || undefined,
+
+        sanitarySealText:
+          formData.sanitarySealText.trim() || undefined,
+
+        videoUrl:
+          formData.videoUrl.trim() || undefined,
+
+        instagramUrl:
+          formData.instagramUrl.trim() || undefined,
+
+        tiktokUrl:
+          formData.tiktokUrl.trim() || undefined,
+
+        facebookUrl:
+          formData.facebookUrl.trim() || undefined,
+
+        whatsapp:
+          formData.whatsapp.trim() || undefined,
+
+        isPublished: formData.isPublished,
       };
 
-      let saved = false;
-      const token = await getAccessToken();
-
-      if (token) {
-        try {
-          const backendRes = await fetch(`${siteConfig.backendUrl}/admin/associations`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              nombre: asociacion.nombre,
-              slug: formData.nombre
-                .toLowerCase()
-                .trim()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/^-+|-+$/g, ""),
-              descripcion_corta: formData.parroquia ? `Filial ubicada en ${formData.parroquia}` : undefined,
-              historia: formData.historia.trim() || undefined,
-              ubicacion: formData.parroquia.trim() || undefined,
-              ubicacion_referencia: formData.referencia_vial.trim() || undefined,
-              fotos: fotos.length > 0 ? fotos : undefined,
-              lat: formData.lat ? Number(formData.lat) : undefined,
-              lng: formData.lng ? Number(formData.lng) : undefined,
-              registro_arcsa: formData.registro_arcsa.trim() || undefined,
-              video_url: formData.video_url.trim() || undefined,
-              is_published: true,
-            }),
-          });
-          if (backendRes.ok) {
-            saved = true;
-          }
-        } catch {
-          // Si el endpoint de backend no responde, continuar al mock local
-        }
-      }
-
-      if (!saved) {
-        const response = await fetch("/api/asociaciones", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(asociacion),
-        });
-
-        if (!response.ok) {
-          throw new Error("No se pudo guardar la asociación.");
-        }
-      }
+      await createAssociation(association);
 
       setStatus("success");
-      setShowValidationMessage(false);
       setFormData(initialFormData);
       setErrors({});
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error al crear la asociación:",
+        error
+      );
+
       setStatus("error");
     } finally {
       setIsSubmitting(false);
     }
+
   };
 
   return (
@@ -418,12 +326,14 @@ export function AssociationAdminForm() {
       noValidate
       className="space-y-8"
     >
-      {/* DATOS GENERALES */}
+      {/* ==========================================
+          INFORMACIÓN GENERAL
+          ========================================== */}
 
       <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="font-headline text-xl font-bold text-primary">
-            Datos Generales
+            Información general
           </h2>
 
           <p className="mt-1 text-sm text-neutral-muted">
@@ -432,480 +342,154 @@ export function AssociationAdminForm() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="md:col-span-2">
+          {/* SLUG */}
+
+          <div>
             <label
-              htmlFor="nombre"
+              htmlFor="slug"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Slug <span className="text-red-600">*</span>
+            </label>
+
+            <input
+              id="slug"
+              type="text"
+              value={formData.slug}
+              onChange={(event) =>
+                updateField(
+                  "slug",
+                  event.target.value
+                )
+              }
+              placeholder="asociacion-san-pedro"
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.slug
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.slug && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.slug}
+              </p>
+            )}
+
+            <p className="mt-1 text-xs text-neutral-muted">
+              Se utilizará en la URL de la asociación.
+            </p>
+          </div>
+
+          {/* NOMBRE */}
+
+          <div>
+            <label
+              htmlFor="name"
               className="mb-2 block text-sm font-semibold text-primary"
             >
               Nombre de la asociación{" "}
-              <span className="text-red-600">
-                *
-              </span>
+              <span className="text-red-600">*</span>
             </label>
 
             <input
-              id="nombre"
+              id="name"
               type="text"
-              value={formData.nombre}
+              value={formData.name}
               onChange={(event) =>
                 updateField(
-                  "nombre",
+                  "name",
                   event.target.value
                 )
               }
-              aria-invalid={!!errors.nombre}
-              aria-describedby={
-                errors.nombre
-                  ? "nombre-error"
-                  : undefined
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.nombre
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="Ej. Asociación San Pedro"
+              placeholder="Asociación San Pedro"
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.name
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
             />
 
-            {errors.nombre && (
-              <p
-                id="nombre-error"
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.nombre}
+            {errors.name && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.name}
               </p>
             )}
           </div>
 
-          <div>
+          {/* DESCRIPCIÓN CORTA */}
+
+          <div className="md:col-span-2">
             <label
-              htmlFor="parroquia"
+              htmlFor="shortDescription"
               className="mb-2 block text-sm font-semibold text-primary"
             >
-              Parroquia o comunidad{" "}
-              <span className="text-red-600">
-                *
-              </span>
+              Descripción corta
             </label>
 
-            <input
-              id="parroquia"
-              type="text"
-              value={formData.parroquia}
+            <textarea
+              id="shortDescription"
+              rows={3}
+              value={
+                formData.shortDescription
+              }
               onChange={(event) =>
                 updateField(
-                  "parroquia",
+                  "shortDescription",
                   event.target.value
                 )
               }
-              aria-invalid={!!errors.parroquia}
-              aria-describedby={
-                errors.parroquia
-                  ? "parroquia-error"
-                  : undefined
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.parroquia
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="Ej. Pilahuín"
+              placeholder="Breve descripción de la asociación..."
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.shortDescription
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
             />
 
-            {errors.parroquia && (
-              <p
-                id="parroquia-error"
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.parroquia}
+            {errors.shortDescription && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.shortDescription}
               </p>
             )}
           </div>
 
-          <div>
+          {/* HISTORIA */}
+
+          <div className="md:col-span-2">
             <label
-              htmlFor="numero_familias"
+              htmlFor="history"
               className="mb-2 block text-sm font-semibold text-primary"
             >
-              Número de familias socias{" "}
-              <span className="text-red-600">
-                *
-              </span>
+              Historia
             </label>
 
-            <input
-              id="numero_familias"
-              type="number"
-              min="1"
-              value={formData.numero_familias}
+            <textarea
+              id="history"
+              rows={7}
+              value={formData.history}
               onChange={(event) =>
                 updateField(
-                  "numero_familias",
+                  "history",
                   event.target.value
                 )
               }
-              aria-invalid={
-                !!errors.numero_familias
-              }
-              aria-describedby={
-                errors.numero_familias
-                  ? "numero-familias-error"
-                  : undefined
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.numero_familias
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="Ej. 25"
+              placeholder="Historia de la asociación..."
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.history
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
             />
 
-            {errors.numero_familias && (
-              <p
-                id="numero-familias-error"
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.numero_familias}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="anio_fundacion"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Año de fundación{" "}
-              <span className="text-red-600">
-                *
-              </span>
-            </label>
-
-            <input
-              id="anio_fundacion"
-              type="number"
-              min="1900"
-              max={currentYear}
-              value={formData.anio_fundacion}
-              onChange={(event) =>
-                updateField(
-                  "anio_fundacion",
-                  event.target.value
-                )
-              }
-              aria-invalid={
-                !!errors.anio_fundacion
-              }
-              aria-describedby={
-                errors.anio_fundacion
-                  ? "anio-fundacion-error"
-                  : undefined
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.anio_fundacion
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder={String(currentYear)}
-            />
-
-            {errors.anio_fundacion && (
-              <p
-                id="anio-fundacion-error"
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.anio_fundacion}
+            {errors.history && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.history}
               </p>
             )}
           </div>
         </div>
       </section>
 
-      {/* CERTIFICACIÓN SANITARIA */}
-
-      <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
-        <div className="mb-6">
-          <h2 className="font-headline text-xl font-bold text-primary">
-            Certificación Sanitaria
-          </h2>
-
-          <p className="mt-1 text-sm text-neutral-muted">
-            Información relacionada con ARCSA y BPM.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div>
-            <label
-              htmlFor="registro_arcsa"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Código de Registro ARCSA / BPM
-            </label>
-
-            <input
-              id="registro_arcsa"
-              type="text"
-              value={formData.registro_arcsa}
-              onChange={(event) =>
-                updateField(
-                  "registro_arcsa",
-                  event.target.value
-                )
-              }
-              aria-invalid={
-                !!errors.registro_arcsa
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.registro_arcsa
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="Código ARCSA/BPM"
-            />
-
-            {errors.registro_arcsa && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.registro_arcsa}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="fecha_emision"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Fecha de emisión
-            </label>
-
-            <input
-              id="fecha_emision"
-              type="date"
-              value={formData.fecha_emision}
-              onChange={(event) =>
-                updateField(
-                  "fecha_emision",
-                  event.target.value
-                )
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.fecha_emision
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-            />
-
-            {errors.fecha_emision && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.fecha_emision}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="estado_vigencia"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Estado de vigencia
-            </label>
-
-            <select
-              id="estado_vigencia"
-              value={formData.estado_vigencia}
-              onChange={(event) =>
-                updateField(
-                  "estado_vigencia",
-                  event.target.value
-                )
-              }
-              className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary"
-            >
-              <option value="">
-                Seleccione un estado
-              </option>
-              <option value="Vigente">
-                Vigente
-              </option>
-              <option value="Por vencer">
-                Por vencer
-              </option>
-              <option value="Vencido">
-                Vencido
-              </option>
-            </select>
-          </div>
-        </div>
-      </section>
-
-      {/* MULTIMEDIA */}
-
-      <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
-        <div className="mb-6">
-          <h2 className="font-headline text-xl font-bold text-primary">
-            Multimedia
-          </h2>
-
-          <p className="mt-1 text-sm text-neutral-muted">
-            Fotografías y video de la asociación.
-          </p>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <label
-              htmlFor="foto_principal"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              URL de foto principal
-            </label>
-
-            <input
-              id="foto_principal"
-              type="url"
-              value={formData.foto_principal}
-              onChange={(event) =>
-                updateField(
-                  "foto_principal",
-                  event.target.value
-                )
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.foto_principal
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="https://ejemplo.com/foto.jpg"
-            />
-
-            {errors.foto_principal && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.foto_principal}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <div className="mb-2 flex items-center justify-between gap-4">
-              <label className="block text-sm font-semibold text-primary">
-                Galería de imágenes
-              </label>
-
-              <button
-                type="button"
-                onClick={addGalleryImage}
-                className="shrink-0 text-sm font-semibold text-primary hover:underline"
-              >
-                + Agregar imagen
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {formData.galeria.map(
-                (url, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-2"
-                  >
-                    <input
-                      type="url"
-                      value={url}
-                      onChange={(event) =>
-                        updateGalleryImage(
-                          index,
-                          event.target.value
-                        )
-                      }
-                      className={`min-w-0 flex-1 rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                        errors.galeria
-                          ? "border-red-500 focus:ring-red-200"
-                          : "border-border"
-                      }`}
-                      placeholder="https://ejemplo.com/galeria.jpg"
-                    />
-
-                    {formData.galeria.length >
-                      1 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeGalleryImage(
-                            index
-                          )
-                        }
-                        className="rounded-xl border border-border px-4 text-sm font-semibold text-red-600 hover:bg-red-50"
-                      >
-                        Eliminar
-                      </button>
-                    )}
-                  </div>
-                )
-              )}
-            </div>
-
-            {errors.galeria && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.galeria}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="video_url"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Enlace de YouTube / Vimeo
-            </label>
-
-            <input
-              id="video_url"
-              type="url"
-              value={formData.video_url}
-              onChange={(event) =>
-                updateField(
-                  "video_url",
-                  event.target.value
-                )
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.video_url
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="https://www.youtube.com/..."
-            />
-
-            {errors.video_url && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.video_url}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* UBICACIÓN */}
+      {/* ==========================================
+          UBICACIÓN
+          ========================================== */}
 
       <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
         <div className="mb-6">
@@ -914,247 +498,489 @@ export function AssociationAdminForm() {
           </h2>
 
           <p className="mt-1 text-sm text-neutral-muted">
-            Coordenadas y referencia de ubicación.
+            Ubicación física y coordenadas geográficas.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label
-              htmlFor="lat"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Latitud{" "}
-              <span className="text-red-600">
-                *
-              </span>
-            </label>
-
-            <input
-              id="lat"
-              type="number"
-              step="any"
-              value={formData.lat}
-              onChange={(event) =>
-                updateField(
-                  "lat",
-                  event.target.value
-                )
-              }
-              aria-invalid={!!errors.lat}
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.lat
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="-1.234567"
-            />
-
-            {errors.lat && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.lat}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="lng"
-              className="mb-2 block text-sm font-semibold text-primary"
-            >
-              Longitud{" "}
-              <span className="text-red-600">
-                *
-              </span>
-            </label>
-
-            <input
-              id="lng"
-              type="number"
-              step="any"
-              value={formData.lng}
-              onChange={(event) =>
-                updateField(
-                  "lng",
-                  event.target.value
-                )
-              }
-              aria-invalid={!!errors.lng}
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.lng
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="-78.123456"
-            />
-
-            {errors.lng && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.lng}
-              </p>
-            )}
-          </div>
+          {/* UBICACIÓN */}
 
           <div className="md:col-span-2">
             <label
-              htmlFor="referencia_vial"
+              htmlFor="locationText"
               className="mb-2 block text-sm font-semibold text-primary"
             >
-              Referencia vial{" "}
-              <span className="text-red-600">
-                *
-              </span>
+              Ubicación
             </label>
 
             <input
-              id="referencia_vial"
+              id="locationText"
               type="text"
-              value={formData.referencia_vial}
+              value={formData.locationText}
               onChange={(event) =>
                 updateField(
-                  "referencia_vial",
+                  "locationText",
                   event.target.value
                 )
               }
-              aria-invalid={
-                !!errors.referencia_vial
-              }
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-                errors.referencia_vial
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-border"
-              }`}
-              placeholder="Ej. Vía Ambato--Guaranda"
+              placeholder="Pilahuín, Tungurahua, Ecuador"
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.locationText
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
             />
 
-            {errors.referencia_vial && (
-              <p
-                role="alert"
-                className="mt-2 text-sm font-medium text-red-600"
-              >
-                {errors.referencia_vial}
+            {errors.locationText && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.locationText}
+              </p>
+            )}
+          </div>
+
+          {/* LATITUD */}
+
+          <div>
+            <label
+              htmlFor="latitude"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Latitud
+            </label>
+
+            <input
+              id="latitude"
+              type="number"
+              step="0.000001"
+              value={formData.latitude}
+              onChange={(event) =>
+                updateField(
+                  "latitude",
+                  event.target.value
+                )
+              }
+              placeholder="-1.234567"
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.latitude
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.latitude && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.latitude}
+              </p>
+            )}
+          </div>
+
+          {/* LONGITUD */}
+
+          <div>
+            <label
+              htmlFor="longitude"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Longitud
+            </label>
+
+            <input
+              id="longitude"
+              type="number"
+              step="0.000001"
+              value={formData.longitude}
+              onChange={(event) =>
+                updateField(
+                  "longitude",
+                  event.target.value
+                )
+              }
+              placeholder="-78.123456"
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.longitude
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.longitude && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.longitude}
               </p>
             )}
           </div>
         </div>
       </section>
 
-      {/* HISTORIA */}
+      {/* ==========================================
+          REGISTROS SANITARIOS
+          ========================================== */}
 
       <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="font-headline text-xl font-bold text-primary">
-            Historia y Descripción
+            Registros sanitarios
           </h2>
 
           <p className="mt-1 text-sm text-neutral-muted">
-            Describe la historia, actividades y características de la asociación.
+            Información relacionada con ARCSA y Agrocalidad.
           </p>
         </div>
 
-        <textarea
-          id="historia"
-          rows={7}
-          maxLength={1000}
-          value={formData.historia}
-          onChange={(event) =>
-            updateField(
-              "historia",
-              event.target.value
-            )
-          }
-          aria-invalid={!!errors.historia}
-          className={`w-full resize-y rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${
-            errors.historia
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* ARCSA */}
+
+          <div>
+            <label
+              htmlFor="arcsaRegistration"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Registro ARCSA
+            </label>
+
+            <input
+              id="arcsaRegistration"
+              type="text"
+              value={
+                formData.arcsaRegistration
+              }
+              onChange={(event) =>
+                updateField(
+                  "arcsaRegistration",
+                  event.target.value
+                )
+              }
+              placeholder="Registro ARCSA"
+              className="w-full rounded-xl border border-border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary"
+            />
+          </div>
+
+          {/* AGROCALIDAD */}
+
+          <div>
+            <label
+              htmlFor="agrocalidadRegistration"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Registro Agrocalidad
+            </label>
+
+            <input
+              id="agrocalidadRegistration"
+              type="text"
+              value={
+                formData.agrocalidadRegistration
+              }
+              onChange={(event) =>
+                updateField(
+                  "agrocalidadRegistration",
+                  event.target.value
+                )
+              }
+              placeholder="Registro Agrocalidad"
+              className="w-full rounded-xl border border-border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary"
+            />
+          </div>
+
+          {/* SELLO SANITARIO */}
+
+          <div className="md:col-span-2">
+            <label
+              htmlFor="sanitarySealText"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Sello sanitario
+            </label>
+
+            <input
+              id="sanitarySealText"
+              type="text"
+              value={
+                formData.sanitarySealText
+              }
+              onChange={(event) =>
+                updateField(
+                  "sanitarySealText",
+                  event.target.value
+                )
+              }
+              placeholder="Información del sello sanitario"
+              className="w-full rounded-xl border border-border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          MULTIMEDIA
+          ========================================== */}
+
+      <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+        <div className="mb-6">
+          <h2 className="font-headline text-xl font-bold text-primary">
+            Multimedia
+          </h2>
+
+          <p className="mt-1 text-sm text-neutral-muted">
+            Video relacionado con la asociación.
+          </p>
+        </div>
+
+        <div>
+          <label
+            htmlFor="videoUrl"
+            className="mb-2 block text-sm font-semibold text-primary"
+          >
+            URL del video
+          </label>
+
+          <input
+            id="videoUrl"
+            type="url"
+            value={formData.videoUrl}
+            onChange={(event) =>
+              updateField(
+                "videoUrl",
+                event.target.value
+              )
+            }
+            placeholder="https://www.youtube.com/watch?v=..."
+            className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.videoUrl
               ? "border-red-500 focus:ring-red-200"
               : "border-border"
-          }`}
-          placeholder="Escribe aquí la historia y descripción de la asociación..."
-        />
+              }`}
+          />
 
-        <div className="mt-2 flex items-start justify-between gap-4">
+          {errors.videoUrl && (
+            <p className="mt-2 text-sm text-red-600">
+              {errors.videoUrl}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* ==========================================
+          CONTACTO Y REDES
+          ========================================== */}
+
+      <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+        <div className="mb-6">
+          <h2 className="font-headline text-xl font-bold text-primary">
+            Contacto y redes sociales
+          </h2>
+
+          <p className="mt-1 text-sm text-neutral-muted">
+            Información de contacto público de la asociación.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* WHATSAPP */}
+
           <div>
-            {errors.historia && (
-              <p
-                role="alert"
-                className="text-sm font-medium text-red-600"
-              >
-                {errors.historia}
+            <label
+              htmlFor="whatsapp"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              WhatsApp
+            </label>
+
+            <input
+              id="whatsapp"
+              type="tel"
+              value={formData.whatsapp}
+              onChange={(event) =>
+                updateField(
+                  "whatsapp",
+                  event.target.value
+                )
+              }
+              placeholder="593987654321"
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.whatsapp
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.whatsapp && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.whatsapp}
               </p>
             )}
           </div>
 
-          <p className="shrink-0 text-xs text-neutral-muted">
-            {formData.historia.length}/1000
-            caracteres
-          </p>
+          {/* INSTAGRAM */}
+
+          <div>
+            <label
+              htmlFor="instagramUrl"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Instagram
+            </label>
+
+            <input
+              id="instagramUrl"
+              type="url"
+              value={
+                formData.instagramUrl
+              }
+              onChange={(event) =>
+                updateField(
+                  "instagramUrl",
+                  event.target.value
+                )
+              }
+              placeholder="https://instagram.com/..."
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.instagramUrl
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.instagramUrl && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.instagramUrl}
+              </p>
+            )}
+          </div>
+
+          {/* TIKTOK */}
+
+          <div>
+            <label
+              htmlFor="tiktokUrl"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              TikTok
+            </label>
+
+            <input
+              id="tiktokUrl"
+              type="url"
+              value={formData.tiktokUrl}
+              onChange={(event) =>
+                updateField(
+                  "tiktokUrl",
+                  event.target.value
+                )
+              }
+              placeholder="https://tiktok.com/@..."
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.tiktokUrl
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.tiktokUrl && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.tiktokUrl}
+              </p>
+            )}
+          </div>
+
+          {/* FACEBOOK */}
+
+          <div>
+            <label
+              htmlFor="facebookUrl"
+              className="mb-2 block text-sm font-semibold text-primary"
+            >
+              Facebook
+            </label>
+
+            <input
+              id="facebookUrl"
+              type="url"
+              value={
+                formData.facebookUrl
+              }
+              onChange={(event) =>
+                updateField(
+                  "facebookUrl",
+                  event.target.value
+                )
+              }
+              placeholder="https://facebook.com/..."
+              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:ring-tertiary ${errors.facebookUrl
+                ? "border-red-500 focus:ring-red-200"
+                : "border-border"
+                }`}
+            />
+
+            {errors.facebookUrl && (
+              <p className="mt-2 text-sm text-red-600">
+                {errors.facebookUrl}
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* INFORMACIÓN DE CAMPOS OBLIGATORIOS */}
+      {/* ==========================================
+          PUBLICACIÓN
+          ========================================== */}
 
-      <div className="rounded-xl border border-border bg-neutral-light/30 px-4 py-3">
-        <p className="text-sm text-neutral-muted">
-          Los campos marcados con{" "}
-          <span className="font-bold text-red-600">
-            *
-          </span>{" "}
-          son obligatorios.
-        </p>
-      </div>
+      <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+        <div className="flex items-start gap-4">
+          <input
+            id="isPublished"
+            type="checkbox"
+            checked={formData.isPublished}
+            onChange={(event) =>
+              updateField(
+                "isPublished",
+                event.target.checked
+              )
+            }
+            className="mt-1 h-5 w-5 rounded border-border"
+          />
 
-      {/* MENSAJES */}
+          <div>
+            <label
+              htmlFor="isPublished"
+              className="block cursor-pointer text-sm font-semibold text-primary"
+            >
+              Publicar asociación
+            </label>
+
+            <p className="mt-1 text-sm text-neutral-muted">
+              Si está activado, la asociación podrá aparecer en las consultas públicas.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          MENSAJES
+          ========================================== */}
 
       {status === "success" && (
         <div
           role="status"
-          className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700"
+          className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"
         >
-          La asociación se guardó correctamente.
+          La asociación se creó correctamente.
         </div>
       )}
 
       {status === "error" && (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
         >
-          No se pudo guardar la asociación.
-          Inténtalo nuevamente.
+          Ocurrió un error al crear la asociación.
+          Verifique la conexión con el backend e inténtelo nuevamente.
         </div>
       )}
 
-      {/* BOTÓN */}
+      {/* ==========================================
+          BOTÓN
+          ========================================== */}
 
-      <div className="flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-end">
-        {showValidationMessage && (
-          <p
-            role="alert"
-            className="text-sm font-semibold text-red-600"
-          >
-            Hay errores en algunos campos.
-            Revisa la información antes de guardar.
-          </p>
-        )}
-
+      <div className="flex justify-end">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-inverted shadow-sm transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-primary px-6 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting && (
-            <span
-              className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"
-              aria-hidden="true"
-            />
-          )}
-
           {isSubmitting
             ? "Guardando..."
             : "Guardar asociación"}
@@ -1163,3 +989,5 @@ export function AssociationAdminForm() {
     </form>
   );
 }
+
+export default AssociationAdminForm;

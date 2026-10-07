@@ -142,15 +142,7 @@ export default async function AssociationDetailPage({ params }: Props) {
         ]} />
 
         {/* Indicador de datos en vivo */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Perfil en Vivo desde Backend API ({products.length} productos vinculados)
-          </span>
-          <span className="text-xs text-neutral-muted font-mono hidden sm:inline">
-            GET {siteConfig.backendUrl}/associations/{slug}
-          </span>
-        </div>
+        
 
         <AssociationProfile association={association} products={products} />
       </Container>

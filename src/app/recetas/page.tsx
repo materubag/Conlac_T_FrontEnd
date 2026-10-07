@@ -1,57 +1,36 @@
-import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getRecipes } from "@/lib/data";
-import { siteConfig } from "@/lib/config";
+import { getRecipes } from "@/services/recipes/recipeService";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ChefHatIcon, ArrowRightIcon } from "@/components/ui/Icons";
-import type { Receta } from "@/types";
+import type { RecipeResponse } from "@/types/recipe";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Recetas con Queso Andino",
-  description: "Platos tradicionales y recetas familiares para preparar con los quesos artesanales de CONLAC-T.",
+  description:
+    "Platos tradicionales y recetas familiares para preparar con los quesos artesanales de CONLAC-T.",
 };
 
-async function fetchRecipesFromBackend(): Promise<{
-  recipes: Receta[];
-  error: string | null;
-}> {
-  try {
-    const res = await fetch(`${siteConfig.backendUrl}/recipes`, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      return {
-        recipes: await getRecipes(),
-        error: `HTTP ${res.status}`,
-      };
-    }
-
-    const data: Receta[] = await res.json();
-    return {
-      recipes: Array.isArray(data) ? data : [],
-      error: null,
-    };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Error de conexión";
-    const fallback = await getRecipes();
-    return {
-      recipes: fallback,
-      error: `No se pudo conectar con el backend (${message}). Mostrando datos locales de respaldo.`,
-    };
-  }
-}
-
 export default async function RecetasPage() {
-  const { recipes, error } = await fetchRecipesFromBackend();
+  let recipes: RecipeResponse[] = [];
+  let error: string | null = null;
+
+  try {
+    recipes = await getRecipes();
+
+    if (!Array.isArray(recipes)) {
+      recipes = [];
+    }
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Error de conexión";
+
+    error = `No se pudieron cargar las recetas (${message}). Verifique que el servicio backend esté en ejecución.`;
+  }
 
   return (
     <div className="py-12 sm:py-16 bg-background">
@@ -60,36 +39,61 @@ export default async function RecetasPage() {
           <span className="text-xs font-label uppercase tracking-widest text-tertiary font-semibold">
             Gastronomía Andina
           </span>
+
           <h1 className="mt-2 text-3xl sm:text-4xl font-headline font-bold text-primary">
             Recetas Tradicionales
           </h1>
+
           <p className="mt-3 text-base text-neutral-muted">
-            Preparaciones típicas de nuestra serranía que destacan el sabor y textura de
-            los quesos frescos, quesillos y madurados de Pilahuín.
+            Preparaciones típicas de nuestra serranía que destacan el
+            sabor y textura de los quesos frescos, quesillos y madurados
+            de Pilahuín.
           </p>
         </div>
 
+        {/* Estado de conexión */}
         {error && (
-          <div className="mb-8 rounded-xl border border-border/80 bg-surface/80 p-4 text-xs text-neutral-muted">
+          <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
             {error}
+          </div>
+        )}
+
+        {!error && (
+          <div className="mb-8 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              API Backend Conectada ({recipes.length} recetas en vivo)
+            </span>
           </div>
         )}
 
         {recipes.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center max-w-xl mx-auto">
             <ChefHatIcon className="mx-auto h-12 w-12 text-neutral-muted/50 mb-3" />
-            <h2 className="font-headline text-lg font-bold text-primary">No hay recetas disponibles</h2>
+
+            <h2 className="font-headline text-lg font-bold text-primary">
+              No hay recetas disponibles
+            </h2>
+
             <p className="mt-2 text-sm text-neutral-muted">
-              Pronto compartiremos nuevas preparaciones tradicionales con nuestros quesos comunitarios.
+              Pronto compartiremos nuevas preparaciones tradicionales
+              con nuestros quesos comunitarios.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {recipes.map((receta) => {
-              const prepTime = receta.tiempo_preparacion_minutos || receta.tiempo_prep;
-              const stepsCount = Array.isArray(receta.pasos) ? receta.pasos.length : 0;
+              const prepTime = receta.tiempo_preparacion_minutos;
+
+              const stepsCount = Array.isArray(receta.pasos)
+                ? receta.pasos.length
+                : 0;
+
               const linkHref = `/recetas/${receta.slug || receta.id}`;
-              const imageSrc = receta.imagen_url || "/placeholders/recipe-placeholder.svg";
+
+              const imageSrc =
+                receta.imagen_url ||
+                "/placeholders/recipe-placeholder.svg";
 
               return (
                 <article
@@ -104,12 +108,14 @@ export default async function RecetasPage() {
                         fill
                         className="object-cover object-center"
                       />
+
                       <div className="absolute top-3 right-3 flex gap-2">
                         {prepTime && (
                           <Badge variant="highlight">
                             {prepTime} min
                           </Badge>
                         )}
+
                         {receta.porciones && (
                           <Badge variant="tertiary">
                             {receta.porciones} porciones
@@ -117,13 +123,6 @@ export default async function RecetasPage() {
                         )}
                       </div>
                     </div>
-
-                    {receta.tipo_queso && (
-                      <div className="flex items-center gap-1.5 text-xs text-tertiary font-semibold uppercase tracking-wider">
-                        <ChefHatIcon className="w-4 h-4" />
-                        <span>{receta.tipo_queso}</span>
-                      </div>
-                    )}
 
                     <h2 className="font-headline text-xl font-bold text-primary">
                       {receta.titulo}
