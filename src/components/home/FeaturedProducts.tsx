@@ -1,22 +1,55 @@
 import React from "react";
 import { getFeaturedProducts } from "@/lib/data";
+import { siteConfig } from "@/lib/config";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "./ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon } from "@/components/ui/Icons";
-import { EditorialTag } from "@/types";
+import { EditorialTag, Producto } from "@/types";
 
 // Etiquetas editoriales visuales del Frontend (desacopladas del contrato Producto)
 const editorialTagsMap: Record<string, EditorialTag> = {
   "prod-queso-fresco": { text: "Bestseller", variant: "primary" },
+  "b0000000-0000-0000-0000-000000000001": { text: "Bestseller", variant: "primary" },
+  "queso-fresco-artesanal-el-lindero": { text: "Bestseller", variant: "primary" },
   "prod-queso-amasado": { text: "Tradicional", variant: "tertiary" },
+  "b0000000-0000-0000-0000-000000000002": { text: "Tradicional", variant: "tertiary" },
+  "queso-de-hoja-tradicional-mulanleo": { text: "Tradicional", variant: "tertiary" },
   "prod-quesillo": { text: "Tierno", variant: "highlight" },
   "prod-queso-maduro-andino": { text: "Edición Limitada", variant: "outline" },
+  "b0000000-0000-0000-0000-000000000003": { text: "Edición Especial", variant: "outline" },
+  "queso-andino-con-oregano-silvestre": { text: "Edición Especial", variant: "outline" },
 };
 
+async function fetchHomeFeaturedProducts(): Promise<Producto[]> {
+  try {
+    const res = await fetch(`${siteConfig.backendUrl}/products?destacado=true`, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (res.ok) {
+      const data: Producto[] = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.slice(0, 4).map((item) => ({
+          ...item,
+          fotos: Array.isArray(item.fotos) && item.fotos.length > 0
+            ? item.fotos
+            : ["/placeholders/product-queso-fresco.svg"],
+        }));
+      }
+    }
+  } catch {
+    // Si el backend no responde, recurrimos a los datos mock locales como fallback
+  }
+
+  return getFeaturedProducts();
+}
 
 export const FeaturedProducts: React.FC = async () => {
-  const products = await getFeaturedProducts();
+  const products = await fetchHomeFeaturedProducts();
 
   return (
     <section

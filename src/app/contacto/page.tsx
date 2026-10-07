@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { MapPinIcon, WhatsAppIcon } from "@/components/ui/Icons";
 import { buildWhatsAppUrl } from "@/lib/utils";
+import { ContactForm } from "@/components/contact/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contacto | CONLAC-T",
@@ -32,8 +33,8 @@ export default function ContactoPage() {
           </p>
         </div>
 
+        {/* Canales Rápidos */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
           {/* Tarjeta WhatsApp */}
           <div className="p-8 rounded-2xl bg-surface border border-border flex flex-col justify-between space-y-6">
             <div className="space-y-3">
@@ -90,7 +91,11 @@ export default function ContactoPage() {
               <span>Escribir por correo</span>
             </Button>
           </div>
+        </div>
 
+        {/* Formulario de Mensajería Conectado al Backend */}
+        <div className="max-w-4xl mx-auto pt-4">
+          <ContactForm />
         </div>
       </Container>
     </div>

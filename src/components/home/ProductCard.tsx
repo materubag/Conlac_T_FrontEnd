@@ -5,6 +5,7 @@ import { ProductCardProps } from "@/types";
 import { formatPrice, cn, buildWhatsAppUrl } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 
 /**
  * ============================================================
@@ -20,7 +21,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   priorityImage = false,
   className,
 }) => {
-  const imageSrc = product.fotos[0] || "/placeholders/product-queso-fresco.svg";
+  const imageSrc = product.fotos?.[0] || "/placeholders/product-queso-fresco.svg";
+  const productDetailHref = `/tienda/${product.slug || product.id}`;
   const whatsappInquiryUrl = buildWhatsAppUrl({
     productName: `${product.nombre} (${product.asociacion || "CONLAC-T"})`,
   });
@@ -88,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="font-headline text-lg sm:text-xl font-bold text-primary group-hover:text-tertiary transition-colors line-clamp-1"
           >
             <Link
-              href={`/tienda/${product.id}`}
+              href={productDetailHref}
               className="focus-visible:outline-none focus-visible:underline"
             >
               {product.nombre}
@@ -117,19 +119,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              href={whatsappInquiryUrl}
+            <AddToCartButton
+              product={product}
               variant="outlined"
               size="sm"
-              isExternal
-              className="group/button"
-              aria-label={`Consultar disponibilidad de ${product.nombre} por WhatsApp`}
-            >
-              <span className="text-primary group-hover/button:text-inverted">Consultar</span>
-            </Button>
+            />
 
             <Button
-              href={`/tienda/${product.id}`}
+              href={productDetailHref}
               variant="primary"
               size="sm"
               className="group"

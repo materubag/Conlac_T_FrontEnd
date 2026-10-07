@@ -53,10 +53,12 @@ export const FOOTER_NAV_SECTIONS = {
     { name: "Nuestras Asociaciones", href: "/asociaciones" },
     { name: "Recetas Andinas", href: "/recetas" },
     { name: "Rutas de Turismo", href: "/turismo" },
+    { name: "Seguimiento de Pedido", href: "/seguimiento" },
   ],
   institucional: [
     { name: "Quiénes Somos", href: "/nosotros" },
     { name: "Cómo Comprar", href: "/como-comprar" },
+    { name: "Carrito de Compras", href: "/carrito" },
     { name: "Sellos Sanitarios y Calidad", href: "/nosotros#calidad" },
     { name: "Contacto y Ubicación", href: "/contacto" },
   ],

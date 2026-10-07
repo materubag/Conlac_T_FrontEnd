@@ -13,9 +13,7 @@ export async function POST(request: Request) {
 
     const nuevaAsociacion = await createAssociation(data);
 
-    const associations = await getAssociations();
-
-    console.log("TOTAL DESDE API DESPUÉS DE GUARDAR:", associations.length);
+    await getAssociations();
 
     return NextResponse.json(nuevaAsociacion, {
       status: 201,

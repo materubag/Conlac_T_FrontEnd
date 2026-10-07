@@ -244,9 +244,6 @@ export async function getFeaturedProducts(): Promise<Producto[]> {
 }
 
 export async function getAssociations(): Promise<Asociacion[]> {
-  console.log("Total de asociaciones:", asociacionesMock.length);
-  console.log("Asociaciones:", asociacionesMock);
-
   return Promise.resolve([...asociacionesMock]);
 }
 

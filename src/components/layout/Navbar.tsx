@@ -9,6 +9,7 @@ import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { CartIcon, MenuIcon, CloseIcon } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
+import { useCart } from "@/context/CartContext";
 
 /**
  * ============================================================
@@ -18,12 +19,13 @@ import { Button } from "@/components/ui/Button";
  * Contiene:
  * - Logo oficial y nombre de marca.
  * - Las 7 pestañas oficiales configuradas de forma centralizada.
- * - Elemento visual de Carrito con contador (mock no funcional).
+ * - Elemento de Carrito interactivo con contador real y drawer.
  * - Botón "Ver tienda".
  * - Menú responsive accesible con soporte completo de teclado.
  */
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const { totalItems, toggleCart } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -71,6 +73,7 @@ export const Navbar: React.FC = () => {
               src={siteConfig.assets.logo}
               alt="Logo oficial de CONLAC-T - Consorcio de Lácteos de Tungurahua"
               fill
+              sizes="48px"
               className="object-contain transition-transform group-hover:scale-105"
               priority
             />
@@ -127,22 +130,27 @@ export const Navbar: React.FC = () => {
             ============================================================ */}
         <div className="flex items-center gap-2 sm:gap-3">
 
-          {/* Carrito como elemento visual NO funcional para Semana 2 */}
-          <div
-            className="relative flex items-center justify-center p-2 rounded-xl text-neutral hover:text-primary hover:bg-neutral-light/60 transition-colors cursor-pointer select-none"
-            title="Carrito de compras (Disponible en semanas posteriores)"
-            role="button"
-            tabIndex={0}
-            aria-label="Carrito de compras con 0 artículos (Visual para Sprint 2)"
+          {/* Carrito de compras interactivo con contador dinámico */}
+          <button
+            type="button"
+            onClick={toggleCart}
+            className="relative flex items-center justify-center p-2 rounded-xl text-neutral hover:text-primary hover:bg-neutral-light/60 transition-colors cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none"
+            title={`Carrito de compras (${totalItems} ${totalItems === 1 ? "artículo" : "artículos"})`}
+            aria-label={`Abrir carrito de compras con ${totalItems} artículos`}
           >
             <CartIcon className="w-6 h-6" />
             <span
-              className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-tertiary text-[10px] font-bold text-neutral shadow-sm"
+              className={cn(
+                "absolute top-1 right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full text-[10px] font-bold shadow-sm transition-all",
+                totalItems > 0
+                  ? "bg-tertiary text-neutral font-bold scale-100"
+                  : "bg-neutral-light text-neutral-muted scale-90"
+              )}
               aria-hidden="true"
             >
-              0
+              {totalItems}
             </span>
-          </div>
+          </button>
 
           {/* CTA "Ver tienda" Desktop */}
           <div className="hidden sm:block">

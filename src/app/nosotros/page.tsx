@@ -12,12 +12,43 @@ import {
   UsersIcon,
 } from "@/components/ui/Icons";
 
+import { siteConfig } from "@/lib/config";
+import type { Testimonial } from "@/types";
+
 export const metadata: Metadata = {
   title: "Nosotros | Consorcio CONLAC-T",
   description: "Historia, valores y misión del Consorcio de Lácteos de Tungurahua (CONLAC-T).",
 };
 
-export default function NosotrosPage() {
+async function fetchNosotrosTestimonials(): Promise<Array<{ quote: string; name: string; role: string }>> {
+  try {
+    const res = await fetch(`${siteConfig.backendUrl}/testimonials`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (res.ok) {
+      const data: Testimonial[] = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((t) => ({
+          quote: `“${t.frase}”`,
+          name: t.autor_nombre,
+          role: t.autor_tipo || "Comunidad CONLAC-T",
+        }));
+      }
+    }
+  } catch {
+    // Fallback a testimonios locales
+  }
+
+  return [
+    { quote: "“La cremosidad y el punto de sal del queso de CONLAC-T elevaron los platos tradicionales de nuestra carta.”", name: "Chef Mateo Villacís", role: "Restaurante Altura & Raíz, Baños" },
+    { quote: "“La frescura es incomparable. Saber que apoyamos directamente a campesinos de nuestra provincia nos da paz.”", name: "Carmen Salazar Morales", role: "Clienta habitual, Ambato" },
+    { quote: "“La puntualidad de entrega y el compromiso ético los convierten en un socio insustituible.”", name: "Diego Barreno", role: "Café Páramo & Aroma, Pelileo" },
+  ];
+}
+
+export default async function NosotrosPage() {
+  const testimonials = await fetchNosotrosTestimonials();
   return (
     <main className="bg-background pb-16 sm:pb-24">
       <Container className="space-y-16 sm:space-y-24">
@@ -203,11 +234,7 @@ export default function NosotrosPage() {
             <ChefHatIcon className="hidden h-12 w-12 text-tertiary sm:block" />
           </div>
           <div className="grid gap-5 md:grid-cols-3">
-            {[
-              ["“La cremosidad y el punto de sal del queso de CONLAC-T elevaron los platos tradicionales de nuestra carta.”", "Chef Mateo Villacís", "Restaurante Altura & Raíz, Baños"],
-              ["“La frescura es incomparable. Saber que apoyamos directamente a campesinos de nuestra provincia nos da paz.”", "Carmen Salazar Morales", "Clienta habitual, Ambato"],
-              ["“La puntualidad de entrega y el compromiso ético los convierten en un socio insustituible.”", "Diego Barreno", "Café Páramo & Aroma, Pelileo"],
-            ].map(([quote, name, role]) => (
+            {testimonials.map(({ quote, name, role }) => (
               <figure key={name} className="flex flex-col justify-between rounded-2xl bg-surface p-6 shadow-artisan">
                 <blockquote className="leading-relaxed text-neutral-muted italic">{quote}</blockquote>
                 <figcaption className="mt-6 border-t border-border pt-4">
