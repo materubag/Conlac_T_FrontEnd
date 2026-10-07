@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
@@ -34,6 +34,17 @@ const SHIPPING_ZONES = [
   },
 ];
 
+// Validaciones de formato de los campos del cliente.
+// Cédula: 10 dígitos. RUC: 13 dígitos. Solo números.
+const CEDULA_RUC_REGEX = /^(\d{10}|\d{13})$/;
+// Acepta dígitos, espacios, guiones y un "+" inicial (ej. +593987654321); 7 a 15 caracteres.
+const TELEFONO_REGEX = /^\+?[0-9\s-]{7,15}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NOMBRE_MIN = 3;
+const NOMBRE_MAX = 120;
+const DIRECCION_MAX = 300;
+const NOTAS_MAX = 500;
+
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, clearCart } = useCart();
 
@@ -53,6 +64,12 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<OrderCreateResponse | null>(null);
 
+  // Guard síncrono contra doble envío: setIsSubmitting(true) no toma efecto en el DOM
+  // de inmediato (React agrupa actualizaciones de estado), por lo que un segundo click
+  // muy rápido podría disparar un segundo submit antes de que el botón quede disabled.
+  // Esta ref se actualiza de forma síncrona y cierra esa ventana.
+  const submitLockRef = useRef(false);
+
   // Cálculo de flete y total
   const selectedZone = metodoEntrega === "delivery" 
     ? SHIPPING_ZONES.find((z) => z.id === zonaEnvioId) 
@@ -62,6 +79,13 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Guard síncrono: si ya hay un envío en curso, ignorar clicks adicionales
+    // inmediatamente (antes de que React re-renderice el botón disabled).
+    if (submitLockRef.current) {
+      return;
+    }
+
     setErrorMessage(null);
 
     if (items.length === 0) {
@@ -69,16 +93,53 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!nombre.trim() || !cedulaRuc.trim() || !telefono.trim()) {
+    const nombreTrim = nombre.trim();
+    const cedulaRucTrim = cedulaRuc.trim();
+    const telefonoTrim = telefono.trim();
+    const emailTrim = email.trim();
+    const direccionTrim = direccionEntrega.trim();
+
+    if (!nombreTrim || !cedulaRucTrim || !telefonoTrim) {
       setErrorMessage("Por favor complete los campos obligatorios del cliente.");
       return;
     }
 
-    if (metodoEntrega === "delivery" && !direccionEntrega.trim()) {
+    if (nombreTrim.length < NOMBRE_MIN || nombreTrim.length > NOMBRE_MAX) {
+      setErrorMessage(`El nombre debe tener entre ${NOMBRE_MIN} y ${NOMBRE_MAX} caracteres.`);
+      return;
+    }
+
+    if (!CEDULA_RUC_REGEX.test(cedulaRucTrim)) {
+      setErrorMessage("La cédula debe tener 10 dígitos o el RUC 13 dígitos, solo números.");
+      return;
+    }
+
+    if (!TELEFONO_REGEX.test(telefonoTrim)) {
+      setErrorMessage("El teléfono ingresado no es válido. Use solo números (7 a 15 dígitos).");
+      return;
+    }
+
+    if (emailTrim && !EMAIL_REGEX.test(emailTrim)) {
+      setErrorMessage("El correo electrónico ingresado no tiene un formato válido.");
+      return;
+    }
+
+    if (metodoEntrega === "delivery" && !direccionTrim) {
       setErrorMessage("La dirección de entrega es obligatoria para envíos a domicilio.");
       return;
     }
 
+    if (metodoEntrega === "delivery" && direccionTrim.length > DIRECCION_MAX) {
+      setErrorMessage(`La dirección de entrega no debe superar los ${DIRECCION_MAX} caracteres.`);
+      return;
+    }
+
+    if (notasCliente.trim().length > NOTAS_MAX) {
+      setErrorMessage(`Las notas adicionales no deben superar los ${NOTAS_MAX} caracteres.`);
+      return;
+    }
+
+    submitLockRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -133,6 +194,7 @@ export default function CheckoutPage() {
       const msg = err instanceof Error ? err.message : "Error inesperado de conexión";
       setErrorMessage(msg);
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -353,6 +415,7 @@ export default function CheckoutPage() {
                     id="nombre"
                     type="text"
                     required
+                    maxLength={NOMBRE_MAX}
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                     placeholder="Ej. Mateo Villacís"
@@ -368,6 +431,8 @@ export default function CheckoutPage() {
                     id="cedulaRuc"
                     type="text"
                     required
+                    inputMode="numeric"
+                    maxLength={13}
                     value={cedulaRuc}
                     onChange={(e) => setCedulaRuc(e.target.value)}
                     placeholder="1801234567"
@@ -383,6 +448,7 @@ export default function CheckoutPage() {
                     id="telefono"
                     type="tel"
                     required
+                    maxLength={15}
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
                     placeholder="099 123 4567"
@@ -501,6 +567,7 @@ export default function CheckoutPage() {
                       id="direccionEntrega"
                       type="text"
                       required={metodoEntrega === "delivery"}
+                      maxLength={DIRECCION_MAX}
                       value={direccionEntrega}
                       onChange={(e) => setDireccionEntrega(e.target.value)}
                       placeholder="Calle Principal, número de casa, sector o punto de referencia"
@@ -580,6 +647,7 @@ export default function CheckoutPage() {
                 <textarea
                   id="notasCliente"
                   rows={2}
+                  maxLength={NOTAS_MAX}
                   value={notasCliente}
                   onChange={(e) => setNotasCliente(e.target.value)}
                   placeholder="Ej. Entregar después de las 14:00, empacar por separado..."
