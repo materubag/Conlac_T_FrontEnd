@@ -3,6 +3,7 @@
 import React, { FormEvent, useState } from "react";
 import type { AssociationFormData } from "@/types/index";
 import { createAssociation } from "@/services/asociaciones/associationService";
+
 type FormErrors = Partial<
   Record<keyof AssociationFormData, string>
 >;

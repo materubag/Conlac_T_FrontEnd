@@ -7,7 +7,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ChefHatIcon } from "@/components/ui/Icons";
-import type { RecipeResponse } from "@/types/recipe";
+import type { RecipeResponse, RecipeIngredient, RecipeStep } from "@/types/recipe";
 
 export const dynamic = "force-dynamic";
 
@@ -142,7 +142,7 @@ export default async function RecipeDetailPage({ params }: Props) {
               </h2>
 
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {ingredientes.map((ing, idx) => {
+                {ingredientes.map((ing: RecipeIngredient | string, idx: number) => {
                   const item =
                     typeof ing === "object" && ing !== null
                       ? String(ing.item ?? "")
@@ -182,7 +182,7 @@ export default async function RecipeDetailPage({ params }: Props) {
               </h2>
 
               <ol className="space-y-4">
-                {pasos.map((paso, index) => {
+                {pasos.map((paso: RecipeStep | string, index: number) => {
                   const stepNum =
                     typeof paso === "object" &&
                     paso !== null &&

@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloatingButton } from "@/components/layout/WhatsAppFloatingButton";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
 // Configuración tipográfica con next/font/google
@@ -84,32 +85,34 @@ export default function RootLayout({
       className={`${playfair.variable} ${montserrat.variable}`}
     >
       <body className="min-h-screen flex flex-col bg-background text-neutral antialiased selection:bg-tertiary selection:text-neutral">
-        <CartProvider>
-          {/* Enlace accesible de salto al contenido principal (WCAG 2.2) */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-inverted focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
-          >
-            Saltar al contenido principal
-          </a>
+        <AuthProvider>
+          <CartProvider>
+            {/* Enlace accesible de salto al contenido principal (WCAG 2.2) */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-inverted focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+            >
+              Saltar al contenido principal
+            </a>
 
-          {/* Barra de Navegación con 7 pestañas oficiales y contador de carrito */}
-          <Navbar />
+            {/* Barra de Navegación con 7 pestañas oficiales y contador de carrito */}
+            <Navbar />
 
-          {/* Contenido Dinámico de la Página */}
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
+            {/* Contenido Dinámico de la Página */}
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
 
-          {/* Drawer interactivo del carrito */}
-          <CartDrawer />
+            {/* Drawer interactivo del carrito */}
+            <CartDrawer />
 
-          {/* Botón flotante persistente de WhatsApp */}
-          <WhatsAppFloatingButton />
+            {/* Botón flotante persistente de WhatsApp */}
+            <WhatsAppFloatingButton />
 
-          {/* Pie de Página Institucional */}
-          <Footer />
-        </CartProvider>
+            {/* Pie de Página Institucional */}
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

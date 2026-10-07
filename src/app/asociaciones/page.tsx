@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AssociationCard } from "@/components/associations/AssociationCard";
 import { getAssociations } from "@/services/asociaciones/associationService";
-import type { AssociationResponse } from "@/types/association";
+import type { Asociacion } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +14,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AsociacionesPage() {
-  let associations: AssociationResponse[] = [];
+  let associations: Asociacion[] = [];
   let error: string | null = null;
 
   try {
-    associations = await getAssociations();
+    const rawAssociations = await getAssociations();
 
     // Agregamos imagen placeholder cuando la asociación no tiene fotos.
-    associations = associations.map((association) => ({
+    associations = rawAssociations.map((association) => ({
       ...association,
       fotos:
         Array.isArray(association.fotos) && association.fotos.length > 0

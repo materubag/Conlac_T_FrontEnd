@@ -273,6 +273,28 @@ export interface ThemeConfig {
   labelFont: string;
 }
 
+// ============================================================
+// 3. TIPOS DE AUTENTICACIÓN Y PERFIL DE USUARIO
+// ============================================================
+
+export type UserRole = "admin" | "customer";
+
+export interface UserProfile {
+  id: string; // UUID de auth.users / profiles
+  full_name: string;
+  role: UserRole;
+  is_active: boolean;
+  email?: string;
+  phone?: string;
+  tax_id?: string;
+  address?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ============================================================
+// 4. TIPOS DE ASOCIACIONES (ADMINISTRACIÓN Y CRUD)
+// ============================================================
 
 export interface AssociationFormData {
   slug: string;
@@ -297,6 +319,7 @@ export interface AssociationFormData {
 
   isPublished: boolean;
 }
+
 export interface AssociationResponse {
   id: string;
 
@@ -306,6 +329,9 @@ export interface AssociationResponse {
   historia?: string;
 
   ubicacion?: string;
+  ubicacion_referencia?: string;
+
+  fotos?: string[];
 
   video_url?: string;
 
@@ -351,3 +377,4 @@ export interface CreateAssociationRequest {
 
   isPublished: boolean;
 }
+
