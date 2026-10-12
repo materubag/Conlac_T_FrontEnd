@@ -1,5 +1,5 @@
 import React from "react";
-import { getFeaturedProducts } from "@/lib/data";
+import { getFeaturedProducts, resolveProductPhotos } from "@/lib/data";
 import { siteConfig } from "@/lib/config";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "./ProductCard";
@@ -35,9 +35,7 @@ async function fetchHomeFeaturedProducts(): Promise<Producto[]> {
       if (Array.isArray(data) && data.length > 0) {
         return data.slice(0, 4).map((item) => ({
           ...item,
-          fotos: Array.isArray(item.fotos) && item.fotos.length > 0
-            ? item.fotos
-            : ["/placeholders/product-queso-fresco.svg"],
+          fotos: resolveProductPhotos(item),
         }));
       }
     }

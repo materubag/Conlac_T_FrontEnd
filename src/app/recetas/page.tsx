@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getRecipes } from "@/services/recipes/recipeService";
+import { recetasMock, demoPhoto } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function RecetasPage() {
   let recipes: RecipeResponse[] = [];
-  let error: string | null = null;
+  const error: string | null = null;
 
   try {
     recipes = await getRecipes();
@@ -26,10 +27,13 @@ export default async function RecetasPage() {
       recipes = [];
     }
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Error de conexión";
+    console.error("[recetas] No se pudo consultar el backend:", err);
+  }
 
-    error = `No se pudieron cargar las recetas (${message}). Verifique que el servicio backend esté en ejecución.`;
+  // Sin backend disponible (o sin recetas cargadas) mostramos el catálogo local
+  // para que el sitio siga siendo navegable al desplegarse solo el frontend.
+  if (recipes.length === 0) {
+    recipes = recetasMock;
   }
 
   return (
@@ -51,19 +55,9 @@ export default async function RecetasPage() {
           </p>
         </div>
 
-        {/* Estado de conexión */}
         {error && (
           <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
             {error}
-          </div>
-        )}
-
-        {!error && (
-          <div className="mb-8 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              API Backend Conectada ({recipes.length} recetas en vivo)
-            </span>
           </div>
         )}
 
@@ -82,7 +76,7 @@ export default async function RecetasPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recipes.map((receta) => {
+            {recipes.map((receta, indice) => {
               const prepTime = receta.tiempo_preparacion_minutos;
 
               const stepsCount = Array.isArray(receta.pasos)
@@ -91,9 +85,7 @@ export default async function RecetasPage() {
 
               const linkHref = `/recetas/${receta.slug || receta.id}`;
 
-              const imageSrc =
-                receta.imagen_url ||
-                "/placeholders/recipe-placeholder.svg";
+              const imageSrc = receta.imagen_url || demoPhoto("recetas", indice);
 
               return (
                 <article

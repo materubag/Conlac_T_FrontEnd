@@ -54,7 +54,7 @@ export default async function NosotrosPage() {
       <Container className="space-y-16 sm:space-y-24">
         <section className="relative isolate overflow-hidden rounded-3xl bg-primary px-6 py-16 text-inverted shadow-artisan sm:px-12 sm:py-24 lg:px-20">
           <Image
-            src="/images/hero-andes.svg"
+            src="/demo/HERO-chimborazo.jpg"
             alt="Paisaje andino de Tungurahua"
             fill
             priority
@@ -85,7 +85,7 @@ export default async function NosotrosPage() {
           <div className="relative lg:col-span-5">
             <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-surface-warm shadow-artisan">
               <Image
-                src="/images/hero-andes.svg"
+                src="/demo/ASOC-paramo.jpg"
                 alt="Paisaje de las comunidades productoras de Tungurahua"
                 fill
                 className="object-cover"

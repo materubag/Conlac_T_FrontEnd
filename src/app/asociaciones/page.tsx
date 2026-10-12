@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AssociationCard } from "@/components/associations/AssociationCard";
 import { getAssociations } from "@/services/asociaciones/associationService";
+import { asociacionesMock, demoPhoto } from "@/lib/data";
 import type { Asociacion } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -15,24 +16,27 @@ export const metadata: Metadata = {
 
 export default async function AsociacionesPage() {
   let associations: Asociacion[] = [];
-  let error: string | null = null;
+  const error: string | null = null;
 
   try {
     const rawAssociations = await getAssociations();
 
-    // Agregamos imagen placeholder cuando la asociación no tiene fotos.
-    associations = rawAssociations.map((association) => ({
+    // Usamos una imagen demo cuando la asociación aún no tiene fotos cargadas.
+    associations = rawAssociations.map((association, indice) => ({
       ...association,
       fotos:
         Array.isArray(association.fotos) && association.fotos.length > 0
           ? association.fotos
-          : ["/placeholders/association-placeholder.svg"],
+          : [demoPhoto("asociaciones", indice)],
     }));
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Error de conexión";
+    console.error("[asociaciones] No se pudo consultar el backend:", err);
+  }
 
-    error = `No se pudieron cargar las asociaciones (${message}). Verifique que el servicio backend esté en ejecución.`;
+  // Sin backend disponible mostramos las asociaciones locales para que el sitio
+  // siga siendo navegable al desplegarse solo el frontend.
+  if (associations.length === 0) {
+    associations = asociacionesMock;
   }
 
   return (
@@ -61,8 +65,7 @@ export default async function AsociacionesPage() {
           </p>
         </div>
 
-        {/* Estado de conexión */}
-        {error ? (
+        {error && (
           <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
             <div className="flex items-start gap-3">
               <span className="text-xl" aria-hidden="true">
@@ -79,10 +82,6 @@ export default async function AsociacionesPage() {
                 </p>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="mb-8 flex flex-wrap items-center gap-3">
-            
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTouristAttractions } from "@/services/tourism/tourismService";
+import { atractivosMock, demoPhoto } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default async function TurismoPage() {
   let attractions: AtractivoTuristico[] = [];
-  let error: string | null = null;
+  const error: string | null = null;
 
   try {
     attractions = await getTouristAttractions();
@@ -27,10 +28,13 @@ export default async function TurismoPage() {
       attractions = [];
     }
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Error de conexión";
+    console.error("[turismo] No se pudo consultar el backend:", err);
+  }
 
-    error = `No se pudieron cargar los atractivos turísticos (${message}). Verifique que el servicio backend esté en ejecución.`;
+  // Sin backend disponible mostramos los atractivos locales para que el sitio
+  // siga siendo navegable al desplegarse solo el frontend.
+  if (attractions.length === 0) {
+    attractions = atractivosMock;
   }
 
   return (
@@ -58,15 +62,6 @@ export default async function TurismoPage() {
           </div>
         )}
 
-        {!error && (
-          <div className="mb-8 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              API Backend Conectada ({attractions.length} atractivos en vivo)
-            </span>
-          </div>
-        )}
-
         {attractions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center max-w-xl mx-auto">
             <MapPinIcon className="mx-auto h-12 w-12 text-neutral-muted/50 mb-3" />
@@ -82,10 +77,8 @@ export default async function TurismoPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {attractions.map((attraction) => {
-              const imageSrc =
-                attraction.foto_url ||
-                "/placeholders/tourism-placeholder.svg";
+            {attractions.map((attraction, indice) => {
+              const imageSrc = attraction.foto_url || demoPhoto("turismo", indice);
 
               const whatsappUrl = buildWhatsAppUrl({
                 message: `Hola CONLAC-T, deseo información sobre la ruta "${attraction.nombre}".`,

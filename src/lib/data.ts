@@ -1,6 +1,51 @@
 import { Producto, PresentacionProducto, Asociacion, Receta, AtractivoTuristico } from "@/types";
 import { siteConfig } from "@/lib/config";
 
+// Fotos locales por producto (demo), usadas mientras el backend no tenga imágenes
+// cargadas en Supabase Storage. Se indexan por slug y también por id, porque el
+// catálogo mock usa ids y el backend usa slugs.
+// Las fotos que vengan del backend siempre tienen prioridad sobre estas.
+const LOCAL_PRODUCT_PHOTOS: Record<string, string> = {
+  // Slugs reales del backend
+  "queso-fresco-artesanal-el-lindero": "/demo/PROD-fresco.jpg",
+  "queso-de-hoja-tradicional-mulanleo": "/demo/PROD-quesillo.jpg",
+  "queso-andino-oregano-apukanlla": "/demo/PROD-maduro.jpg",
+  // Ids del catálogo mock (fallback sin backend)
+  "prod-queso-fresco": "/demo/PROD-fresco.jpg",
+  "prod-queso-amasado": "/demo/PROD-amasado.jpg",
+  "prod-quesillo": "/demo/PROD-quesillo.jpg",
+  "prod-queso-maduro-andino": "/demo/PROD-maduro.jpg",
+};
+
+// Repertorio de imágenes demo para las secciones cuyo contenido aún no tiene
+// fotos cargadas en el backend. Se reparten por posición para que cada tarjeta
+// muestre una imagen distinta.
+const DEMO_PHOTOS = {
+  asociaciones: [
+    "/demo/ASOC-paramo.jpg",
+    "/demo/ASOC-canon.jpg",
+    "/demo/ASOC-paisaje.jpg",
+    "/demo/ASOC-comunidad.jpg",
+  ],
+  recetas: ["/demo/REC-locro.jpg", "/demo/REC-empanadas.jpg", "/demo/REC-tabla.jpg"],
+  turismo: ["/demo/TUR-vicunas.jpg", "/demo/TUR-carihuairazo.jpg", "/demo/TUR-chimborazo.jpg"],
+} as const;
+
+export function demoPhoto(seccion: keyof typeof DEMO_PHOTOS, indice: number): string {
+  const pool = DEMO_PHOTOS[seccion];
+  return pool[Math.abs(indice) % pool.length];
+}
+
+export function resolveProductPhotos(product: Pick<Producto, "fotos" | "slug" | "id">): string[] {
+  const fromBackend = Array.isArray(product.fotos) ? product.fotos.filter(Boolean) : [];
+  if (fromBackend.length > 0) {
+    return fromBackend;
+  }
+
+  const local = LOCAL_PRODUCT_PHOTOS[product.slug ?? ""] ?? LOCAL_PRODUCT_PHOTOS[product.id ?? ""];
+  return [local ?? siteConfig.assets.productPlaceholder];
+}
+
 export function normalizeBackendProduct(product: Producto): Producto {
   const presentations: PresentacionProducto[] = Array.isArray(product.presentaciones)
     ? product.presentaciones.map((presentation) => ({
@@ -13,7 +58,7 @@ export function normalizeBackendProduct(product: Producto): Producto {
 
   return {
     ...product,
-    fotos: Array.isArray(product.fotos) ? product.fotos.filter(Boolean) : [],
+    fotos: resolveProductPhotos(product),
     precio: Number(primaryPresentation?.precio ?? product.precio ?? 0),
     stock: Number(primaryPresentation?.stock ?? product.stock ?? 0),
     peso: primaryPresentation?.nombre_presentacion ?? product.peso,
@@ -48,7 +93,7 @@ export const productosMock: Producto[] = [
     tipo_queso: "Fresco Semidesnatado",
     peso: "500 g",
     precio: 3.25,
-    fotos: ["/placeholders/product-queso-fresco.svg"],
+    fotos: ["/demo/PROD-fresco.jpg"],
     asociacion: "Asociación El Lindero",
     asociacion_id: "asoc-el-lindero",
     stock: 20,
@@ -60,7 +105,7 @@ export const productosMock: Producto[] = [
     tipo_queso: "Amasado Tradicional",
     peso: "500 g",
     precio: 3.90,
-    fotos: ["/placeholders/product-queso-amasado.svg"],
+    fotos: ["/demo/PROD-amasado.jpg"],
     asociacion: "Asociación de Lácteos San Francisco de Chibuleo",
     asociacion_id: "asoc-san-francisco-chibuleo",
     stock: 15,
@@ -72,7 +117,7 @@ export const productosMock: Producto[] = [
     tipo_queso: "Tierno Andino",
     peso: "500 g",
     precio: 2.80,
-    fotos: ["/placeholders/product-quesillo.svg"],
+    fotos: ["/demo/PROD-quesillo.jpg"],
     asociacion: "Asociación Mulanleo",
     asociacion_id: "asoc-mulanleo",
     stock: 30,
@@ -84,7 +129,7 @@ export const productosMock: Producto[] = [
     tipo_queso: "Madurado en Cava",
     peso: "400 g",
     precio: 6.50,
-    fotos: ["/placeholders/product-queso-maduro.svg"],
+    fotos: ["/demo/PROD-maduro.jpg"],
     asociacion: "Asociación Apukanlla",
     asociacion_id: "asoc-apukanlla",
     stock: 8,
@@ -100,9 +145,9 @@ export const asociacionesMock: Asociacion[] = [
     historia:
       "Ubicada en el sector El Lindero en las faldas del páramo andino de Pilahuín, agrupa a familias campesinas dedicadas a la producción de leche de pastoreo de altura y elaboración de queso fresco tradicional con estrictas normas de inocuidad.",
     fotos: [
-      "/placeholders/association-placeholder.svg",
-      "/placeholders/association-placeholder.svg",
-      "/placeholders/association-placeholder.svg",
+      "/demo/ASOC-paramo.jpg",
+      "/demo/PROD-hoja.jpg",
+      "/demo/ASOC-paisaje.jpg",
     ],
     sello_sanitario: "BPM-CONLAC-001",
     sello_arcsa: "ARCSA-BPM-TUN-00124 (Provisional / Mock)",
@@ -127,8 +172,8 @@ export const asociacionesMock: Asociacion[] = [
     historia:
       "Núcleo comunitario productor de Mulanleo en Pilahuín, especializado en derivados lácteos de alta pureza y quesillos tiernos elaborados con ganado adaptado al ecosistema de páramo a más de 3.350 msnm.",
     fotos: [
-      "/placeholders/association-placeholder.svg",
-      "/placeholders/association-placeholder.svg",
+      "/demo/ASOC-canon.jpg",
+      "/demo/ASOC-lienzo.jpg",
     ],
     sello_sanitario: "BPM-CONLAC-002",
     sello_arcsa: "ARCSA-BPM-TUN-00125 (Provisional / Mock)",
@@ -152,8 +197,8 @@ export const asociacionesMock: Asociacion[] = [
     historia:
       "Pioneros en la maduración de quesos andinos de cava natural en el sector Apukanlla, aprovechando el microclima frío y seco del páramo para lograr notas aromáticas profundas y cortezas naturales.",
     fotos: [
-      "/placeholders/association-placeholder.svg",
-      "/placeholders/association-placeholder.svg",
+      "/demo/ASOC-paisaje.jpg",
+      "/demo/PROD-maduro.jpg",
     ],
     sello_sanitario: "BPM-CONLAC-003",
     sello_arcsa: "ARCSA-BPM-TUN-00126 (Provisional / Mock)",
@@ -176,7 +221,7 @@ export const asociacionesMock: Asociacion[] = [
     nombre: "Asociación de Lácteos San Francisco de Chibuleo",
     historia:
       "Productores indígenas de la comunidad de Chibuleo San Francisco que preservan la técnica ancestral del queso amasado a mano, garantizando una textura cremosa y sabor auténtico de la serranía.",
-    fotos: ["/placeholders/association-placeholder.svg"],
+    fotos: ["/demo/ASOC-comunidad.jpg", "/demo/PROD-amasado.jpg"],
     sello_sanitario: "BPM-CONLAC-004",
     sello_arcsa: "ARCSA-BPM-TUN-00127 (Provisional / Mock)",
     registro_bpm: "BPM-2024-092 (Mock)",
@@ -207,6 +252,7 @@ export const recetasMock: Receta[] = [
     titulo: "Locro de Papa Andino con Queso Fresco",
     tipo_queso: "Queso Fresco El Lindero",
     tiempo_prep: 45,
+    imagen_url: "/demo/REC-locro.jpg",
     producto_slug: "prod-queso-fresco",
     pasos: [
       "Pelar y picar las papas chola y chahuaco en cubos.",
@@ -221,6 +267,7 @@ export const recetasMock: Receta[] = [
     titulo: "Empanadas de Viento con Quesillo de Mulanleo",
     tipo_queso: "Quesillo Mulanleo",
     tiempo_prep: 30,
+    imagen_url: "/demo/REC-empanadas.jpg",
     producto_slug: "prod-quesillo",
     pasos: [
       "Elaborar masa fina con harina de trigo, manteca tibia y agua con sal.",
@@ -234,6 +281,7 @@ export const recetasMock: Receta[] = [
     titulo: "Tabla & Fondue Rústico de Maduro Andino",
     tipo_queso: "Queso Maduro Andino Apukanlla",
     tiempo_prep: 20,
+    imagen_url: "/demo/REC-tabla.jpg",
     producto_slug: "prod-queso-maduro-andino",
     pasos: [
       "Rallar o trocear el Queso Maduro Andino a temperatura ambiente.",
@@ -251,6 +299,7 @@ export const atractivosMock: AtractivoTuristico[] = [
       "Extensos páramos andinos, senderos de alta montaña y avistamiento de vicuñas en su hábitat natural, contiguo a las zonas de pastoreo de Pilahuín.",
     asociacion_cercana: "Asociación Mulanleo",
     tipo: "Naturaleza & Senderismo",
+    foto_url: "/demo/TUR-vicunas.jpg",
   },
   {
     id: "tur-ruta-queso-artesanal",
@@ -259,6 +308,7 @@ export const atractivosMock: AtractivoTuristico[] = [
       "Recorrido vivencial por las plantas queseras comunitarias para conocer el proceso de ordeño en altura, cuajado artesanal y degustación guiada.",
     asociacion_cercana: "Asociación El Lindero",
     tipo: "Agroturismo & Gastronomía",
+    foto_url: "/demo/PROD-hoja.jpg",
   },
   {
     id: "tur-mirador-carihuairazo",
@@ -267,6 +317,7 @@ export const atractivosMock: AtractivoTuristico[] = [
       "Panorámica imponente de los valles interandinos de Tungurahua y senderos botánicos de frailejones y flora nativa de páramo.",
     asociacion_cercana: "Asociación Apukanlla",
     tipo: "Paisajismo & Fotografía",
+    foto_url: "/demo/TUR-carihuairazo.jpg",
   },
 ];
 

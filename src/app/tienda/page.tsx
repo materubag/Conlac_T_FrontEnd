@@ -1,6 +1,11 @@
 import React from "react";
 import type { Metadata } from "next";
-import { getAssociationById, normalizeBackendProduct } from "@/lib/data";
+import {
+  getAssociationById,
+  normalizeBackendProduct,
+  productosMock,
+  resolveProductPhotos,
+} from "@/lib/data";
 import { siteConfig } from "@/lib/config";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "@/components/home/ProductCard";
@@ -19,10 +24,12 @@ interface Props {
   searchParams: Promise<{ asociacion?: string }>;
 }
 
+const CATALOG_ERROR_MESSAGE =
+  "El catálogo no está disponible en este momento. Vuelve a intentarlo en unos minutos o escríbenos por WhatsApp para coordinar tu pedido.";
+
 async function fetchProductsFromBackend(associationFilter?: string): Promise<{
   products: Producto[];
   error: string | null;
-  apiUrl: string;
 }> {
   const url = new URL(`${siteConfig.backendUrl}/products`);
   if (associationFilter) {
@@ -40,11 +47,8 @@ async function fetchProductsFromBackend(associationFilter?: string): Promise<{
     });
 
     if (!res.ok) {
-      return {
-        products: [],
-        error: `El servidor backend respondió con código HTTP ${res.status} (${res.statusText})`,
-        apiUrl,
-      };
+      console.error(`[tienda] ${apiUrl} respondió HTTP ${res.status} (${res.statusText})`);
+      return { products: [], error: CATALOG_ERROR_MESSAGE };
     }
 
     const data: Producto[] = await res.json();
@@ -59,15 +63,10 @@ async function fetchProductsFromBackend(associationFilter?: string): Promise<{
         };
       }),
       error: null,
-      apiUrl,
     };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Error de conexión";
-    return {
-      products: [],
-      error: `No se pudo conectar con el backend (${message}). Verifique que el contenedor Docker esté activo en el puerto 8080.`,
-      apiUrl,
-    };
+    console.error(`[tienda] No se pudo conectar con ${apiUrl}:`, err);
+    return { products: [], error: CATALOG_ERROR_MESSAGE };
   }
 }
 
@@ -76,7 +75,16 @@ export default async function TiendaPage({ searchParams }: Props) {
   const asociacion = asociacionId ? await getAssociationById(asociacionId) : null;
   const filterKey = asociacion?.slug || asociacion?.id || asociacionId;
 
-  const { products, error, apiUrl } = await fetchProductsFromBackend(filterKey);
+  const { products: backendProducts, error: backendError } =
+    await fetchProductsFromBackend(filterKey);
+
+  // Sin backend disponible mostramos el catálogo local para que la tienda siga
+  // siendo navegable al desplegarse solo el frontend.
+  const products =
+    backendProducts.length > 0
+      ? backendProducts
+      : productosMock.map((item) => ({ ...item, fotos: resolveProductPhotos(item) }));
+  const error = products.length > 0 ? null : backendError;
 
   return (
     <div className="py-12 sm:py-16 bg-background">
@@ -105,29 +113,15 @@ export default async function TiendaPage({ searchParams }: Props) {
           )}
         </div>
 
-        {/* Banner de estado de conexión / live API indicator */}
-        {error ? (
+        {error && (
           <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
             <div className="flex items-start gap-3">
               <span className="text-xl" aria-hidden="true">⚠️</span>
               <div>
-                <h3 className="font-semibold text-sm">Estado de conexión con el Backend</h3>
+                <h3 className="font-semibold text-sm">No pudimos cargar el catálogo</h3>
                 <p className="text-xs mt-1 text-red-700">{error}</p>
-                <p className="text-[11px] mt-2 text-red-600 font-mono">
-                  URL solicitada: {apiUrl}
-                </p>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="mb-8 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              API Backend Conectada ({products.length} productos en vivo)
-            </span>
-            <span className="text-xs text-neutral-muted font-mono hidden sm:inline">
-              GET {apiUrl}
-            </span>
           </div>
         )}
 

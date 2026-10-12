@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/config";
+import { getAssociationById, resolveProductPhotos } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AssociationProfile } from "@/components/associations/AssociationProfile";
@@ -80,9 +81,7 @@ async function fetchAssociationProducts(slugOrId: string): Promise<Producto[]> {
     const data: Producto[] = await res.json();
     return data.map((item) => ({
       ...item,
-      fotos: Array.isArray(item.fotos) && item.fotos.length > 0
-        ? item.fotos
-        : ["/placeholders/product-queso-fresco.svg"],
+      fotos: resolveProductPhotos(item),
     }));
   } catch {
     return [];
@@ -102,9 +101,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function AssociationDetailPage({ params }: Props) {
   const { slug } = await params;
-  const { association, error, isNotFound } = await fetchAssociationFromBackend(slug);
+  const resultado = await fetchAssociationFromBackend(slug);
 
-  if (isNotFound) {
+  // Sin backend disponible recurrimos al listado local para que el perfil siga
+  // siendo navegable al desplegarse solo el frontend.
+  const association = resultado.association ?? (await getAssociationById(slug));
+  const error = association ? null : resultado.error;
+
+  if (!association && resultado.isNotFound) {
     notFound();
   }
 
@@ -140,9 +144,6 @@ export default async function AssociationDetailPage({ params }: Props) {
           { label: "Asociaciones", href: "/asociaciones" },
           { label: association.nombre },
         ]} />
-
-        {/* Indicador de datos en vivo */}
-        
 
         <AssociationProfile association={association} products={products} />
       </Container>

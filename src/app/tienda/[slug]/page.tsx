@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/config";
-import { normalizeBackendProduct } from "@/lib/data";
+import { normalizeBackendProduct, productosMock } from "@/lib/data";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -99,9 +99,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const { product, error, isNotFound } = await fetchProductFromBackend(slug);
+  const resultado = await fetchProductFromBackend(slug);
 
-  if (isNotFound) {
+  // Sin backend disponible recurrimos al catálogo local para que el detalle
+  // siga siendo navegable al desplegarse solo el frontend.
+  const fallback = productosMock.find((p) => p.id === slug || p.slug === slug);
+  const product = resultado.product ?? fallback ?? null;
+  const error = product ? null : resultado.error;
+
+  if (!product && resultado.isNotFound) {
     notFound();
   }
 
@@ -145,17 +151,6 @@ export default async function ProductDetailPage({ params }: Props) {
           { label: "Tienda", href: "/tienda" },
           { label: product.nombre },
         ]} />
-
-        {/* Indicador de conexión en vivo */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Producto en Vivo desde Backend API
-          </span>
-          <span className="text-xs text-neutral-muted font-mono hidden sm:inline">
-            GET {siteConfig.backendUrl}/products/{slug}
-          </span>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12 bg-surface rounded-2xl p-6 sm:p-10 border border-border">
           {/* Imagen del producto */}

@@ -31,7 +31,7 @@ export const siteConfig = {
   // Rutas de assets
   assets: {
     logo: "/logo/logo-conlac-t.png",
-    heroImage: "/images/hero-andes.svg",
+    heroImage: "/demo/HERO-chimborazo.jpg",
     productPlaceholder: "/placeholders/product-queso-fresco.svg",
   },
 

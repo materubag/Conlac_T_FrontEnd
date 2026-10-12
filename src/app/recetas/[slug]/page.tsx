@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe } from "@/services/recipes/recipeService";
+import { recetasMock } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -19,10 +20,17 @@ async function fetchRecipeDetail(
   slug: string
 ): Promise<RecipeResponse | null> {
   try {
-    return await getRecipe(slug);
+    const receta = await getRecipe(slug);
+    if (receta) {
+      return receta;
+    }
   } catch {
-    return null;
+    // Backend no disponible: seguimos con el recetario local.
   }
+
+  // Sin backend disponible recurrimos al recetario local para que el detalle
+  // siga siendo navegable al desplegarse solo el frontend.
+  return recetasMock.find((r) => r.id === slug || r.slug === slug) ?? null;
 }
 
 export async function generateMetadata({

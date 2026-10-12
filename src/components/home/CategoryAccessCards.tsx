@@ -11,7 +11,7 @@ const accessCategories = [
     description: "Conoce a los socios y socias de Pilahuín, Chibuleo, San Pedro y Nueva Vida que lideran la producción láctea local.",
     href: "/asociaciones",
     icon: UsersIcon,
-    image: "/placeholders/association-placeholder.svg",
+    image: "/demo/ASOC-comunidad.jpg",
     badge: "4 Asociaciones",
   },
   {
@@ -20,7 +20,7 @@ const accessCategories = [
     description: "Descubre platos típicos, locro de papa, empanadas y sugerencias de maridaje con nuestros quesos artesanales.",
     href: "/recetas",
     icon: ChefHatIcon,
-    image: "/placeholders/recipe-placeholder.svg",
+    image: "/demo/REC-locro.jpg",
     badge: "Tradición Culinaria",
   },
   {
@@ -29,7 +29,7 @@ const accessCategories = [
     description: "Visita nuestras queserías en el páramo andino y disfruta de senderos agroecológicos en las faldas de los volcanes.",
     href: "/turismo",
     icon: MapPinIcon,
-    image: "/placeholders/tourism-placeholder.svg",
+    image: "/demo/TUR-vicunas.jpg",
     badge: "Visitas Guiadas",
   },
 ];
