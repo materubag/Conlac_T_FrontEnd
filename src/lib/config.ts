@@ -31,7 +31,7 @@ export const siteConfig = {
   // Rutas de assets
   assets: {
     logo: "/logo/logo-conlac-t.png",
-    heroImage: "/images/hero-andes.svg",
+    heroImage: "/demo/HERO-chimborazo.jpg",
     productPlaceholder: "/placeholders/product-queso-fresco.svg",
   },
 
@@ -42,7 +42,10 @@ export const siteConfig = {
     whatsapp: `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "593999999999"}`,
   },
 
-  // URLs de servicios (Semana 7+)
-  backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000/api",
+  // URLs de servicios (Backend Spring Boot en Docker / Local)
+  backendUrl:
+    process.env.BACKEND_API_URL ||
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    "http://localhost:8080/api",
   googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
 } as const;

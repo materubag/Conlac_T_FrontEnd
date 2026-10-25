@@ -3,6 +3,7 @@ import { Hero } from "@/components/home/Hero";
 import { TrustSection } from "@/components/home/TrustSection";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { CategoryAccessCards } from "@/components/home/CategoryAccessCards";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { StoreCTA } from "@/components/home/StoreCTA";
 
 /**
@@ -33,7 +34,10 @@ export default function HomePage() {
       {/* 4. Tarjetas de Acceso a Secciones */}
       <CategoryAccessCards />
 
-      {/* 5. Llamado a la Acción Final */}
+      {/* 5. Testimonios Reales de la Comunidad */}
+      <TestimonialsSection />
+
+      {/* 6. Llamado a la Acción Final */}
       <StoreCTA />
     </>
   );

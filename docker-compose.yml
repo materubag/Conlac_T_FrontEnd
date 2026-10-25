@@ -1,0 +1,37 @@
+# ==============================================================================
+# CONLAC-T Frontend - despliegue independiente
+# ==============================================================================
+#   docker compose up -d --build        # construir y levantar
+#   docker compose logs -f frontend     # ver registros
+#   docker compose down                 # detener
+#
+# Por defecto arranca en modo autónomo (sin backend): el sitio sirve su catálogo
+# local y todas las secciones se ven completas. Para conectarlo a un backend,
+# define BACKEND_URL antes de construir, por ejemplo:
+#
+#   BACKEND_URL=https://api.midominio.com/api docker compose up -d --build
+#
+# OJO: BACKEND_URL se incrusta durante el BUILD. Cambiarlo exige reconstruir
+# con --build; reiniciar el contenedor no basta.
+# ==============================================================================
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL:-http://localhost:8080/api}
+        NEXT_PUBLIC_APP_NAME: ${APP_NAME:-CONLAC-T}
+        NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-593987654321}
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+    image: conlact-frontend:latest
+    container_name: conlact-frontend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Solo lado servidor; no se incrusta en el bundle del navegador.
+      BACKEND_API_URL: ${BACKEND_URL:-}

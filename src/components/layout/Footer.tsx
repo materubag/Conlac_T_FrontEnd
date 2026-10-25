@@ -40,6 +40,7 @@ export const Footer: React.FC = () => {
                   src={siteConfig.assets.logo}
                   alt="Logo oficial de CONLAC-T"
                   fill
+                  sizes="48px"
                   className="object-contain p-1"
                 />
               </div>
