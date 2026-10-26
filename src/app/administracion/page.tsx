@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Container } from "@/components/ui/Container";
@@ -116,6 +116,32 @@ export default function AdministracionHubPage() {
                 fullWidth
               >
                 <span>Administrar Asociaciones</span>
+                <ArrowRightIcon className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Tarjeta: Contenidos y Capacitación */}
+            <div className="p-6 rounded-2xl bg-surface border border-border flex flex-col justify-between space-y-4 shadow-xs hover:border-tertiary transition-colors">
+              <div className="space-y-2">
+                <span className="text-xs font-label uppercase tracking-wider text-tertiary font-bold">
+                  Módulo de Formación
+                </span>
+                <h2 className="font-headline font-bold text-xl text-primary">
+                  Contenidos y Capacitación
+                </h2>
+                <p className="text-xs text-neutral-muted leading-relaxed">
+                  Organiza videos, guías y documentos en secciones, como un aula virtual, y
+                  publícalos para las asociaciones productoras.
+                </p>
+              </div>
+
+              <Button
+                href="/administracion/contenidos"
+                variant="primary"
+                size="md"
+                fullWidth
+              >
+                <span>Administrar Contenidos</span>
                 <ArrowRightIcon className="w-4 h-4" />
               </Button>
             </div>

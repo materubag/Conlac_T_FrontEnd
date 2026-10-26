@@ -35,3 +35,10 @@ services:
     environment:
       # Solo lado servidor; no se incrusta en el bundle del navegador.
       BACKEND_API_URL: ${BACKEND_URL:-}
+      CONTENT_DB_DIR: /app/data
+    volumes:
+      # Persiste la base SQLite de contenidos entre despliegues.
+      - contenidos-db:/app/data
+
+volumes:
+  contenidos-db:
