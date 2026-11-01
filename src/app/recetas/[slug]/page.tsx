@@ -4,10 +4,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe } from "@/services/recipes/recipeService";
 import { recetasMock } from "@/lib/data";
+import { obtenerRecetaPorIdOSlug } from "@/lib/db/recetasRepo";
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ChefHatIcon } from "@/components/ui/Icons";
+import { getVideoEmbedUrl } from "@/lib/utils";
 import type { RecipeResponse, RecipeIngredient, RecipeStep } from "@/types/recipe";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,30 @@ interface Props {
 async function fetchRecipeDetail(
   slug: string
 ): Promise<RecipeResponse | null> {
+  // 1. Consultar almacén local SQLite de recetas editables
+  try {
+    const local = obtenerRecetaPorIdOSlug(slug);
+    if (local) {
+      return {
+        id: local.id,
+        slug: local.slug,
+        titulo: local.titulo,
+        descripcion_corta: local.descripcion_corta || undefined,
+        tipo_queso: local.tipo_queso || undefined,
+        tiempo_prep: local.tiempo_prep || undefined,
+        tiempo_preparacion_minutos: local.tiempo_prep || undefined,
+        porciones: local.porciones || undefined,
+        imagen_url: local.imagen_url || undefined,
+        video_url: local.video_url || undefined,
+        pasos: local.pasos.map((p, idx) => ({ step: idx + 1, instruction: p })),
+        ingredientes: [],
+      };
+    }
+  } catch {
+    // Si falla consulta a SQLite, continuar al fallback
+  }
+
+  // 2. Consultar backend Spring Boot si está disponible
   try {
     const receta = await getRecipe(slug);
     if (receta) {
@@ -28,8 +53,7 @@ async function fetchRecipeDetail(
     // Backend no disponible: seguimos con el recetario local.
   }
 
-  // Sin backend disponible recurrimos al recetario local para que el detalle
-  // siga siendo navegable al desplegarse solo el frontend.
+  // 3. Fallback en catálogo mock estático
   return recetasMock.find((r) => r.id === slug || r.slug === slug) ?? null;
 }
 
@@ -61,7 +85,7 @@ export default async function RecipeDetailPage({ params }: Props) {
     notFound();
   }
 
-  const prepTime = recipe.tiempo_preparacion_minutos;
+  const prepTime = recipe.tiempo_preparacion_minutos ?? recipe.tiempo_prep;
 
   const imageSrc =
     recipe.imagen_url || "/placeholders/recipe-placeholder.svg";
@@ -71,6 +95,7 @@ export default async function RecipeDetailPage({ params }: Props) {
     : [];
 
   const pasos = Array.isArray(recipe.pasos) ? recipe.pasos : [];
+  const embedUrl = getVideoEmbedUrl(recipe.video_url || "");
 
   return (
     <div className="py-12 sm:py-16 bg-background">
@@ -112,6 +137,7 @@ export default async function RecipeDetailPage({ params }: Props) {
               fill
               className="object-cover object-center"
               priority
+              unoptimized={imageSrc.startsWith("data:")}
             />
           </div>
 
@@ -129,6 +155,12 @@ export default async function RecipeDetailPage({ params }: Props) {
                   Porciones: {recipe.porciones}
                 </Badge>
               )}
+
+              {recipe.tipo_queso && (
+                <Badge variant="secondary">
+                  Queso: {recipe.tipo_queso}
+                </Badge>
+              )}
             </div>
 
             <h1 className="font-headline text-3xl sm:text-4xl font-bold text-primary">
@@ -142,7 +174,7 @@ export default async function RecipeDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Ingredientes */}
+          {/* Ingredientes (si existen) */}
           {ingredientes.length > 0 && (
             <div className="pt-4 border-t border-border">
               <h2 className="font-headline text-xl font-bold text-primary mb-4">
@@ -180,6 +212,25 @@ export default async function RecipeDetailPage({ params }: Props) {
             </div>
           )}
 
+          {/* Video de preparación si está configurado en la receta */}
+          {embedUrl && (
+            <div className="pt-4 border-t border-border">
+              <h2 className="font-headline text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                <span className="text-red-600 font-bold">▶</span>
+                <span>Video de Preparación</span>
+              </h2>
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-sm">
+                <iframe
+                  src={embedUrl}
+                  title={`Video de preparación de ${recipe.titulo}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full border-0"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Pasos de preparación */}
           {pasos.length > 0 && (
             <div className="pt-4 border-t border-border">
@@ -207,32 +258,21 @@ export default async function RecipeDetailPage({ params }: Props) {
                   return (
                     <li
                       key={index}
-                      className="flex items-start gap-4 p-4 rounded-xl bg-background border border-border/70"
+                      className="p-4 rounded-xl bg-background border border-border flex items-start gap-3.5"
                     >
-                      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary text-inverted text-xs font-bold font-label">
+                      <span className="w-7 h-7 rounded-full bg-primary text-white flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5">
                         {stepNum}
                       </span>
 
-                      <p className="text-sm sm:text-base text-neutral leading-relaxed">
+                      <div className="text-sm text-neutral-muted leading-relaxed pt-0.5">
                         {text}
-                      </p>
+                      </div>
                     </li>
                   );
                 })}
               </ol>
             </div>
           )}
-
-          {/* Botones */}
-          <div className="pt-6 border-t border-border flex flex-wrap items-center gap-4">
-            <Button href="/tienda" variant="primary">
-              Conseguir el queso para esta receta
-            </Button>
-
-            <Button href="/recetas" variant="outlined">
-              Ver más recetas
-            </Button>
-          </div>
         </div>
       </Container>
     </div>

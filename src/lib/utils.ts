@@ -50,22 +50,27 @@ export function buildWhatsAppUrl(options?: {
 }
 
 export function getVideoEmbedUrl(url?: string): string | null {
-  if (!url) return null;
+  if (!url || !url.trim()) return null;
+
+  let cleanUrl = url.trim();
+  if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+    cleanUrl = "https://" + cleanUrl;
+  }
 
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(cleanUrl);
 
     if (parsed.hostname.includes("youtu.be")) {
-      const videoId = parsed.pathname.slice(1);
+      const videoId = parsed.pathname.slice(1).split("?")[0].split("/")[0];
       return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
     }
 
     if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtube-nocookie.com")) {
       if (parsed.pathname.startsWith("/embed/")) {
-        return url;
+        return cleanUrl;
       }
       if (parsed.pathname.startsWith("/shorts/")) {
-        const videoId = parsed.pathname.split("/shorts/")[1];
+        const videoId = parsed.pathname.split("/shorts/")[1]?.split("?")[0];
         return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
       }
       const videoId = parsed.searchParams.get("v");
@@ -73,7 +78,7 @@ export function getVideoEmbedUrl(url?: string): string | null {
     }
 
     if (parsed.hostname.includes("player.vimeo.com")) {
-      return url;
+      return cleanUrl;
     }
 
     if (parsed.hostname.includes("vimeo.com")) {

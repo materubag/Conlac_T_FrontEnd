@@ -76,6 +76,7 @@ export interface Asociacion {
   numero_familias?: number;
   altitud_msnm?: number;
   horario_atencion?: string;
+  campos_ficha?: Array<{ id: string; label: string; value: string }>;
 
   productos_ids?: string[];
 
@@ -120,6 +121,7 @@ export interface Receta {
   producto_slug?: string;
   tipo_queso?: string;
   tiempo_prep?: number;
+  video_url?: string | null;
 }
 
 export interface AtractivoTuristico {
@@ -134,6 +136,9 @@ export interface AtractivoTuristico {
   requiere_confirmacion?: boolean;
   condiciones_acceso?: string;
   foto_url?: string | null;
+  duracion?: string;
+  dificultad?: string;
+  video_url?: string | null;
 }
 
 export interface ContactMessageRequest {

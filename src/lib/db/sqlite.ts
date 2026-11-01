@@ -2,7 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 
-// Almacén local de contenidos (secciones y materiales tipo Moodle).
+// Almacén local de contenidos y páginas editables.
 // Es provisional: el backend todavía no expone estas entidades, así que el
 // panel administra el contenido aquí hasta que el equipo de backend lo migre.
 // Toda la estructura (tablas, campos, tipos) está pensada para trasladarse
@@ -44,7 +44,49 @@ function crearEsquema(db: DatabaseSync): void {
 
     CREATE INDEX IF NOT EXISTS idx_contenidos_seccion ON contenidos(seccion_id, orden);
     CREATE INDEX IF NOT EXISTS idx_secciones_orden ON secciones(orden);
+
+    -- Configuración editable de encabezados de páginas (recetas, nosotros, turismo, etc.)
+    CREATE TABLE IF NOT EXISTS paginas_editables (
+      slug           TEXT PRIMARY KEY,
+      eyebrow        TEXT,
+      titulo         TEXT NOT NULL,
+      subtitulo      TEXT,
+      contenido_json TEXT,
+      actualizado_en TEXT NOT NULL
+    );
+
+    -- Recetas administrables en vivo desde el sitio
+    CREATE TABLE IF NOT EXISTS recetas_editables (
+      id                TEXT PRIMARY KEY,
+      slug              TEXT,
+      titulo            TEXT NOT NULL,
+      descripcion_corta TEXT,
+      tipo_queso        TEXT,
+      tiempo_prep       INTEGER,
+      porciones         INTEGER,
+      imagen_url        TEXT,
+      gradient          TEXT,
+      pasos_json        TEXT NOT NULL,
+      orden             INTEGER NOT NULL DEFAULT 0,
+      publicado         INTEGER NOT NULL DEFAULT 1,
+      creado_en         TEXT NOT NULL,
+      actualizado_en    TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_recetas_orden ON recetas_editables(orden);
   `);
+
+  try {
+    db.exec(`ALTER TABLE paginas_editables ADD COLUMN contenido_json TEXT;`);
+  } catch {
+    // Si la columna ya existe, no hace nada
+  }
+
+  try {
+    db.exec(`ALTER TABLE recetas_editables ADD COLUMN video_url TEXT;`);
+  } catch {
+    // Si la columna ya existe, no hace nada
+  }
 }
 
 export function getDb(): DatabaseSync {

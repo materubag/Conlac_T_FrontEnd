@@ -23,6 +23,7 @@ export interface RecipeResponse {
   is_published?: boolean;
   producto_slug?: string;
   tipo_queso?: string;
+  video_url?: string | null;
 }
 
 export interface RecipeDetailResponse extends RecipeResponse {}

@@ -67,7 +67,7 @@ export const Navbar: React.FC = () => {
             ============================================================ */}
         <Link
           href="/"
-          className="flex items-center gap-3 group focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none rounded-lg p-1"
+          className="flex items-center gap-3 group focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none rounded-lg p-1 shrink-0"
           aria-label="Ir a la página de inicio de CONLAC-T"
         >
           <div className="relative w-12 h-12 flex-shrink-0">
@@ -81,8 +81,8 @@ export const Navbar: React.FC = () => {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-xl font-bold tracking-tight text-primary leading-tight">
-              CONLAC-T
+            <span className="font-headline text-xl font-bold tracking-tight text-primary leading-tight whitespace-nowrap">
+              CONLAC&#8209;T
             </span>
             <span className="text-[10px] uppercase font-label tracking-widest text-neutral-muted font-medium">
               Pilahuín · Tungurahua

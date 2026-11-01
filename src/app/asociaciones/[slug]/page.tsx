@@ -5,8 +5,9 @@ import { siteConfig } from "@/lib/config";
 import { getAssociationById, resolveProductPhotos } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { AssociationProfile } from "@/components/associations/AssociationProfile";
+import { AssociationDetailManager } from "@/components/associations/AssociationDetailManager";
 import { Button } from "@/components/ui/Button";
+import { obtenerPaginaConfig } from "@/lib/db/paginasRepo";
 import type { Asociacion, Producto } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -91,11 +92,12 @@ async function fetchAssociationProducts(slugOrId: string): Promise<Producto[]> {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { association } = await fetchAssociationFromBackend(slug);
-  if (!association) return { title: "Asociación no encontrada" };
+  const fallback = association ?? (await getAssociationById(slug));
+  if (!fallback) return { title: "Asociación no encontrada" };
 
   return {
-    title: `${association.nombre} - Asociación CONLAC-T`,
-    description: association.historia || `Perfil de ${association.nombre} en Pilahuín, Tungurahua.`,
+    title: `${fallback.nombre} - Asociación CONLAC-T`,
+    description: fallback.historia || `Perfil de ${fallback.nombre} en Pilahuín, Tungurahua.`,
   };
 }
 
@@ -103,24 +105,24 @@ export default async function AssociationDetailPage({ params }: Props) {
   const { slug } = await params;
   const resultado = await fetchAssociationFromBackend(slug);
 
-  // Sin backend disponible recurrimos al listado local para que el perfil siga
-  // siendo navegable al desplegarse solo el frontend.
-  const association = resultado.association ?? (await getAssociationById(slug));
-  const error = association ? null : resultado.error;
+  const rawAssoc = resultado.association ?? (await getAssociationById(slug));
+  const error = rawAssoc ? null : resultado.error;
 
-  if (!association && resultado.isNotFound) {
+  if (!rawAssoc && resultado.isNotFound) {
     notFound();
   }
 
-  if (error || !association) {
+  if (error || !rawAssoc) {
     return (
       <div className="py-12 sm:py-16 bg-background">
         <Container>
-          <Breadcrumbs items={[
-            { label: "Inicio", href: "/" },
-            { label: "Asociaciones", href: "/asociaciones" },
-            { label: "Error de carga" },
-          ]} />
+          <Breadcrumbs
+            items={[
+              { label: "Inicio", href: "/" },
+              { label: "Asociaciones", href: "/asociaciones" },
+              { label: "Error de carga" },
+            ]}
+          />
           <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800 max-w-2xl mx-auto my-8">
             <h2 className="font-semibold text-base mb-2">Error al cargar la asociación</h2>
             <p className="text-sm text-red-700">{error || "No se pudo obtener la información de la asociación."}</p>
@@ -133,19 +135,38 @@ export default async function AssociationDetailPage({ params }: Props) {
     );
   }
 
-  // PASO 5: Obtener productos reales de esta asociación desde el backend
+  // Cargar personalizaciones guardadas en SQLite para esta asociación
+  const config = obtenerPaginaConfig<Asociacion>(`asoc-${slug}`, {
+    eyebrow: "Comunidad Productora",
+    titulo: rawAssoc.nombre,
+    subtitulo: rawAssoc.ubicacion_referencia || "",
+    contenido: rawAssoc,
+  });
+
+  const association: Asociacion = {
+    ...rawAssoc,
+    ...(config.contenido || {}),
+    nombre: config.contenido?.nombre || config.titulo || rawAssoc.nombre,
+  };
+
   const products = await fetchAssociationProducts(association.slug || association.id || slug);
 
   return (
     <div className="py-12 sm:py-16 bg-background">
       <Container>
-        <Breadcrumbs items={[
-          { label: "Inicio", href: "/" },
-          { label: "Asociaciones", href: "/asociaciones" },
-          { label: association.nombre },
-        ]} />
+        <Breadcrumbs
+          items={[
+            { label: "Inicio", href: "/" },
+            { label: "Asociaciones", href: "/asociaciones" },
+            { label: association.nombre },
+          ]}
+        />
 
-        <AssociationProfile association={association} products={products} />
+        <AssociationDetailManager
+          slug={slug}
+          initialAssociation={association}
+          products={products}
+        />
       </Container>
     </div>
   );
