@@ -1,5 +1,5 @@
 "use client";
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -88,12 +88,12 @@ export const Footer: React.FC = () => {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar pie de página");
+      if (!res.ok) throw new Error(await mensajeDeError(res, "Error al guardar pie de página"));
       setIsDirty(false);
       mostrarToast("Pie de página guardado en el servidor");
     } catch (err) {
       console.error(err);
-      mostrarToast("Error al guardar cambios");
+      mostrarToast(err instanceof Error ? err.message : "Error al guardar cambios");
     } finally {
       setIsSaving(false);
     }

@@ -8,3 +8,9 @@ export async function adminFetch(input: string, init: RequestInit = {}) {
   headers.set("Authorization", `Bearer ${token}`);
   return fetch(input, { ...init, headers });
 }
+
+// El backend responde { message }, y el proxy de Next responde { error }.
+export async function mensajeDeError(res: Response, porDefecto: string): Promise<string> {
+  const datos = await res.json().catch(() => null);
+  return datos?.message || datos?.error || porDefecto;
+}

@@ -39,6 +39,8 @@ export function AssociationAdminForm() {
   const [errors, setErrors] =
     useState<FormErrors>({});
 
+  const [mensajeError, setMensajeError] = useState("");
+
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
@@ -313,6 +315,7 @@ export function AssociationAdminForm() {
         error
       );
 
+      setMensajeError(error instanceof Error ? error.message : "");
       setStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -966,8 +969,7 @@ export function AssociationAdminForm() {
           role="alert"
           className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
         >
-          Ocurrió un error al crear la asociación.
-          Verifique la conexión con el backend e inténtelo nuevamente.
+          {mensajeError || "Ocurrió un error al crear la asociación. Verifique la conexión con el backend e inténtelo nuevamente."}
         </div>
       )}
 

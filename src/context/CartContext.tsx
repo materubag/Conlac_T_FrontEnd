@@ -96,23 +96,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const productId = "producto_id" in product && product.producto_id
         ? product.producto_id
         : product.id;
-      const defaultVariantMap: Record<string, string> = {
-        "b0000000-0000-0000-0000-000000000001": "ba000000-0000-0000-0000-000000000001",
-        "queso-fresco-artesanal-el-lindero": "ba000000-0000-0000-0000-000000000001",
-        "prod-queso-fresco": "ba000000-0000-0000-0000-000000000001",
-        "b0000000-0000-0000-0000-000000000002": "ba000000-0000-0000-0000-000000000003",
-        "queso-de-hoja-tradicional-mulanleo": "ba000000-0000-0000-0000-000000000003",
-        "prod-queso-amasado": "ba000000-0000-0000-0000-000000000003",
-        "prod-quesillo": "ba000000-0000-0000-0000-000000000003",
-        "b0000000-0000-0000-0000-000000000003": "ba000000-0000-0000-0000-000000000004",
-        "queso-andino-con-oregano-silvestre": "ba000000-0000-0000-0000-000000000004",
-        "prod-queso-maduro-andino": "ba000000-0000-0000-0000-000000000004",
-      };
       const variantId = ("variante_id" in product && product.variante_id)
         ? product.variante_id
-        : ("presentaciones" in product && product.presentaciones?.[0]?.id)
-          || defaultVariantMap[productId]
-          || ("slug" in product && product.slug ? defaultVariantMap[product.slug] : undefined);
+        : ("presentaciones" in product && product.presentaciones?.[0]?.id) || undefined;
       const cartLineId = variantId ? `${productId}::${variantId}` : productId;
 
       if (stock <= 0) {

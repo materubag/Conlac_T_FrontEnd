@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { siteConfig } from "@/lib/config";
 import { normalizeBackendProduct } from "@/lib/data";
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "@/components/home/ProductCard";
 import { ProductModal } from "@/components/tienda/ProductModal";
@@ -26,7 +26,7 @@ export function TiendaManager({initialConfig,products,asociacion,error}: Props) 
   const filtered=useMemo(()=>catalog.filter(p=>(!search || `${p.nombre} ${p.tipo_queso} ${p.asociacion}`.toLowerCase().includes(search.toLowerCase())) && (!type || p.tipo_queso===type) && (!association || p.asociacion===association) && (!weight || p.peso===weight)),[catalog,search,type,association,weight]);
   async function hide(id:string) { if(!confirm("¿Ocultar este producto del catálogo?")) return;
     try {const r=await adminFetch(`${siteConfig.backendUrl}/admin/productos/${id}`,{method:"DELETE"}); if(!r.ok) throw new Error("No se pudo ocultar"); router.refresh();}catch(e){setMessage(e instanceof Error?e.message:"Error");} }
-  async function saveHeader(){ try{const r=await adminFetch("/api/admin/paginas/tienda",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...config,contenido:{}})}); if(!r.ok)throw new Error("No se pudo guardar");setMessage("Encabezado guardado");}catch(e){setMessage(e instanceof Error?e.message:"Error");}}
+  async function saveHeader(){ try{const r=await adminFetch("/api/admin/paginas/tienda",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...config,contenido:{}})}); if(!r.ok)throw new Error(await mensajeDeError(r,"No se pudo guardar"));setMessage("Encabezado guardado");}catch(e){setMessage(e instanceof Error?e.message:"Error");}}
   return <Container className="py-12">
     <EditableField isEditing={isAdmin} value={config.eyebrow} onChange={v=>setConfig({...config,eyebrow:v})} className="text-tertiary" />
     <h1 className="text-3xl font-bold my-3"><EditableField isEditing={isAdmin} value={asociacion?`Quesos de ${asociacion.nombre}`:config.titulo} onChange={v=>setConfig({...config,titulo:v})}/></h1>

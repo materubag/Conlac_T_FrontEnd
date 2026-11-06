@@ -1,5 +1,5 @@
 "use client";
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 
 import React, { useState } from "react";
 import { Container } from "@/components/ui/Container";
@@ -69,12 +69,12 @@ export function ComoComprarManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar en el servidor");
+      if (!res.ok) throw new Error(await mensajeDeError(res, "Error al guardar en el servidor"));
       setIsDirty(false);
       mostrarToast("Página guardada exitosamente");
     } catch (error) {
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(error instanceof Error ? error.message : "Error al guardar los cambios");
     } finally {
       setIsSaving(false);
     }

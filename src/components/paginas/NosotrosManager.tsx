@@ -1,5 +1,5 @@
 "use client";
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 
 import React, { useState } from "react";
 import Image from "next/image";
@@ -83,14 +83,14 @@ export function NosotrosManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await mensajeDeError(res, "Error al guardar"));
       const saved = await res.json();
       if (saved.data?.contenido) setC(saved.data.contenido);
       setIsDirty(false);
       mostrarToast("Página de Nosotros guardada exitosamente");
     } catch (error) {
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(error instanceof Error ? error.message : "Error al guardar los cambios");
     } finally {
       setIsSaving(false);
     }

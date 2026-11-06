@@ -1,4 +1,4 @@
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 import { siteConfig } from "@/lib/config";
 import type {
   AssociationResponse,
@@ -85,6 +85,6 @@ export async function createAssociation(data: CreateAssociationRequest): Promise
       video_url:data.videoUrl,instagram_url:data.instagramUrl,tiktok_url:data.tiktokUrl,
       facebook_url:data.facebookUrl,whatsapp:data.whatsapp,is_published:data.isPublished,
     })});
-  if(!response.ok){const body=await response.json();throw new Error(body.message||"No se pudo crear la asociación");}
+  if(!response.ok)throw new Error(await mensajeDeError(response,"No se pudo crear la asociación"));
   return response.json();
 }

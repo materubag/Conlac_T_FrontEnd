@@ -106,7 +106,7 @@ export default function AdminContenidosPage() {
           let mensaje = `La operación falló (HTTP ${res.status})`;
           try {
             const datos = await res.json();
-            if (datos?.error) mensaje = datos.error;
+            if (datos?.message || datos?.error) mensaje = datos.message || datos.error;
           } catch {
             // respuesta sin cuerpo JSON
           }

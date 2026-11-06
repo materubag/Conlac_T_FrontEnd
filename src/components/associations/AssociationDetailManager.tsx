@@ -1,5 +1,5 @@
 "use client";
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
@@ -97,12 +97,12 @@ export function AssociationDetailManager({
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await mensajeDeError(res, "Error al guardar"));
       setIsDirty(false);
       mostrarToast("Información de la asociación guardada");
     } catch (err) {
       console.error(err);
-      mostrarToast("Error al guardar cambios");
+      mostrarToast(err instanceof Error ? err.message : "Error al guardar cambios");
     } finally {
       setIsSaving(false);
     }

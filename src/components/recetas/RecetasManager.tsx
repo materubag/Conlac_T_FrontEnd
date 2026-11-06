@@ -1,7 +1,7 @@
 "use client";
 import { siteConfig } from "@/lib/config";
 import { normalizeRecipe } from "@/lib/db/recetasRepo";
-import { adminFetch } from "@/lib/adminFetch";
+import { adminFetch, mensajeDeError } from "@/lib/adminFetch";
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
@@ -82,7 +82,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
       });
 
       if (!res.ok) {
-        throw new Error("No se pudo guardar la información en el servidor.");
+        throw new Error(await mensajeDeError(res, "No se pudo guardar la información en el servidor."));
       }
 
       const resData = await res.json();

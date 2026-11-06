@@ -1,5 +1,5 @@
 import React from "react";
-import { getFeaturedProducts, resolveProductPhotos } from "@/lib/data";
+import { resolveProductPhotos } from "@/lib/data";
 import { siteConfig } from "@/lib/config";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "./ProductCard";
@@ -40,10 +40,10 @@ async function fetchHomeFeaturedProducts(): Promise<Producto[]> {
       }
     }
   } catch {
-    // Si el backend no responde, recurrimos a los datos mock locales como fallback
+    // Sin backend no se muestran productos: precios o existencias inventados terminarían en el carrito.
   }
 
-  return getFeaturedProducts();
+  return [];
 }
 
 export const FeaturedProducts: React.FC = async () => {
@@ -86,6 +86,11 @@ export const FeaturedProducts: React.FC = async () => {
         </div>
 
         {/* Grilla responsive de productos */}
+        {products.length === 0 && (
+          <p role="status" className="mb-6 rounded-xl border border-dashed border-border p-6 text-center text-sm text-neutral-muted">
+            El catálogo no está disponible en este momento. Vuelve a intentarlo en unos minutos.
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {products.map((product, idx) => (
             <ProductCard
