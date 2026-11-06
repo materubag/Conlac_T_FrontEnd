@@ -62,7 +62,7 @@ export const Button = React.forwardRef<
   ref
 ) {
   const commonClasses = cn(
-    "inline-flex items-center justify-center font-label transition-all duration-200 cursor-pointer select-none",
+    "inline-flex items-center justify-center font-label transition-all duration-200 cursor-pointer select-none motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 hover:shadow-md motion-reduce:transition-none",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
     variantStyles[variant],
     sizeStyles[size],

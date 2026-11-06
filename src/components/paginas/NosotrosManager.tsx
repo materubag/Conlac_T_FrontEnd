@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useState } from "react";
 import Image from "next/image";
@@ -19,6 +20,8 @@ import { EditableField } from "@/components/admin/EditableField";
 import type { PaginaEditableConfig } from "@/lib/db/paginasRepo";
 
 export interface TestimonioItem {
+  id?: string;
+  authorized?: boolean;
   quote: string;
   name: string;
   role: string;
@@ -69,7 +72,7 @@ export function NosotrosManager({ initialData }: Props) {
   const guardarCambios = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/paginas/nosotros", {
+      const res = await adminFetch("/api/admin/paginas/nosotros", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -81,6 +84,8 @@ export function NosotrosManager({ initialData }: Props) {
       });
 
       if (!res.ok) throw new Error("Error al guardar");
+      const saved = await res.json();
+      if (saved.data?.contenido) setC(saved.data.contenido);
       setIsDirty(false);
       mostrarToast("Página de Nosotros guardada exitosamente");
     } catch (error) {
@@ -104,6 +109,7 @@ export function NosotrosManager({ initialData }: Props) {
         />
       )}
 
+      {isAdmin && modoEdicion && <Container className="py-4"><h2 className="font-bold">Autorización de testimonios</h2>{c.testimonials.map((t,i)=><label key={i} className="block"><input type="checkbox" checked={!!t.authorized} onChange={e=>{setC({...c,testimonials:c.testimonials.map((v,n)=>n===i?{...v,authorized:e.target.checked}:v)});marcarCambio();}}/> {t.name}: cuento con autorización para publicar su testimonio</label>)}</Container>}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#111c17] text-white px-5 py-3 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 border border-white/20 animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-emerald-400" />

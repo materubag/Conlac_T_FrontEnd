@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RecetasPage() {
-  const data = obtenerPaginaRecetas(false);
+  const data = await obtenerPaginaRecetas();
 
   return <RecetasManager initialData={data} />;
 }

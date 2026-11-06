@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useState } from "react";
 import { Container } from "@/components/ui/Container";
@@ -50,7 +51,7 @@ export function ContactoManager({ initialData }: Props) {
   const guardarCambios = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/paginas/contacto", {
+      const res = await adminFetch("/api/admin/paginas/contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

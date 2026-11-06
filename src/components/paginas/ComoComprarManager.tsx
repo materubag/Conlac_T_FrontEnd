@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useState } from "react";
 import { Container } from "@/components/ui/Container";
@@ -53,7 +54,7 @@ export function ComoComprarManager({ initialData }: Props) {
   const guardarCambios = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/paginas/como-comprar", {
+      const res = await adminFetch("/api/admin/paginas/como-comprar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

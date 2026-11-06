@@ -11,61 +11,47 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ShieldCheckIcon, WhatsAppIcon, ArrowRightIcon } from "@/components/ui/Icons";
+import { bankDetails } from "@/lib/bank";
 import type { OrderCreateRequest, OrderCreateResponse } from "@/types";
 
-// Zonas de envío reales sincronizadas con la base de datos de PostgreSQL
-const SHIPPING_ZONES = [
-  {
-    id: "f0000000-0000-0000-0000-000000000001",
-    name: "Ambato Urbano (Puntos Céntricos y Domicilio)",
-    delivery_fee: 1.5,
-    delivery_days: "Martes, Jueves y Sábados",
-  },
-  {
-    id: "f0000000-0000-0000-0000-000000000003",
-    name: "Quito Metropolitano (Envío Refrigerado)",
-    delivery_fee: 4.5,
-    delivery_days: "Miércoles y Viernes",
-  },
-  {
-    id: "f0000000-0000-0000-0000-000000000004",
-    name: "Guayaquil y Costa (Transporte Especializado)",
-    delivery_fee: 6.0,
-    delivery_days: "Sábados",
-  },
-];
+type ShippingZone = {id:string;name:string;delivery_fee:number;delivery_days:string};
 
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, clearCart } = useCart();
   const { user, profile, isAuthenticated, getAccessToken } = useAuth();
 
+  const [SHIPPING_ZONES, setShippingZones] = useState<ShippingZone[]>([]);
   // Estados del formulario
   const [nombre, setNombre] = useState("");
   const [cedulaRuc, setCedulaRuc] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [metodoEntrega, setMetodoEntrega] = useState<"delivery" | "pickup">("pickup");
-  const [zonaEnvioId, setZonaEnvioId] = useState(SHIPPING_ZONES[0].id);
+  const [zonaEnvioId, setZonaEnvioId] = useState("");
   const [direccionEntrega, setDireccionEntrega] = useState("");
-  const [metodoPago, setMetodoPago] = useState<"transferencia" | "payphone">("transferencia");
+  const metodoPago = "transferencia" as const;
   const [notasCliente, setNotasCliente] = useState("");
 
-  // Precargar datos del usuario si está autenticado
+  // Autocomplete only when the authenticated identity changes; keep customer edits.
   useEffect(() => {
-    if (user) {
-      if (!nombre) {
-        setNombre(profile?.full_name || user.user_metadata?.full_name || "");
+    const timer = setTimeout(() => {
+      if (user) {
+        setNombre(current => current || profile?.full_name || user.user_metadata?.full_name || "");
+        setEmail(current => current || user.email || "");
       }
-      if (!email && user.email) {
-        setEmail(user.email);
-      }
-    }
-  }, [user, profile, nombre, email]);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [user, profile]);
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<OrderCreateResponse | null>(null);
+
+  useEffect(() => { fetch(`${siteConfig.backendUrl}/zonas-envio`).then(async res => {
+    if (!res.ok) throw new Error("No se pudieron cargar las zonas de envío");
+    const zones = await res.json(); setShippingZones(zones); if(zones.length) setZonaEnvioId(zones[0].id);
+  }).catch(() => setErrorMessage("Las zonas de envío no están disponibles. Puedes retirar en planta o intentar de nuevo.")); }, []);
 
   // Cálculo de flete y total
   const selectedZone = metodoEntrega === "delivery" 
@@ -88,7 +74,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (metodoEntrega === "delivery" && !direccionEntrega.trim()) {
+    if (metodoEntrega === "delivery" && (!zonaEnvioId || !direccionEntrega.trim())) {
       setErrorMessage("La dirección de entrega es obligatoria para envíos a domicilio.");
       return;
     }
@@ -97,9 +83,10 @@ export default function CheckoutPage() {
 
     try {
       // Mapear items con variante_id obligatoria
+      if (items.some(item => !item.variante_id)) throw new Error("Actualiza tu carrito seleccionando una presentación del catálogo.");
       const orderItems = items.map((item) => ({
         producto_id: item.producto_id || item.id,
-        variante_id: item.variante_id || "ba000000-0000-0000-0000-000000000001",
+        variante_id: item.variante_id!,
         cantidad: item.cantidad,
         precio_unitario: item.precio,
       }));
@@ -164,7 +151,7 @@ export default function CheckoutPage() {
   // ============================================================
   if (createdOrder) {
     const whatsappOrderMsg = buildWhatsAppUrl({
-      message: `Hola CONLAC-T, acabo de registrar el pedido #${createdOrder.numero_pedido} por un total de ${formatPrice(createdOrder.total)}. Deseo coordinar el pago y entrega.`,
+      message: `Hola CONLAC-T, acabo de registrar el pedido #${createdOrder.numero_pedido} por un total de ${formatPrice(createdOrder.total)}. Deseo enviar el comprobante de mi transferencia para su verificación manual.`,
     });
 
     return (
@@ -218,36 +205,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Botón PayPhone si el backend entregó URL */}
-            {createdOrder.metodo_pago === "payphone" && createdOrder.payphone_url && (
-              <div className="p-4 rounded-xl bg-[#F8F4E9] border border-tertiary/70 text-center space-y-3">
-                <p className="text-xs font-semibold text-primary">
-                  Pasarela de pago PayPhone generada para tu pedido:
-                </p>
-                <Button
-                  href={createdOrder.payphone_url}
-                  variant="primary"
-                  size="md"
-                  isExternal
-                  fullWidth
-                >
-                  Pagar ahora con PayPhone
-                </Button>
-              </div>
-            )}
-
-            {/* Mensaje PayPhone si no se proporcionó URL */}
-            {createdOrder.metodo_pago === "payphone" && !createdOrder.payphone_url && (
-              <div className="p-4 rounded-xl bg-[#F8F4E9] border border-tertiary/70 text-center space-y-2">
-                <p className="text-xs font-semibold text-primary">
-                  Pago PayPhone en proceso
-                </p>
-                <p className="text-xs text-neutral-muted">
-                  El enlace directo de cobro será coordinado con la administración de CONLAC-T para la confirmación de tu pedido.
-                </p>
-              </div>
-            )}
-
             {/* Instrucciones para transferencia */}
             {createdOrder.metodo_pago === "transferencia" && (
               <div className="p-5 rounded-2xl bg-background border border-border/80 text-xs text-neutral-muted space-y-2">
@@ -255,8 +212,11 @@ export default function CheckoutPage() {
                   Instrucciones para Transferencia Bancaria:
                 </span>
                 <p>
-                  Para coordinar y confirmar la transferencia de tu pedido <strong>#{createdOrder.numero_pedido}</strong>, los datos de la cuenta bancaria institucional serán facilitados al comunicarse con la administración o vía WhatsApp.
+                  Realiza la transferencia e indica el pedido <strong>#{createdOrder.numero_pedido}</strong> como referencia. Envía el comprobante por WhatsApp; el consorcio verificará el abono antes de confirmar el pago.
                 </p>
+                <dl className="space-y-1 text-sm">
+                  {Object.entries(bankDetails).map(([label, value]) => <div key={label}><dt className="inline font-semibold">{label}: </dt><dd className="inline">{value || "Consultar al consorcio por WhatsApp"}</dd></div>)}
+                </dl>
                 <div className="rounded-lg bg-surface border border-border/70 p-3 mt-2 text-[11px] text-neutral space-y-1">
                   <p><strong>Referencia del Pedido:</strong> #{createdOrder.numero_pedido} — {nombre}</p>
                   <p><strong>Total a transferir:</strong> {formatPrice(createdOrder.total)}</p>
@@ -267,6 +227,7 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            {createdOrder.reserva_expira_en && <p className="text-sm">Reserva válida hasta {new Date(createdOrder.reserva_expira_en).toLocaleString("es-EC")}. Envía el comprobante dentro de este plazo.</p>}
             {/* Acciones finales */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
@@ -298,7 +259,7 @@ export default function CheckoutPage() {
                 fullWidth
               >
                 <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
-                <span>Notificar por WhatsApp</span>
+                <span>Enviar comprobante por WhatsApp</span>
               </Button>
             </div>
           </div>
@@ -572,61 +533,9 @@ export default function CheckoutPage() {
                 3. Método de Pago
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label
-                  className={`p-4 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
-                    metodoPago === "transferencia"
-                      ? "border-primary bg-[#F8F4E9] ring-2 ring-primary"
-                      : "border-border bg-background hover:border-tertiary"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="transferencia"
-                      checked={metodoPago === "transferencia"}
-                      onChange={() => setMetodoPago("transferencia")}
-                      className="text-primary focus:ring-tertiary"
-                    />
-                    <div>
-                      <span className="font-headline font-bold text-sm text-primary block">
-                        Transferencia Bancaria
-                      </span>
-                      <span className="text-xs text-neutral-muted">
-                        Coordinación directa / Depósito bancario
-                      </span>
-                    </div>
-                  </div>
-                </label>
-
-                <label
-                  className={`p-4 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
-                    metodoPago === "payphone"
-                      ? "border-primary bg-[#F8F4E9] ring-2 ring-primary"
-                      : "border-border bg-background hover:border-tertiary"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="payphone"
-                      checked={metodoPago === "payphone"}
-                      onChange={() => setMetodoPago("payphone")}
-                      className="text-primary focus:ring-tertiary"
-                    />
-                    <div>
-                      <span className="font-headline font-bold text-sm text-primary block">
-                        PayPhone (Tarjetas)
-                      </span>
-                      <span className="text-xs text-neutral-muted">
-                        Tarjetas de débito o crédito
-                      </span>
-                    </div>
-                  </div>
-                </label>
-              </div>
+              <p className="rounded-xl border border-border bg-background p-4 text-sm">
+                Transferencia bancaria directa a cuentas del consorcio. Envía el comprobante por WhatsApp con el número de pedido. La administración verificará el abono y confirmará el pago manualmente.
+              </p>
 
               <div>
                 <label htmlFor="notasCliente" className="block text-xs font-label uppercase font-bold text-primary mb-1">

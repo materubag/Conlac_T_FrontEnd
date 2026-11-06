@@ -1,15 +1,10 @@
+import { siteConfig } from "@/lib/config";
 import type {
   RecipeResponse,
   RecipeDetailResponse,
 } from "@/types/recipe";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-if (!BACKEND_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_BACKEND_URL no está configurada en las variables de entorno"
-  );
-}
+const BACKEND_URL = siteConfig.backendUrl;
 
 /**
  * Obtiene todas las recetas publicadas.

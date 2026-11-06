@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -28,7 +29,7 @@ const defaultFooterConfig: FooterConfig = {
     "Unión de asociaciones y familias productoras de Pilahuín comprometidas con la preservación de la tradición quesera andina, calidad sanitaria y desarrollo agroecológico comunitario.",
   direccion: siteConfig.location.address,
   metodos_titulo: "Métodos de Compra",
-  metodo1: "Transferencia Bancaria Directa",
+  metodo1: "Transferencia bancaria directa a cuentas del consorcio",
   metodo2: "Pedidos Asistidos por WhatsApp",
   metodo3: "Retiro en Planta Comunitaria",
   garantia: "Garantía Sanitaria BPM",
@@ -46,7 +47,7 @@ export const Footer: React.FC = () => {
 
   const [cfg, setCfg] = useState<FooterConfig>(defaultFooterConfig);
 
-  // Cargar configuración guardada desde SQLite
+  // Cargar configuración guardada desde PostgreSQL
   useEffect(() => {
     fetch("/api/admin/paginas/footer")
       .then((res) => {
@@ -76,7 +77,7 @@ export const Footer: React.FC = () => {
   const guardarCambios = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/paginas/footer", {
+      const res = await adminFetch("/api/admin/paginas/footer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,7 +90,7 @@ export const Footer: React.FC = () => {
 
       if (!res.ok) throw new Error("Error al guardar pie de página");
       setIsDirty(false);
-      mostrarToast("Pie de página guardado en SQLite");
+      mostrarToast("Pie de página guardado en el servidor");
     } catch (err) {
       console.error(err);
       mostrarToast("Error al guardar cambios");

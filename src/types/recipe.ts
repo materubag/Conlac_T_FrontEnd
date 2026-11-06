@@ -26,4 +26,4 @@ export interface RecipeResponse {
   video_url?: string | null;
 }
 
-export interface RecipeDetailResponse extends RecipeResponse {}
+export type RecipeDetailResponse = RecipeResponse;

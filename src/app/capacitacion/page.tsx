@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function CapacitacionPage() {
   // Solo secciones y materiales marcados como publicados.
-  const secciones = listarSecciones(true).filter((s) => s.contenidos.length > 0);
+  const secciones = (await listarSecciones()).filter((s) => s.contenidos.length > 0);
 
   return (
     <div className="py-12 sm:py-16 bg-background">

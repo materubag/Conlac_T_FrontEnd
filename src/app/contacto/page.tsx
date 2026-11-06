@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description: "Contáctanos para pedidos por mayor, visitas a plantas queseras y atención personalizada.",
 };
 
-export default function ContactoPage() {
-  const data = obtenerPaginaConfig<ContactoContenido>("contacto", {
+export default async function ContactoPage() {
+  const data = await obtenerPaginaConfig<ContactoContenido>("contacto", {
     eyebrow: "Canales de Atención",
     titulo: "Contáctanos",
     subtitulo:

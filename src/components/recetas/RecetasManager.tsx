@@ -1,6 +1,9 @@
 "use client";
+import { siteConfig } from "@/lib/config";
+import { normalizeRecipe } from "@/lib/db/recetasRepo";
+import { adminFetch } from "@/lib/adminFetch";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import { Container } from "@/components/ui/Container";
@@ -19,8 +22,20 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
   const { isAdmin } = useAuth();
 
   // Estado del contenido
+  const [savedIds, setSavedIds] = useState(initialData.recetas.map(r => r.id));
   const [config, setConfig] = useState(initialData.config);
   const [recetas, setRecetas] = useState<RecetaEditable[]>(initialData.recetas);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let active=true;
+    adminFetch(`${siteConfig.backendUrl}/admin/recetas`).then(async res=>{
+      if(!res.ok) return;
+      const data=(await res.json()).map(normalizeRecipe);
+      if(active){setRecetas(data);setSavedIds(data.map((r:RecetaEditable)=>r.id));}
+    }).catch(()=>undefined);
+    return ()=>{active=false;};
+  },[isAdmin]);
 
   // Estados de interfaz administrativa
   const [modoEdicion, setModoEdicion] = useState(true);
@@ -51,17 +66,18 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
     }, 2800);
   };
 
-  // Guardar cambios en SQLite (unificado, publica automáticamente)
+  // Guardar cambios en PostgreSQL (unificado, publica automáticamente)
   const guardarCambios = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/recetas", {
+      const res = await adminFetch("/api/admin/recetas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           config,
           recetas,
           publicar: true,
+          eliminadas: savedIds.filter(id => !recetas.some(r => r.id === id)),
         }),
       });
 
@@ -73,6 +89,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
       if (resData.success && resData.data) {
         setConfig(resData.data.config);
         setRecetas(resData.data.recetas);
+        setSavedIds(resData.data.recetas.map((r: RecetaEditable) => r.id));
       }
 
       setIsDirty(false);
@@ -269,7 +286,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                 <span>{modoEdicion ? "Modo edición activo" : "Vista previa"}</span>
               </button>
 
-              {/* Botón único Guardar Cambios (persiste y publica en SQLite) */}
+              {/* Botón único Guardar Cambios (persiste y publica en PostgreSQL) */}
               <button
                 type="button"
                 disabled={isSaving}

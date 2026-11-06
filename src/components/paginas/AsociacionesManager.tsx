@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
@@ -57,7 +58,7 @@ export function AsociacionesManager({ initialData }: Props) {
   const guardarCambios = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/paginas/asociaciones", {
+      const res = await adminFetch("/api/admin/paginas/asociaciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,6 +70,8 @@ export function AsociacionesManager({ initialData }: Props) {
       });
 
       if (!res.ok) throw new Error("Error al guardar");
+      const saved = await res.json();
+      if(saved.data?.contenido?.asociaciones) setAsociaciones(saved.data.contenido.asociaciones);
       setIsDirty(false);
       mostrarToast("Página de asociaciones guardada");
     } catch (error) {

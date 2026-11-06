@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/config";
-import { normalizeBackendProduct, productosMock } from "@/lib/data";
+import { normalizeBackendProduct } from "@/lib/data";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -101,11 +101,8 @@ export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
   const resultado = await fetchProductFromBackend(slug);
 
-  // Sin backend disponible recurrimos al catálogo local para que el detalle
-  // siga siendo navegable al desplegarse solo el frontend.
-  const fallback = productosMock.find((p) => p.id === slug || p.slug === slug);
-  const product = resultado.product ?? fallback ?? null;
-  const error = product ? null : resultado.error;
+  const product = resultado.product;
+  const error = resultado.error;
 
   if (!product && resultado.isNotFound) {
     notFound();

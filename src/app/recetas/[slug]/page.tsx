@@ -3,8 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe } from "@/services/recipes/recipeService";
-import { recetasMock } from "@/lib/data";
-import { obtenerRecetaPorIdOSlug } from "@/lib/db/recetasRepo";
+
+
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import { ChefHatIcon } from "@/components/ui/Icons";
@@ -20,41 +20,7 @@ interface Props {
 async function fetchRecipeDetail(
   slug: string
 ): Promise<RecipeResponse | null> {
-  // 1. Consultar almacén local SQLite de recetas editables
-  try {
-    const local = obtenerRecetaPorIdOSlug(slug);
-    if (local) {
-      return {
-        id: local.id,
-        slug: local.slug,
-        titulo: local.titulo,
-        descripcion_corta: local.descripcion_corta || undefined,
-        tipo_queso: local.tipo_queso || undefined,
-        tiempo_prep: local.tiempo_prep || undefined,
-        tiempo_preparacion_minutos: local.tiempo_prep || undefined,
-        porciones: local.porciones || undefined,
-        imagen_url: local.imagen_url || undefined,
-        video_url: local.video_url || undefined,
-        pasos: local.pasos.map((p, idx) => ({ step: idx + 1, instruction: p })),
-        ingredientes: [],
-      };
-    }
-  } catch {
-    // Si falla consulta a SQLite, continuar al fallback
-  }
-
-  // 2. Consultar backend Spring Boot si está disponible
-  try {
-    const receta = await getRecipe(slug);
-    if (receta) {
-      return receta;
-    }
-  } catch {
-    // Backend no disponible: seguimos con el recetario local.
-  }
-
-  // 3. Fallback en catálogo mock estático
-  return recetasMock.find((r) => r.id === slug || r.slug === slug) ?? null;
+  try { return await getRecipe(slug); } catch { return null; }
 }
 
 export async function generateMetadata({

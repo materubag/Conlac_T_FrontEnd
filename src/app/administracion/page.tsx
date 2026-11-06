@@ -185,7 +185,7 @@ export default function AdministracionHubPage() {
               </div>
 
               <Button
-                href="/seguimiento"
+                href="/administracion/pedidos"
                 variant="outlined"
                 size="md"
                 fullWidth

@@ -135,8 +135,8 @@ export default async function AssociationDetailPage({ params }: Props) {
     );
   }
 
-  // Cargar personalizaciones guardadas en SQLite para esta asociación
-  const config = obtenerPaginaConfig<Asociacion>(`asoc-${slug}`, {
+  // Cargar personalizaciones guardadas en PostgreSQL para esta asociación
+  const config = await obtenerPaginaConfig<Asociacion>(`asoc-${slug}`, {
     eyebrow: "Comunidad Productora",
     titulo: rawAssoc.nombre,
     subtitulo: rawAssoc.ubicacion_referencia || "",
@@ -144,9 +144,10 @@ export default async function AssociationDetailPage({ params }: Props) {
   });
 
   const association: Asociacion = {
-    ...rawAssoc,
     ...(config.contenido || {}),
-    nombre: config.contenido?.nombre || config.titulo || rawAssoc.nombre,
+    ...rawAssoc,
+    fotos: config.contenido?.fotos?.length ? config.contenido.fotos : rawAssoc.fotos,
+    nombre: rawAssoc.nombre,
   };
 
   const products = await fetchAssociationProducts(association.slug || association.id || slug);

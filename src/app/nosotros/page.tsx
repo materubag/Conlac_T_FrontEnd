@@ -1,3 +1,4 @@
+import { siteConfig } from "@/lib/config";
 import React from "react";
 import type { Metadata } from "next";
 import { obtenerPaginaConfig } from "@/lib/db/paginasRepo";
@@ -10,8 +11,8 @@ export const metadata: Metadata = {
   description: "Historia, valores y misión del Consorcio de Lácteos de Tungurahua (CONLAC-T).",
 };
 
-export default function NosotrosPage() {
-  const data = obtenerPaginaConfig<NosotrosContenido>("nosotros", {
+export default async function NosotrosPage() {
+  const data = await obtenerPaginaConfig<NosotrosContenido>("nosotros", {
     eyebrow: "Herencia y territorio andino",
     titulo: "Nuestra historia y tradición",
     subtitulo:
@@ -52,5 +53,8 @@ export default function NosotrosPage() {
     },
   });
 
+  const response = await fetch(`${siteConfig.backendUrl}/testimonios`, {cache:"no-store"});
+  if(!response.ok) throw new Error("No se pudieron cargar los testimonios");
+  data.contenido.testimonials = (await response.json()).map((t:{id:string;autor_nombre:string;autor_tipo:string;frase:string})=>({id:t.id,name:t.autor_nombre,role:t.autor_tipo,quote:t.frase,authorized:true}));
   return <NosotrosManager initialData={data} />;
 }

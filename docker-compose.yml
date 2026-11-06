@@ -1,44 +1,34 @@
-# ==============================================================================
-# CONLAC-T Frontend - despliegue independiente
-# ==============================================================================
-#   docker compose up -d --build        # construir y levantar
-#   docker compose logs -f frontend     # ver registros
-#   docker compose down                 # detener
-#
-# Por defecto arranca en modo autónomo (sin backend): el sitio sirve su catálogo
-# local y todas las secciones se ven completas. Para conectarlo a un backend,
-# define BACKEND_URL antes de construir, por ejemplo:
-#
-#   BACKEND_URL=https://api.midominio.com/api docker compose up -d --build
-#
-# OJO: BACKEND_URL se incrusta durante el BUILD. Cambiarlo exige reconstruir
-# con --build; reiniciar el contenedor no basta.
-# ==============================================================================
-
+# Ejecutar desde este directorio: docker compose up -d --build
+# Las variables p?blicas se incorporan al compilar; requieren --build al cambiarlas.
 services:
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL:-http://localhost:8080/api}
-        NEXT_PUBLIC_APP_NAME: ${APP_NAME:-CONLAC-T}
-        NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
-        NEXT_PUBLIC_WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-593987654321}
-        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL:-}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-${BACKEND_URL:-http://localhost:8080/api}}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-${APP_NAME:-CONLAC-T}}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-${APP_URL:-http://localhost:3000}}
+        NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER:-${WHATSAPP_NUMBER:-593987654321}}
+        NEXT_PUBLIC_WHATSAPP_DEFAULT_MESSAGE: ${NEXT_PUBLIC_WHATSAPP_DEFAULT_MESSAGE:-}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-${SUPABASE_URL:-}}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-${SUPABASE_ANON_KEY:-}}
+        NEXT_PUBLIC_BANK_NAME: ${NEXT_PUBLIC_BANK_NAME:-}
+        NEXT_PUBLIC_BANK_ACCOUNT_TYPE: ${NEXT_PUBLIC_BANK_ACCOUNT_TYPE:-}
+        NEXT_PUBLIC_BANK_ACCOUNT_NUMBER: ${NEXT_PUBLIC_BANK_ACCOUNT_NUMBER:-}
+        NEXT_PUBLIC_BANK_BENEFICIARY: ${NEXT_PUBLIC_BANK_BENEFICIARY:-}
+        NEXT_PUBLIC_BANK_RUC: ${NEXT_PUBLIC_BANK_RUC:-}
+        NEXT_PUBLIC_BANK_EMAIL: ${NEXT_PUBLIC_BANK_EMAIL:-}
     image: conlact-frontend:latest
     container_name: conlact-frontend
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      # Solo lado servidor; no se incrusta en el bundle del navegador.
-      BACKEND_API_URL: ${BACKEND_URL:-}
-      CONTENT_DB_DIR: /app/data
-    volumes:
-      # Persiste la base SQLite de contenidos entre despliegues.
-      - contenidos-db:/app/data
-
-volumes:
-  contenidos-db:
+      # El navegador usa localhost:8080; el servidor dentro de Docker usa el host.
+      BACKEND_API_URL: ${DOCKER_BACKEND_API_URL:-http://host.docker.internal:8080/api}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

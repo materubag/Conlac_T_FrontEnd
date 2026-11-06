@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -65,7 +66,7 @@ export default function AdminContenidosPage() {
   // Solo obtiene datos; quien llama decide qué hacer con ellos. Mantenerlo sin
   // setState permite invocarlo desde un efecto sin provocar renders en cascada.
   const pedirSecciones = useCallback(async (): Promise<SeccionConContenidos[]> => {
-    const res = await fetch("/api/admin/secciones", { cache: "no-store" });
+    const res = await adminFetch("/api/admin/secciones", { cache: "no-store" });
     if (!res.ok) throw new Error(`No se pudo cargar el contenido (HTTP ${res.status})`);
     return res.json();
   }, []);
@@ -126,7 +127,7 @@ export default function AdminContenidosPage() {
   const crearSeccion = async (evento: React.FormEvent) => {
     evento.preventDefault();
     const ok = await ejecutar(() =>
-      fetch("/api/admin/secciones", {
+      adminFetch("/api/admin/secciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -156,12 +157,12 @@ export default function AdminContenidosPage() {
 
     const ok = await ejecutar(() =>
       editando
-        ? fetch(`/api/admin/contenidos/${editando}`, {
+        ? adminFetch(`/api/admin/contenidos/${editando}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(cuerpo),
           })
-        : fetch("/api/admin/contenidos", {
+        : adminFetch("/api/admin/contenidos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...cuerpo, seccion_id: seccionId }),
@@ -341,7 +342,7 @@ export default function AdminContenidosPage() {
                       disabled={ocupado || indice === 0}
                       onClick={() =>
                         ejecutar(() =>
-                          fetch(`/api/admin/secciones/${seccion.id}`, {
+                          adminFetch(`/api/admin/secciones/${seccion.id}`, {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ mover: "arriba" }),
@@ -358,7 +359,7 @@ export default function AdminContenidosPage() {
                       disabled={ocupado || indice === secciones.length - 1}
                       onClick={() =>
                         ejecutar(() =>
-                          fetch(`/api/admin/secciones/${seccion.id}`, {
+                          adminFetch(`/api/admin/secciones/${seccion.id}`, {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ mover: "abajo" }),
@@ -374,7 +375,7 @@ export default function AdminContenidosPage() {
                       disabled={ocupado}
                       onClick={() =>
                         ejecutar(() =>
-                          fetch(`/api/admin/secciones/${seccion.id}`, {
+                          adminFetch(`/api/admin/secciones/${seccion.id}`, {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ publicado: !seccion.publicado }),
@@ -395,7 +396,7 @@ export default function AdminContenidosPage() {
                           )
                         ) {
                           void ejecutar(() =>
-                            fetch(`/api/admin/secciones/${seccion.id}`, { method: "DELETE" })
+                            adminFetch(`/api/admin/secciones/${seccion.id}`, { method: "DELETE" })
                           );
                         }
                       }}
@@ -481,7 +482,7 @@ export default function AdminContenidosPage() {
                               disabled={ocupado || i === 0}
                               onClick={() =>
                                 ejecutar(() =>
-                                  fetch(`/api/admin/contenidos/${contenido.id}`, {
+                                  adminFetch(`/api/admin/contenidos/${contenido.id}`, {
                                     method: "PATCH",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ mover: "arriba" }),
@@ -498,7 +499,7 @@ export default function AdminContenidosPage() {
                               disabled={ocupado || i === seccion.contenidos.length - 1}
                               onClick={() =>
                                 ejecutar(() =>
-                                  fetch(`/api/admin/contenidos/${contenido.id}`, {
+                                  adminFetch(`/api/admin/contenidos/${contenido.id}`, {
                                     method: "PATCH",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ mover: "abajo" }),
@@ -514,7 +515,7 @@ export default function AdminContenidosPage() {
                               disabled={ocupado}
                               onClick={() =>
                                 ejecutar(() =>
-                                  fetch(`/api/admin/contenidos/${contenido.id}`, {
+                                  adminFetch(`/api/admin/contenidos/${contenido.id}`, {
                                     method: "PATCH",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ publicado: !contenido.publicado }),
@@ -539,7 +540,7 @@ export default function AdminContenidosPage() {
                               onClick={() => {
                                 if (confirm(`¿Eliminar "${contenido.titulo}"?`)) {
                                   void ejecutar(() =>
-                                    fetch(`/api/admin/contenidos/${contenido.id}`, {
+                                    adminFetch(`/api/admin/contenidos/${contenido.id}`, {
                                       method: "DELETE",
                                     })
                                   );

@@ -1,15 +1,11 @@
+import { adminFetch } from "@/lib/adminFetch";
+import { siteConfig } from "@/lib/config";
 import type {
   AssociationResponse,
   CreateAssociationRequest,
 } from "@/types/index";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-if (!BACKEND_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_BACKEND_URL no está configurada en las variables de entorno"
-  );
-}
+const BACKEND_URL = siteConfig.backendUrl;
 
 /**
  * Obtiene todas las asociaciones publicadas.
@@ -80,29 +76,15 @@ export async function getAssociation(
  *
  * POST /api/asociaciones
  */
-export async function createAssociation(
-  data: CreateAssociationRequest
-): Promise<AssociationResponse> {
-  const response = await fetch(
-    `${BACKEND_URL}/asociaciones`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-
-    throw new Error(
-      errorText ||
-        `Error al crear la asociación: ${response.status} ${response.statusText}`
-    );
-  }
-
+export async function createAssociation(data: CreateAssociationRequest): Promise<AssociationResponse> {
+  const response=await adminFetch(`${BACKEND_URL}/admin/asociaciones`,{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      slug:data.slug,nombre:data.name,descripcion_corta:data.shortDescription,historia:data.history,
+      ubicacion:data.locationText,lat:data.latitude,lng:data.longitude,registro_arcsa:data.arcsaRegistration,
+      registro_agrocalidad:data.agrocalidadRegistration,sello_sanitario:data.sanitarySealText,
+      video_url:data.videoUrl,instagram_url:data.instagramUrl,tiktok_url:data.tiktokUrl,
+      facebook_url:data.facebookUrl,whatsapp:data.whatsapp,is_published:data.isPublished,
+    })});
+  if(!response.ok){const body=await response.json();throw new Error(body.message||"No se pudo crear la asociación");}
   return response.json();
 }

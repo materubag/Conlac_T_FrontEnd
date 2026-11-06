@@ -1,5 +1,70 @@
 @import "tailwindcss";
 
+/* Shared interaction defaults. Component utilities can refine these states. */
+@layer base {
+  :where(button, a[href], select, summary, [role="button"]) {
+    transition: background-color 160ms ease, color 160ms ease,
+      border-color 160ms ease, box-shadow 160ms ease, filter 160ms ease,
+      opacity 160ms ease, transform 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where(button, select, summary, [role="button"], input[type="checkbox"], input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  :where(button:disabled, select:disabled, input:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+
+  :where(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):active {
+    filter: brightness(0.88);
+  }
+
+  input[type="file"]::file-selector-button {
+    margin-inline-end: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--theme-color-border);
+    border-radius: 0.5rem;
+    background: var(--theme-color-background-warm);
+    color: var(--theme-color-primary);
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :where(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):hover {
+      background-color: color-mix(in srgb, currentColor 8%, transparent);
+      filter: brightness(0.94);
+      box-shadow: 0 3px 10px rgb(24 67 50 / 12%);
+    }
+
+    :where(a[href]):not([aria-disabled="true"]):hover {
+      opacity: 0.85;
+    }
+
+    :where(select, summary):not(:disabled):not([aria-disabled="true"]):hover {
+      filter: brightness(0.96);
+      box-shadow: 0 0 0 1px var(--theme-color-tertiary);
+    }
+
+    :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea):not(:disabled):hover {
+      border-color: var(--theme-color-border-dark);
+    }
+
+    input[type="file"]:not(:disabled)::file-selector-button:hover {
+      background: var(--theme-color-neutral-light);
+      border-color: var(--theme-color-tertiary);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(button, a[href], select, summary, [role="button"]) {
+      transition: none;
+    }
+  }
+}
+
 
 :root {
   /* Color 1: Principal de Marca */

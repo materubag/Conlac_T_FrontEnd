@@ -322,7 +322,7 @@ export const atractivosMock: AtractivoTuristico[] = [
 ];
 
 export async function getProducts(): Promise<Producto[]> {
-  return (await fetchBackendProducts()) ?? [...productosMock];
+  return (await fetchBackendProducts()) ?? [];
 }
 
 export async function getProductById(id: string): Promise<Producto | null> {
@@ -352,15 +352,15 @@ export async function getFeaturedProducts(): Promise<Producto[]> {
 }
 
 export async function getAssociations(): Promise<Asociacion[]> {
-  return Promise.resolve([...asociacionesMock]);
+  const response=await fetch(`${siteConfig.backendUrl}/asociaciones`,{cache:"no-store"});
+  if(!response.ok) throw new Error("No se pudieron cargar las asociaciones");
+  return response.json();
 }
-
-export async function getAssociationById(idOrSlug: string): Promise<Asociacion | null> {
-  const resolvedId = associationAliasMap[idOrSlug] || idOrSlug;
-  const item = asociacionesMock.find(
-    (a) => a.id === resolvedId || a.slug === resolvedId || a.id === idOrSlug || a.slug === idOrSlug
-  );
-  return Promise.resolve(item || null);
+export async function getAssociationById(idOrSlug:string): Promise<Asociacion|null> {
+  const response=await fetch(`${siteConfig.backendUrl}/asociaciones/${encodeURIComponent(idOrSlug)}`,{cache:"no-store"});
+  if(response.status===404) return null;
+  if(!response.ok) throw new Error("No se pudo cargar la asociación");
+  return response.json();
 }
 
 export async function createAssociation(

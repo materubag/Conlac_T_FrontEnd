@@ -146,7 +146,7 @@ export function VideoSectionManager({
             <div className="shrink-0">
               <Button
                 type="button"
-                variant="outline"
+                variant="outlined"
                 size="sm"
                 onClick={agregarVideo}
                 className="bg-red-50 text-red-700 border-red-300 hover:bg-red-100 hover:border-red-400 font-semibold shadow-sm"

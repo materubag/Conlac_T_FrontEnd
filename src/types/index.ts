@@ -199,7 +199,7 @@ export interface OrderCreateRequest {
   metodo_entrega: "delivery" | "pickup";
   zona_envio_id?: string;
   direccion_entrega?: string;
-  metodo_pago: "transferencia" | "payphone";
+  metodo_pago: "transferencia";
   notas_cliente?: string;
   items: OrderItemRequest[];
 }

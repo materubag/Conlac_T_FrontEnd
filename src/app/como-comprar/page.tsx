@@ -24,7 +24,7 @@ const defaultSteps = [
   {
     number: "03",
     title: "Pago por Transferencia Bancaria",
-    description: "Realiza el pago seguro vía transferencia directa a la cuenta de la asociación productora y comparte el comprobante.",
+    description: "Realiza el pago seguro vía transferencia directa a la cuenta del consorcio y envía el comprobante por WhatsApp. El pago se confirma manualmente después de verificar el abono.",
   },
   {
     number: "04",
@@ -33,8 +33,8 @@ const defaultSteps = [
   },
 ];
 
-export default function ComoComprarPage() {
-  const data = obtenerPaginaConfig<ComoComprarContenido>("como-comprar", {
+export default async function ComoComprarPage() {
+  const data = await obtenerPaginaConfig<ComoComprarContenido>("como-comprar", {
     eyebrow: "Guía de Pedidos",
     titulo: "¿Cómo Comprar en CONLAC-T?",
     subtitulo: "Un proceso directo, transparente y solidario que apoya a los productores de Tungurahua.",

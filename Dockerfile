@@ -25,10 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Configuración pública incrustada en el bundle del navegador.
-# NEXT_PUBLIC_BACKEND_URL no puede ir vacía: los servicios de src/services/
-# lanzan un error al cargarse si falta, y eso rompe la compilación. Con el valor
-# por defecto el sitio compila y, al no existir ese backend, cae en su catálogo
-# local y se ve completo igual (modo autónomo).
+# El backend es la fuente central de cat?logo y contenidos.
 ARG NEXT_PUBLIC_BACKEND_URL="http://localhost:8080/api"
 ARG NEXT_PUBLIC_APP_NAME="CONLAC-T"
 ARG NEXT_PUBLIC_APP_URL="http://localhost:3000"
@@ -36,12 +33,27 @@ ARG NEXT_PUBLIC_WHATSAPP_NUMBER="593987654321"
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 
+ARG NEXT_PUBLIC_WHATSAPP_DEFAULT_MESSAGE=""
+ARG NEXT_PUBLIC_BANK_NAME=""
+ARG NEXT_PUBLIC_BANK_ACCOUNT_TYPE=""
+ARG NEXT_PUBLIC_BANK_ACCOUNT_NUMBER=""
+ARG NEXT_PUBLIC_BANK_BENEFICIARY=""
+ARG NEXT_PUBLIC_BANK_RUC=""
+ARG NEXT_PUBLIC_BANK_EMAIL=""
+
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL \
     NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
     NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_WHATSAPP_NUMBER=$NEXT_PUBLIC_WHATSAPP_NUMBER \
     NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
     NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
+    NEXT_PUBLIC_WHATSAPP_DEFAULT_MESSAGE=$NEXT_PUBLIC_WHATSAPP_DEFAULT_MESSAGE \
+    NEXT_PUBLIC_BANK_NAME=$NEXT_PUBLIC_BANK_NAME \
+    NEXT_PUBLIC_BANK_ACCOUNT_TYPE=$NEXT_PUBLIC_BANK_ACCOUNT_TYPE \
+    NEXT_PUBLIC_BANK_ACCOUNT_NUMBER=$NEXT_PUBLIC_BANK_ACCOUNT_NUMBER \
+    NEXT_PUBLIC_BANK_BENEFICIARY=$NEXT_PUBLIC_BANK_BENEFICIARY \
+    NEXT_PUBLIC_BANK_RUC=$NEXT_PUBLIC_BANK_RUC \
+    NEXT_PUBLIC_BANK_EMAIL=$NEXT_PUBLIC_BANK_EMAIL \
     NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
@@ -64,11 +76,6 @@ RUN addgroup -S nodejs -g 1001 && adduser -S nextjs -u 1001
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-# Carpeta de la base SQLite de contenidos. Debe montarse como volumen: sin él,
-# todo lo que el administrador publique se pierde al recrear el contenedor.
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
-VOLUME ["/app/data"]
 
 USER nextjs
 EXPOSE 3000

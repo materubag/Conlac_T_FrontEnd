@@ -1,4 +1,5 @@
 "use client";
+import { adminFetch } from "@/lib/adminFetch";
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
@@ -85,7 +86,7 @@ export function AssociationDetailManager({
         campos_ficha: camposFicha,
       };
 
-      const res = await fetch(`/api/admin/paginas/asoc-${slug}`, {
+      const res = await adminFetch(`/api/admin/paginas/asoc-${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

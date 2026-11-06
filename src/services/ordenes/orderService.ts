@@ -1,12 +1,7 @@
+import { siteConfig } from "@/lib/config";
 import type { OrderCreateResponse } from "@/types";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-if (!BACKEND_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_BACKEND_URL no está configurada en las variables de entorno"
-  );
-}
+const BACKEND_URL = siteConfig.backendUrl;
 
 /**
  * Obtiene un pedido por su ID (UUID).

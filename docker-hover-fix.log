@@ -1,0 +1,135 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.32kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 3.62kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 202B done
+#4 DONE 0.0s
+
+#5 [deps 1/4] FROM docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+#5 resolve docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 25.53kB 0.0s done
+#6 DONE 0.0s
+
+#7 [deps 4/4] RUN npm ci
+#7 CACHED
+
+#8 [deps 2/4] WORKDIR /app
+#8 CACHED
+
+#9 [deps 3/4] COPY package.json package-lock.json ./
+#9 CACHED
+
+#10 [builder 3/5] COPY --from=deps /app/node_modules ./node_modules
+#10 CACHED
+
+#11 [builder 4/5] COPY . .
+#11 DONE 0.1s
+
+#12 [builder 5/5] RUN npm run build
+#12 0.511 
+#12 0.511 > conlac-t-frontend@0.1.0 build
+#12 0.511 > next build
+#12 0.511 
+#12 0.863 ▲ Next.js 16.3.4 (Turbopack)
+#12 0.894 ✓ Running next.config.ts took 30ms
+#12 0.905 
+#12 0.933   Creating an optimized production build ...
+#12 4.374 ✓ Compiled successfully in 3.2s
+#12 4.381   Running TypeScript ...
+#12 8.367   Finished TypeScript in 4.0s ...
+#12 8.369   Collecting page data using 15 workers ...
+#12 9.552   Generating static pages using 15 workers (0/20) ...
+#12 9.822   Generating static pages using 15 workers (5/20) 
+#12 9.855   Generating static pages using 15 workers (10/20) 
+#12 9.948   Generating static pages using 15 workers (15/20) 
+#12 10.04 ✓ Generating static pages using 15 workers (20/20) in 484ms
+#12 10.04   Finalizing page optimization ...
+#12 10.25 
+#12 10.25 Route (app)
+#12 10.25 ┌ ƒ /
+#12 10.25 ├ ○ /_not-found
+#12 10.25 ├ ○ /administracion
+#12 10.25 ├ ○ /administracion/asociaciones
+#12 10.25 ├ ○ /administracion/contenidos
+#12 10.25 ├ ○ /administracion/pedidos
+#12 10.25 ├ ƒ /api/admin/contenidos
+#12 10.25 ├ ƒ /api/admin/contenidos/[id]
+#12 10.25 ├ ƒ /api/admin/paginas/[slug]
+#12 10.25 ├ ƒ /api/admin/recetas
+#12 10.25 ├ ƒ /api/admin/secciones
+#12 10.25 ├ ƒ /api/admin/secciones/[id]
+#12 10.25 ├ ƒ /api/auth/recuperar-password
+#12 10.25 ├ ƒ /asociaciones
+#12 10.25 ├ ƒ /asociaciones/[slug]
+#12 10.25 ├ ƒ /capacitacion
+#12 10.25 ├ ○ /carrito
+#12 10.25 ├ ○ /checkout
+#12 10.25 ├ ƒ /como-comprar
+#12 10.25 ├ ƒ /contacto
+#12 10.25 ├ ○ /login
+#12 10.25 ├ ○ /mi-cuenta
+#12 10.25 ├ ○ /mis-pedidos
+#12 10.25 ├ ƒ /nosotros
+#12 10.25 ├ ƒ /recetas
+#12 10.25 ├ ƒ /recetas/[slug]
+#12 10.25 ├ ○ /recuperar-password
+#12 10.25 ├ ○ /registro
+#12 10.25 ├ ○ /seguimiento
+#12 10.25 ├ ƒ /tienda
+#12 10.25 ├ ƒ /tienda/[slug]
+#12 10.25 └ ƒ /turismo
+#12 10.25 
+#12 10.25 
+#12 10.25 ○  (Static)   prerendered as static content
+#12 10.25 ƒ  (Dynamic)  server-rendered on demand
+#12 10.25 
+#12 10.31 npm notice
+#12 10.31 npm notice New major version of npm available! 10.9.9 -> 12.2.2
+#12 10.31 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+#12 10.31 npm notice To update run: npm install -g npm@12.2.2
+#12 10.31 npm notice
+#12 DONE 10.4s
+
+#13 [runner 3/6] RUN addgroup -S nodejs -g 1001 && adduser -S nextjs -u 1001
+#13 CACHED
+
+#14 [runner 4/6] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+#14 DONE 0.2s
+
+#15 [runner 5/6] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+#15 DONE 0.1s
+
+#16 [runner 6/6] COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+#16 DONE 0.1s
+
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 3.0s done
+#17 exporting manifest sha256:2b6c477442aff7a290e34dc018f154a3514d563a187eee5d60af74d76d7ca229 0.0s done
+#17 exporting config sha256:6857f15d68b22c5ed2dbeeb4555476920acac28e39f3a0371144c50b1bab95fd 0.0s done
+#17 exporting attestation manifest sha256:d5bf621342f4653698924f72916c88dc61658587aee01f7919db43db0b34732e 0.1s done
+#17 exporting manifest list sha256:117266054c48231ffca384308ff52e7379e883a670bade9a98e063da783a164e
+#17 exporting manifest list sha256:117266054c48231ffca384308ff52e7379e883a670bade9a98e063da783a164e 0.0s done
+#17 naming to docker.io/library/conlact-frontend:latest done
+#17 unpacking to docker.io/library/conlact-frontend:latest
+#17 unpacking to docker.io/library/conlact-frontend:latest 0.5s done
+#17 DONE 3.7s
+
+#18 resolving provenance for metadata file
+#18 DONE 0.0s
+ conlact-frontend:latest  Built
+ Container conlact-frontend  Recreate
+ Container conlact-frontend  Recreated
+ Container conlact-frontend  Starting
+ Container conlact-frontend  Started

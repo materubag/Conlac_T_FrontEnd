@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { asociacionesMock } from "@/lib/data";
+import { getAssociations } from "@/lib/data";
 import { obtenerPaginaConfig } from "@/lib/db/paginasRepo";
 import {
   AsociacionesManager,
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     "Conoce las asociaciones comunitarias y familias queseras del consorcio CONLAC-T en Tungurahua.",
 };
 
-export default function AsociacionesPage() {
-  const defaultAsociaciones: AsociacionEditable[] = asociacionesMock.map((a, idx) => ({
+export default async function AsociacionesPage() {
+  const defaultAsociaciones: AsociacionEditable[] = (await getAssociations()).map((a, idx) => ({
     id: a.id,
     slug: a.slug || a.id,
     nombre: a.nombre,
@@ -30,7 +30,7 @@ export default function AsociacionesPage() {
     foto_url: (Array.isArray(a.fotos) && a.fotos[0]) || null,
   }));
 
-  const data = obtenerPaginaConfig<AsociacionesContenido>("asociaciones", {
+  const data = await obtenerPaginaConfig<AsociacionesContenido>("asociaciones", {
     eyebrow: "Nuestra Gente",
     titulo: "Asociaciones de CONLAC-T",
     subtitulo:
@@ -40,5 +40,10 @@ export default function AsociacionesPage() {
     },
   });
 
+  data.contenido.asociaciones = defaultAsociaciones.map(a=>({
+    ...data.contenido.asociaciones?.find(saved=>saved.id===a.id), ...a,
+    miembros: data.contenido.asociaciones?.find(saved=>saved.id===a.id)?.miembros ?? a.miembros,
+    foto_url: a.foto_url || data.contenido.asociaciones?.find(saved=>saved.id===a.id)?.foto_url || null,
+  }));
   return <AsociacionesManager initialData={data} />;
 }

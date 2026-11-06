@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import {
   getAssociationById,
   normalizeBackendProduct,
-  productosMock,
-  resolveProductPhotos,
 } from "@/lib/data";
 import { siteConfig } from "@/lib/config";
 import { obtenerPaginaConfig } from "@/lib/db/paginasRepo";
@@ -77,13 +75,10 @@ export default async function TiendaPage({ searchParams }: Props) {
   const { products: backendProducts, error: backendError } =
     await fetchProductsFromBackend(filterKey);
 
-  const defaultProducts =
-    backendProducts.length > 0
-      ? backendProducts
-      : productosMock.map((item) => ({ ...item, fotos: resolveProductPhotos(item) }));
-  const error = defaultProducts.length > 0 ? null : backendError;
+  const defaultProducts = backendProducts;
+  const error = backendError;
 
-  const initialConfig = obtenerPaginaConfig<TiendaContenido>("tienda", {
+  const initialConfig = await obtenerPaginaConfig<TiendaContenido>("tienda", {
     eyebrow: "Catálogo Oficial",
     titulo: "Tienda de Quesos Artesanales",
     subtitulo:
@@ -96,7 +91,7 @@ export default async function TiendaPage({ searchParams }: Props) {
   return (
     <TiendaManager
       initialConfig={initialConfig}
-      products={initialConfig.contenido?.productos || defaultProducts}
+      products={defaultProducts}
       asociacion={asociacion}
       error={error}
     />
