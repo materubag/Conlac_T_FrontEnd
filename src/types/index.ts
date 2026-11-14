@@ -282,7 +282,7 @@ export interface ThemeConfig {
 // 3. TIPOS DE AUTENTICACIÓN Y PERFIL DE USUARIO
 // ============================================================
 
-export type UserRole = "admin" | "customer";
+export type UserRole = "admin" | "editor" | "customer";
 
 export interface UserProfile {
   id: string; // UUID de auth.users / profiles
@@ -382,4 +382,3 @@ export interface CreateAssociationRequest {
 
   isPublished: boolean;
 }
-

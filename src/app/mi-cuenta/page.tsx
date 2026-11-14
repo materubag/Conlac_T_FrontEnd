@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { AccountSecurityActions } from "@/components/account/AccountSecurityActions";
 
 export default function MiCuentaPage() {
   const router = useRouter();
-  const { user, profile, role, isAuthenticated, isAdmin, loading, logout } = useAuth();
+  const { user, profile, isAuthenticated, isAdmin, canEdit, loading, logout, changeEmail, verifyEmailChange } = useAuth();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -57,9 +57,9 @@ export default function MiCuentaPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              {isAdmin && (
+              {canEdit && (
                 <span className="px-3 py-1.5 rounded-full text-xs font-label font-bold border uppercase tracking-wider bg-amber-100 text-amber-800 border-amber-300">
-                  Administrador
+                  {isAdmin ? "Administrador" : "Editor"}
                 </span>
               )}
 
@@ -97,34 +97,7 @@ export default function MiCuentaPage() {
             </div>
           </div>
 
-          {/* Acciones Rápidas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-6 rounded-2xl bg-surface border border-border space-y-3">
-              <h3 className="font-headline font-bold text-lg text-primary">
-                Mis Pedidos
-              </h3>
-              <p className="text-xs text-neutral-muted">
-                Revisa el historial de quesos adquiridos, fletes y estado de preparación.
-              </p>
-              <Button href="/mis-pedidos" variant="primary" size="md" fullWidth>
-                Ver Historial de Pedidos
-              </Button>
-            </div>
-
-            {isAdmin && (
-              <div className="p-6 rounded-2xl bg-surface border border-amber-300 bg-amber-50/40 space-y-3">
-                <h3 className="font-headline font-bold text-lg text-amber-900">
-                  Panel de Administración
-                </h3>
-                <p className="text-xs text-amber-800">
-                  Acceso exclusivo para gestión de filiales queseras, productos y backoffice.
-                </p>
-                <Button href="/administracion" variant="primary" size="md" fullWidth>
-                  Ir a Administración
-                </Button>
-              </div>
-            )}
-          </div>
+          <AccountSecurityActions email={user?.email || ""} changeEmail={changeEmail} verifyEmailChange={verifyEmailChange} />
         </div>
       </Container>
     </div>
