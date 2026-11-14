@@ -5,6 +5,13 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
   size?: number;
 }
 
+export const UserIcon: React.FC<IconProps> = ({ className = "h-5 w-5 shrink-0", size = 20, ...props }) => (
+  <svg aria-hidden="true" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="7" r="3" />
+    <path d="M5 21v-2a7 7 0 0 1 14 0v2Z" />
+  </svg>
+);
+
 export const CartIcon: React.FC<IconProps> = ({ className = "w-5 h-5", size = 20, ...props }) => (
   <svg
     width={size}

@@ -7,10 +7,11 @@ import { usePathname } from "next/navigation";
 import { MAIN_NAV_ITEMS } from "@/config/navigation";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
-import { CartIcon, MenuIcon, CloseIcon } from "@/components/ui/Icons";
+import { CartIcon, MenuIcon, CloseIcon, UserIcon } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { AdminAccountMenu } from "./AdminAccountMenu";
 
 /**
  * ============================================================
@@ -21,15 +22,20 @@ import { useAuth } from "@/context/AuthContext";
  * - Logo oficial y nombre de marca.
  * - Las 7 pestañas oficiales configuradas de forma centralizada.
  * - Elemento de Carrito interactivo con contador real y drawer.
- * - Botón "Ver tienda".
+ * - Acceso a cuenta y menú desplegable para administradores.
  * - Menú responsive accesible con soporte completo de teclado.
  */
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { totalItems, toggleCart } = useCart();
-  const { isAuthenticated, isAdmin, logout } = useAuth();
+  const { isAuthenticated, canEdit, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [accountMenuPath, setAccountMenuPath] = useState<string | null>(null);
+  const setAccountMenuOpen = (open: boolean) => {
+    setAccountMenuPath(open ? pathname : null);
+    if (open) setIsMobileMenuOpen(false);
+  };
 
   // Detección de scroll para sombra sutil
   useEffect(() => {
@@ -60,17 +66,17 @@ export const Navbar: React.FC = () => {
           : "bg-[#F8F4E9] border-b border-border/50"
       )}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-5 sm:px-6 lg:px-8">
 
         {/* ============================================================
             1. LOGO E IDENTIDAD INSTITUCIONAL
             ============================================================ */}
         <Link
           href="/"
-          className="flex items-center gap-3 group focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none rounded-lg p-1 shrink-0"
+          className="flex items-center gap-2 sm:gap-3 group focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none rounded-lg p-1 shrink-0"
           aria-label="Ir a la página de inicio de CONLAC-T"
         >
-          <div className="relative w-12 h-12 flex-shrink-0">
+          <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
             <Image
               src={siteConfig.assets.logo}
               alt="Logo oficial de CONLAC-T - Consorcio de Lácteos de Tungurahua"
@@ -81,10 +87,10 @@ export const Navbar: React.FC = () => {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-xl font-bold tracking-tight text-primary leading-tight whitespace-nowrap">
+            <span className="font-headline text-lg sm:text-xl font-bold tracking-tight text-primary leading-tight whitespace-nowrap">
               CONLAC&#8209;T
             </span>
-            <span className="text-[10px] uppercase font-label tracking-widest text-neutral-muted font-medium">
+            <span className="hidden sm:block text-[10px] uppercase font-label tracking-widest text-neutral-muted font-medium">
               Pilahuín · Tungurahua
             </span>
           </div>
@@ -94,7 +100,7 @@ export const Navbar: React.FC = () => {
             2. LAS 7 PESTAÑAS OBLIGATORIAS (DESKTOP)
             ============================================================ */}
         <nav
-          className="hidden xl:flex items-center gap-1 lg:gap-2"
+          className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex 2xl:gap-2"
           aria-label="Navegación principal"
         >
           {MAIN_NAV_ITEMS.map((item) => {
@@ -107,7 +113,7 @@ export const Navbar: React.FC = () => {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative px-3 py-2 text-sm font-label font-medium transition-colors rounded-md",
+                  "relative whitespace-nowrap px-2.5 py-2 text-sm font-label font-medium transition-colors rounded-md 2xl:px-3",
                   "focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none",
                   isActive
                     ? "text-primary font-semibold"
@@ -128,15 +134,15 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* ============================================================
-            3. ACCIONES DE DERECHA (CARRITO VISUAL + CTA + TOGGLE MÓVIL)
+            3. ACCIONES DE DERECHA (CARRITO + CUENTA + MENÚ MÓVIL)
             ============================================================ */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
 
           {/* Carrito de compras interactivo con contador dinámico */}
           <button
             type="button"
             onClick={toggleCart}
-            className="relative flex items-center justify-center p-2 rounded-xl text-neutral hover:text-primary hover:bg-neutral-light/60 transition-colors cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-neutral hover:text-primary hover:bg-neutral-light/60 transition-colors cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none"
             title={`Carrito de compras (${totalItems} ${totalItems === 1 ? "artículo" : "artículos"})`}
             aria-label={`Abrir carrito de compras con ${totalItems} artículos`}
           >
@@ -154,26 +160,18 @@ export const Navbar: React.FC = () => {
             </span>
           </button>
 
-          {/* CTA "Ver tienda" Desktop */}
-          <div className="hidden sm:block">
-            <Button
-              href="/tienda"
-              variant="primary"
-              size="sm"
-              className="shadow-sm"
-            >
-              Ver tienda
-            </Button>
-          </div>
           {/* Acciones de usuario según autenticación y rol */}
-          <div className="hidden sm:flex items-center gap-2">
+          {canEdit ? (
+            <AdminAccountMenu isOpen={accountMenuPath === pathname} onOpenChange={setAccountMenuOpen} />
+          ) : <div className="hidden sm:flex items-center gap-2">
             {!isAuthenticated ? (
               <Button
                 href="/login"
                 variant="outlined"
                 size="sm"
-                className="shadow-sm"
+                className="min-h-10 gap-2 rounded-xl px-4"
               >
+                <UserIcon />
                 Ingresar
               </Button>
             ) : (
@@ -187,17 +185,6 @@ export const Navbar: React.FC = () => {
                   Mi cuenta
                 </Button>
 
-                {isAdmin && (
-                  <Button
-                    href="/administracion"
-                    variant="outlined"
-                    size="sm"
-                    className="shadow-sm border-amber-600 text-amber-900 bg-amber-50/70"
-                  >
-                    Administración
-                  </Button>
-                )}
-
                 <Button
                   variant="ghost"
                   size="sm"
@@ -208,12 +195,15 @@ export const Navbar: React.FC = () => {
                 </Button>
               </>
             )}
-          </div>
+          </div>}
           {/* Botón Toggle Menú Móvil */}
           <button
             type="button"
             className="flex xl:hidden items-center justify-center p-2 rounded-xl text-neutral hover:text-primary hover:bg-neutral-light transition-colors focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => {
+              setAccountMenuOpen(false);
+              setIsMobileMenuOpen(!isMobileMenuOpen);
+            }}
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation-drawer"
             aria-label={isMobileMenuOpen ? "Cerrar menú principal" : "Abrir menú principal"}
@@ -273,9 +263,9 @@ export const Navbar: React.FC = () => {
             })}
           </div>
 
-          <div className="pt-6 mt-6 border-t border-border/80 flex flex-col gap-3">
+          {!canEdit && <div className="pt-6 mt-6 border-t border-border/80 flex flex-col gap-3">
             {!isAuthenticated ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <Button
                   href="/login"
                   variant="primary"
@@ -283,16 +273,8 @@ export const Navbar: React.FC = () => {
                   fullWidth
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
+                  <UserIcon />
                   Ingresar
-                </Button>
-                <Button
-                  href="/registro"
-                  variant="outlined"
-                  size="md"
-                  fullWidth
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Crear Cuenta
                 </Button>
               </div>
             ) : (
@@ -315,17 +297,6 @@ export const Navbar: React.FC = () => {
                 >
                   Mis Pedidos
                 </Button>
-                {isAdmin && (
-                  <Button
-                    href="/administracion"
-                    variant="primary"
-                    size="md"
-                    fullWidth
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Panel de Administración
-                  </Button>
-                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -341,16 +312,7 @@ export const Navbar: React.FC = () => {
               </div>
             )}
 
-            <Button
-              href="/tienda"
-              variant="outlined"
-              size="sm"
-              fullWidth
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Explorar Catálogo
-            </Button>
-          </div>
+          </div>}
         </div>
       )}
     </header>
