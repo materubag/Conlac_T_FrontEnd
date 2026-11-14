@@ -1,4 +1,5 @@
 import { siteConfig } from "./config";
+import { youtubeVideoId } from "./adminValidation";
 
 export function cn(...inputs: (string | undefined | null | false | Record<string, boolean>)[]): string {
   const classes: string[] = [];
@@ -50,44 +51,6 @@ export function buildWhatsAppUrl(options?: {
 }
 
 export function getVideoEmbedUrl(url?: string): string | null {
-  if (!url || !url.trim()) return null;
-
-  let cleanUrl = url.trim();
-  if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
-    cleanUrl = "https://" + cleanUrl;
-  }
-
-  try {
-    const parsed = new URL(cleanUrl);
-
-    if (parsed.hostname.includes("youtu.be")) {
-      const videoId = parsed.pathname.slice(1).split("?")[0].split("/")[0];
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    }
-
-    if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtube-nocookie.com")) {
-      if (parsed.pathname.startsWith("/embed/")) {
-        return cleanUrl;
-      }
-      if (parsed.pathname.startsWith("/shorts/")) {
-        const videoId = parsed.pathname.split("/shorts/")[1]?.split("?")[0];
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-      }
-      const videoId = parsed.searchParams.get("v");
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    }
-
-    if (parsed.hostname.includes("player.vimeo.com")) {
-      return cleanUrl;
-    }
-
-    if (parsed.hostname.includes("vimeo.com")) {
-      const videoId = parsed.pathname.split("/").filter(Boolean)[0];
-      return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
+  const id = url ? youtubeVideoId(url) : null;
+  return id ? `https://www.youtube.com/embed/${id}` : null;
 }

@@ -1,8 +1,10 @@
 "use client";
 
+import { ValidatedInput, ValidatedTextarea } from "@/components/admin/ValidatedFields";
 import React, { FormEvent, useState } from "react";
 import type { AssociationFormData } from "@/types/index";
 import { createAssociation } from "@/services/asociaciones/associationService";
+import { fieldError, validateAdminFields } from "@/lib/adminValidation";
 
 type FormErrors = Partial<
   Record<keyof AssociationFormData, string>
@@ -166,12 +168,8 @@ export function AssociationAdminForm() {
     // ============================
 
     if (formData.videoUrl.trim()) {
-      try {
-        new URL(formData.videoUrl.trim());
-      } catch {
-        validationErrors.videoUrl =
-          "Ingrese una URL de video válida.";
-      }
+      const error = fieldError(formData.videoUrl, "youtube");
+      if (error) validationErrors.videoUrl = error;
     }
 
     // ============================
@@ -239,6 +237,7 @@ export function AssociationAdminForm() {
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    if (!validateAdminFields(event.currentTarget)) return;
 
     const validationErrors = validateForm();
 
@@ -352,7 +351,7 @@ export function AssociationAdminForm() {
               Slug <span className="text-red-600">*</span>
             </label>
 
-            <input
+            <ValidatedInput rule="slug"
               id="slug"
               type="text"
               value={formData.slug}
@@ -391,7 +390,7 @@ export function AssociationAdminForm() {
               <span className="text-red-600">*</span>
             </label>
 
-            <input
+            <ValidatedInput rule="title"
               id="name"
               type="text"
               value={formData.name}
@@ -425,7 +424,7 @@ export function AssociationAdminForm() {
               Descripción corta
             </label>
 
-            <textarea
+            <ValidatedTextarea rule="description"
               id="shortDescription"
               rows={3}
               value={
@@ -461,7 +460,7 @@ export function AssociationAdminForm() {
               Historia
             </label>
 
-            <textarea
+            <ValidatedTextarea rule="longText"
               id="history"
               rows={7}
               value={formData.history}
@@ -513,7 +512,7 @@ export function AssociationAdminForm() {
               Ubicación
             </label>
 
-            <input
+            <ValidatedInput rule="address"
               id="locationText"
               type="text"
               value={formData.locationText}
@@ -547,10 +546,9 @@ export function AssociationAdminForm() {
               Latitud
             </label>
 
-            <input
+            <ValidatedInput rule="latitude" optional
               id="latitude"
               type="number"
-              step="0.000001"
               value={formData.latitude}
               onChange={(event) =>
                 updateField(
@@ -582,10 +580,9 @@ export function AssociationAdminForm() {
               Longitud
             </label>
 
-            <input
+            <ValidatedInput rule="longitude" optional
               id="longitude"
               type="number"
-              step="0.000001"
               value={formData.longitude}
               onChange={(event) =>
                 updateField(
@@ -635,7 +632,7 @@ export function AssociationAdminForm() {
               Registro ARCSA
             </label>
 
-            <input
+            <ValidatedInput rule="registration"
               id="arcsaRegistration"
               type="text"
               value={
@@ -662,7 +659,7 @@ export function AssociationAdminForm() {
               Registro Agrocalidad
             </label>
 
-            <input
+            <ValidatedInput rule="registration"
               id="agrocalidadRegistration"
               type="text"
               value={
@@ -689,7 +686,7 @@ export function AssociationAdminForm() {
               Sello sanitario
             </label>
 
-            <input
+            <ValidatedInput rule="detail"
               id="sanitarySealText"
               type="text"
               value={
@@ -731,7 +728,7 @@ export function AssociationAdminForm() {
             URL del video
           </label>
 
-          <input
+          <ValidatedInput rule="youtube"
             id="videoUrl"
             type="url"
             value={formData.videoUrl}
@@ -782,7 +779,7 @@ export function AssociationAdminForm() {
               WhatsApp
             </label>
 
-            <input
+            <ValidatedInput rule="phone"
               id="whatsapp"
               type="tel"
               value={formData.whatsapp}
@@ -816,7 +813,7 @@ export function AssociationAdminForm() {
               Instagram
             </label>
 
-            <input
+            <ValidatedInput rule="url"
               id="instagramUrl"
               type="url"
               value={
@@ -852,7 +849,7 @@ export function AssociationAdminForm() {
               TikTok
             </label>
 
-            <input
+            <ValidatedInput rule="url"
               id="tiktokUrl"
               type="url"
               value={formData.tiktokUrl}
@@ -886,7 +883,7 @@ export function AssociationAdminForm() {
               Facebook
             </label>
 
-            <input
+            <ValidatedInput rule="url"
               id="facebookUrl"
               type="url"
               value={

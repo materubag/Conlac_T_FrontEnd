@@ -1,8 +1,8 @@
 "use client";
 
+import { adminResponseError, imageFileError, imageValueError, IMAGE_ACCEPT } from "@/lib/adminValidation";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
@@ -31,7 +31,7 @@ interface Props {
 }
 
 export function AsociacionesManager({ initialData }: Props) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -68,12 +68,13 @@ export function AsociacionesManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Página de asociaciones guardada");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error al guardar los cambios";
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -89,9 +90,14 @@ export function AsociacionesManager({ initialData }: Props) {
     const index = targetImageIndexRef.current;
     if (!file || index === null || !asociaciones[index]) return;
 
+    const imageError = imageFileError(file);
+    if (imageError) { mostrarToast(imageError); e.target.value = ""; return; }
+
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
+      const imageError = imageValueError(dataUrl);
+      if (imageError) { mostrarToast(imageError); return; }
       const nuevas = [...asociaciones];
       nuevas[index] = { ...nuevas[index], foto_url: dataUrl };
       setAsociaciones(nuevas);
@@ -129,12 +135,12 @@ export function AsociacionesManager({ initialData }: Props) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         onChange={handleArchivoSeleccionado}
         className="hidden"
       />
 
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName="Asociaciones"
           isEditing={modoEdicion}
@@ -162,8 +168,8 @@ export function AsociacionesManager({ initialData }: Props) {
           />
 
           <div className="max-w-2xl mb-10">
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="short"
+              isEditing={canEdit && modoEdicion}
               value={eyebrow}
               onChange={(val) => {
                 setEyebrow(val);
@@ -174,8 +180,8 @@ export function AsociacionesManager({ initialData }: Props) {
             />
 
             <div className="mt-2">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={titulo}
                 onChange={(val) => {
                   setTitulo(val);
@@ -192,8 +198,8 @@ export function AsociacionesManager({ initialData }: Props) {
             </div>
 
             <div className="mt-3">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="subtitle"
+                isEditing={canEdit && modoEdicion}
                 value={subtitulo}
                 onChange={(val) => {
                   setSubtitulo(val);
@@ -209,7 +215,7 @@ export function AsociacionesManager({ initialData }: Props) {
               />
             </div>
 
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <AdminBadgeHelp message="Puedes editar títulos, descripciones comunitarias, cambiar fotos y gestionar asociaciones." />
             )}
           </div>
@@ -227,12 +233,12 @@ export function AsociacionesManager({ initialData }: Props) {
                 <article
                   key={assoc.id}
                   className={`flex flex-col sm:flex-row overflow-hidden rounded-2xl bg-surface border shadow-sm transition-all relative ${
-                    isAdmin && modoEdicion
+                    canEdit && modoEdicion
                       ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                       : "border-border hover:border-tertiary/70"
                   }`}
                 >
-                  {isAdmin && modoEdicion && (
+                  {canEdit && modoEdicion && (
                     <button
                       type="button"
                       onClick={() => eliminarAsociacion(index)}
@@ -256,13 +262,13 @@ export function AsociacionesManager({ initialData }: Props) {
                       unoptimized={imageSrc.startsWith("data:")}
                     />
 
-                    {isAdmin && modoEdicion && (
+                    {canEdit && modoEdicion && (
                       <button
                         type="button"
                         onClick={() => abrirSelectorImagen(index)}
                         className="absolute inset-x-2 bottom-2 py-1 px-2 rounded-lg bg-[#111c17]/90 text-white text-[11px] font-semibold text-center hover:bg-[#111c17] transition shadow-xs"
                       >
-                        Cambiar foto
+                        Cambiar foto · máx. 5 MB
                       </button>
                     )}
                   </div>
@@ -273,8 +279,8 @@ export function AsociacionesManager({ initialData }: Props) {
                       <div className="flex items-center gap-3 text-xs text-neutral-muted">
                         <span className="flex items-center gap-1">
                           <MapPinIcon className="w-3.5 h-3.5 text-tertiary" />
-                          <EditableField
-                            isEditing={isAdmin && modoEdicion}
+                          <EditableField rule="short"
+                            isEditing={canEdit && modoEdicion}
                             value={assoc.parroquia}
                             onChange={(val) => {
                               const copy = [...asociaciones];
@@ -289,8 +295,8 @@ export function AsociacionesManager({ initialData }: Props) {
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <UsersIcon className="w-3.5 h-3.5 text-tertiary" />
-                          <EditableField
-                            isEditing={isAdmin && modoEdicion}
+                          <EditableField rule="members"
+                            isEditing={canEdit && modoEdicion}
                             value={String(assoc.miembros)}
                             onChange={(val) => {
                               const copy = [...asociaciones];
@@ -305,8 +311,8 @@ export function AsociacionesManager({ initialData }: Props) {
                         </span>
                       </div>
 
-                      <EditableField
-                        isEditing={isAdmin && modoEdicion}
+                      <EditableField rule="title"
+                        isEditing={canEdit && modoEdicion}
                         value={assoc.nombre}
                         onChange={(val) => {
                           const copy = [...asociaciones];
@@ -323,8 +329,8 @@ export function AsociacionesManager({ initialData }: Props) {
                         )}
                       />
 
-                      <EditableField
-                        isEditing={isAdmin && modoEdicion}
+                      <EditableField rule="description"
+                        isEditing={canEdit && modoEdicion}
                         value={assoc.descripcion}
                         onChange={(val) => {
                           const copy = [...asociaciones];
@@ -361,7 +367,7 @@ export function AsociacionesManager({ initialData }: Props) {
             })}
 
             {/* Añadir Asociación */}
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <button
                 type="button"
                 onClick={agregarAsociacion}

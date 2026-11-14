@@ -1,5 +1,7 @@
+import { contentPermission } from "@/lib/server/contentPermission";
 import { NextResponse } from "next/server";
 import { obtenerPaginaRecetas, guardarPaginaRecetas, RecetaEditable } from "@/lib/db/recetasRepo";
+import { validateRecipesPayload } from "@/lib/adminPayloadValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +18,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = contentPermission(request);
+  if (denied) return denied;
+
   try {
     const body = await request.json();
+    const validationError = validateRecipesPayload(body);
+    if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "Formato de datos no válido." }, { status: 400 });

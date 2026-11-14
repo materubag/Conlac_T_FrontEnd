@@ -32,6 +32,7 @@ export interface Producto {
   asociacion_id?: string;    // ID de la asociación (relación products.association_id -> associations.id)
   stock: number;
   disponible: boolean;
+  oculto?: boolean; // Visibilidad editorial, independiente de las existencias.
   presentaciones?: PresentacionProducto[];
   variante_id?: string;
 }

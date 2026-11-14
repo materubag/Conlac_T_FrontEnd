@@ -1,5 +1,6 @@
 "use client";
 
+import { adminResponseError, validateAdminFields } from "@/lib/adminValidation";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,7 +38,7 @@ const defaultFooterConfig: FooterConfig = {
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
 
   const [modoEdicion, setModoEdicion] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -87,12 +88,13 @@ export const Footer: React.FC = () => {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar pie de página");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Pie de página guardado en SQLite");
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error al guardar los cambios";
       console.error(err);
-      mostrarToast("Error al guardar cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -116,48 +118,60 @@ export const Footer: React.FC = () => {
       )}
 
       {/* Barra de control de edición del footer para Admin */}
-      {isAdmin && (
-        <div className="bg-[#111c17] border-b border-[#243d30] px-4 py-2 text-xs flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 font-semibold">
+      {canEdit && (
+        <aside aria-label="Administración del pie de página" className="border-b border-tertiary/40 bg-background text-primary shadow-sm">
+          <Container className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 items-center gap-3">
             <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                isDirty ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+              aria-hidden="true"
+              className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors ${
+                isDirty ? "bg-amber-600" : "bg-primary"
               }`}
             />
-            <span className="text-neutral-200">
-              {modoEdicion
-                ? isDirty
-                  ? "Pie de página · Cambios pendientes"
-                  : "Pie de página · Modo edición activo"
-                : "Pie de página institucional"}
-            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-label font-semibold uppercase tracking-wider text-neutral-muted">
+                Administración · Pie de página
+              </p>
+              <p role="status" className="mt-0.5 text-xs text-neutral-muted">
+                {isSaving ? "Guardando cambios…" : isDirty ? "Tienes cambios sin guardar" : "Sin cambios pendientes"}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:gap-3">
             <button
               type="button"
+              aria-pressed={modoEdicion}
               onClick={() => setModoEdicion(!modoEdicion)}
-              className={`px-3 py-1 rounded-lg font-semibold transition border ${
+              className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 sm:flex-none ${
                 modoEdicion
-                  ? "bg-white text-[#111c17] border-white"
-                  : "bg-transparent text-white border-white/30 hover:bg-white/10"
+                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                  : "border-border bg-surface text-neutral hover:border-primary/40 hover:bg-neutral-light/50"
               }`}
             >
-              {modoEdicion ? "Cerrar edición" : "⚙️ Editar pie de página"}
+              <svg aria-hidden="true" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+              </svg>
+              {modoEdicion ? "Cerrar edición" : "Editar pie de página"}
             </button>
 
             {modoEdicion && (
               <button
                 type="button"
                 disabled={isSaving}
-                onClick={guardarCambios}
-                className="px-3.5 py-1 rounded-lg font-bold bg-[#d4a373] text-[#2b1a0d] hover:bg-[#c99563] transition disabled:opacity-50"
+                onClick={(event) => {
+                  const root = event.currentTarget.closest("footer");
+                  if (root && validateAdminFields(root)) guardarCambios();
+                }}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-tertiary bg-tertiary px-4 py-2 text-xs font-bold text-neutral hover:bg-tertiary-hover transition-colors disabled:cursor-wait disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:flex-none"
               >
                 {isSaving ? "Guardando..." : "Guardar pie de página"}
               </button>
             )}
           </div>
-        </div>
+          </Container>
+        </aside>
       )}
 
       <Container className="py-12 sm:py-16">
@@ -181,8 +195,8 @@ export const Footer: React.FC = () => {
                 <span className="font-headline text-2xl font-bold tracking-tight text-[#F8F4E9] whitespace-nowrap">
                   CONLAC&#8209;T
                 </span>
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="title"
+                  isEditing={canEdit && modoEdicion}
                   value={cfg.subtitulo}
                   onChange={(val) => {
                     setCfg({ ...cfg, subtitulo: val });
@@ -199,8 +213,8 @@ export const Footer: React.FC = () => {
               </div>
             </Link>
 
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="description"
+              isEditing={canEdit && modoEdicion}
               value={cfg.descripcion}
               onChange={(val) => {
                 setCfg({ ...cfg, descripcion: val });
@@ -218,8 +232,8 @@ export const Footer: React.FC = () => {
             <div className="pt-2 flex items-start gap-2.5 text-xs text-[#F8F4E9]/75">
               <MapPinIcon className="w-4 h-4 text-[#D4A373] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="address"
+                  isEditing={canEdit && modoEdicion}
                   value={cfg.direccion}
                   onChange={(val) => {
                     setCfg({ ...cfg, direccion: val });
@@ -273,8 +287,8 @@ export const Footer: React.FC = () => {
 
           {/* Columna 5: Métodos y Garantía */}
           <div>
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="title"
+              isEditing={canEdit && modoEdicion}
               value={cfg.metodos_titulo}
               onChange={(val) => {
                 setCfg({ ...cfg, metodos_titulo: val });
@@ -292,8 +306,8 @@ export const Footer: React.FC = () => {
             <div className="space-y-3 text-xs text-[#F8F4E9]/80">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#D4A373] shrink-0" />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="detail"
+                  isEditing={canEdit && modoEdicion}
                   value={cfg.metodo1}
                   onChange={(val) => {
                     setCfg({ ...cfg, metodo1: val });
@@ -307,8 +321,8 @@ export const Footer: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#D4A373] shrink-0" />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="detail"
+                  isEditing={canEdit && modoEdicion}
                   value={cfg.metodo2}
                   onChange={(val) => {
                     setCfg({ ...cfg, metodo2: val });
@@ -322,8 +336,8 @@ export const Footer: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#D4A373] shrink-0" />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="detail"
+                  isEditing={canEdit && modoEdicion}
                   value={cfg.metodo3}
                   onChange={(val) => {
                     setCfg({ ...cfg, metodo3: val });
@@ -337,8 +351,8 @@ export const Footer: React.FC = () => {
 
               <div className="mt-4 pt-3 border-t border-[#2D6A4F]/60 flex items-center gap-2 text-[#D4A373]">
                 <ShieldCheckIcon className="w-5 h-5 flex-shrink-0" />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="detail"
+                  isEditing={canEdit && modoEdicion}
                   value={cfg.garantia}
                   onChange={(val) => {
                     setCfg({ ...cfg, garantia: val });
@@ -359,8 +373,8 @@ export const Footer: React.FC = () => {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#F8F4E9]/60">
           <div className="flex items-center gap-1.5 flex-1">
             <span>© {currentYear}</span>
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="detail"
+              isEditing={canEdit && modoEdicion}
               value={cfg.copyright}
               onChange={(val) => {
                 setCfg({ ...cfg, copyright: val });

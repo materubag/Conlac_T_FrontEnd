@@ -10,7 +10,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export default function AdministracionAsociacionesPage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, canEdit, loading } = useAuth();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -27,7 +27,7 @@ export default function AdministracionAsociacionesPage() {
   }
 
   // Protección 403: Si está autenticado pero no es administrador
-  if (isAuthenticated && !isAdmin) {
+  if (isAuthenticated && !canEdit) {
     return (
       <div className="py-16 sm:py-24 bg-background">
         <Container>
@@ -39,7 +39,7 @@ export default function AdministracionAsociacionesPage() {
               403 — Acceso Denegado
             </h1>
             <p className="text-sm text-neutral-muted">
-              Esta sección requiere permisos de <strong>ADMIN</strong> para dar de alta o modificar filiales queseras.
+              Esta sección requiere un rol <strong>admin o editor</strong> para dar de alta o modificar filiales queseras.
             </p>
             <div className="pt-4 flex flex-col gap-2">
               <Button href="/tienda" variant="primary" size="md">

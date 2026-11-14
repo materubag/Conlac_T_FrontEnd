@@ -1,5 +1,7 @@
 "use client";
 
+import { imageFileError, imageValueError, IMAGE_ACCEPT, adminResponseError } from "@/lib/adminValidation";
+import { ValidatedInput, ValidatedTextarea } from "@/components/admin/ValidatedFields";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
@@ -8,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ChefHatIcon, ArrowRightIcon } from "@/components/ui/Icons";
 import { EditableField } from "@/components/admin/EditableField";
+import { AdminPageBar } from "@/components/admin/AdminPageBar";
 import { getVideoEmbedUrl } from "@/lib/utils";
 import type { PaginaRecetasData, RecetaEditable } from "@/lib/db/recetasRepo";
 
@@ -16,7 +19,7 @@ interface RecetasManagerProps {
 }
 
 export function RecetasManager({ initialData }: RecetasManagerProps) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
 
   // Estado del contenido
   const [config, setConfig] = useState(initialData.config);
@@ -66,7 +69,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
       });
 
       if (!res.ok) {
-        throw new Error("No se pudo guardar la información en el servidor.");
+        throw new Error(await adminResponseError(res));
       }
 
       const resData = await res.json();
@@ -158,9 +161,14 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
     const index = targetImageIndexRef.current;
     if (!file || index === null || !recetas[index]) return;
 
+    const imageError = imageFileError(file);
+    if (imageError) { mostrarToast(imageError); e.target.value = ""; return; }
+
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
+      const imageError = imageValueError(dataUrl);
+      if (imageError) { mostrarToast(imageError); return; }
       const nuevas = [...recetas];
       nuevas[index] = { ...nuevas[index], imagen_url: dataUrl };
       setRecetas(nuevas);
@@ -223,69 +231,15 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
       {/* ==============================================================
           BARRA DE ADMINISTRACIÓN SUPERIOR (Visible sólo para Admin)
           ============================================================== */}
-      {isAdmin && (
-        <aside
-          aria-label="Barra de administración en vivo"
-          className="sticky top-0 z-40 bg-[#111c17] text-white border-b border-[#243d30] px-4 sm:px-8 py-2.5 shadow-md"
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
-            {/* Indicador de estado */}
-            <div className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
-              <span
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                  isDirty ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
-                }`}
-              />
-              <span className="text-neutral-200">
-                {isDirty ? "Cambios sin guardar" : "Panel de administración · Recetas"}
-              </span>
-            </div>
-
-            {/* Controles de administración */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              {/* Toggle Modo Edición / Vista Previa */}
-              <button
-                type="button"
-                onClick={() => setModoEdicion(!modoEdicion)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                  modoEdicion
-                    ? "bg-white text-[#111c17] border-white shadow-xs"
-                    : "bg-transparent text-white border-white/30 hover:bg-white/10"
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  {modoEdicion ? (
-                    <>
-                      <path d="M12 20h9" />
-                      <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </>
-                  )}
-                </svg>
-                <span>{modoEdicion ? "Modo edición activo" : "Vista previa"}</span>
-              </button>
-
-              {/* Botón único Guardar Cambios (persiste y publica en SQLite) */}
-              <button
-                type="button"
-                disabled={isSaving}
-                onClick={guardarCambios}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-[#d4a373] text-[#2b1a0d] hover:bg-[#c99563] active:scale-95 transition disabled:opacity-50 shadow-xs"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                  <polyline points="17 21 17 13 7 13 7 21" />
-                  <polyline points="7 3 7 8 15 8" />
-                </svg>
-                <span>{isSaving ? "Guardando..." : "Guardar cambios"}</span>
-              </button>
-            </div>
-          </div>
-        </aside>
+      {canEdit && (
+        <AdminPageBar
+          pageName="Recetas"
+          isEditing={modoEdicion}
+          setIsEditing={setModoEdicion}
+          isDirty={isDirty}
+          isSaving={isSaving}
+          onGuardar={guardarCambios}
+        />
       )}
 
       {/* ==============================================================
@@ -296,8 +250,8 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
           {/* ================= ENCABEZADO ================= */}
           <div className="max-w-3xl mb-10">
             {/* 1. Eyebrow editable */}
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="short"
+              isEditing={canEdit && modoEdicion}
               value={config.eyebrow}
               onChange={(val) => {
                 setConfig({ ...config, eyebrow: val });
@@ -310,8 +264,8 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
 
             {/* 2. Título Principal editable */}
             <div className="mt-1">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={config.titulo}
                 onChange={(val) => {
                   setConfig({ ...config, titulo: val });
@@ -330,8 +284,8 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
 
             {/* 3. Subtítulo / Descripción editable */}
             <div className="mt-3">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="subtitle"
+                isEditing={canEdit && modoEdicion}
                 value={config.subtitulo}
                 onChange={(val) => {
                   setConfig({ ...config, subtitulo: val });
@@ -349,7 +303,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
             </div>
 
             {/* Indicador compacto con popover al hacer hover */}
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <div className="relative inline-flex items-center mt-3 group">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold cursor-help shadow-2xs hover:bg-blue-100 transition">
                   <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
@@ -377,13 +331,13 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                 <article
                   key={receta.id}
                   className={`relative flex flex-col justify-between rounded-2xl bg-surface border p-6 shadow-sm transition-all ${
-                    isAdmin && modoEdicion
+                    canEdit && modoEdicion
                       ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500 hover:shadow-md"
                       : "border-border hover:border-tertiary/70"
                   }`}
                 >
                   {/* Barra de herramientas flotante de la tarjeta (Admin) */}
-                  {isAdmin && modoEdicion && (
+                  {canEdit && modoEdicion && (
                     <div className="absolute -top-3.5 right-4 z-20 flex items-center gap-1 bg-surface border border-border rounded-full px-2 py-1 shadow-md">
                       <button
                         type="button"
@@ -526,12 +480,11 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
 
                             {/* Badges superiores (Editables) */}
                             <div className="absolute top-3 right-3 flex gap-2 z-20">
-                              {isAdmin && modoEdicion ? (
+                              {canEdit && modoEdicion ? (
                                 <div className="flex items-center gap-1.5 bg-[#111c17]/80 backdrop-blur-xs px-2 py-1 rounded-xl border border-white/20 shadow-sm">
                                   <div className="flex items-center gap-1">
-                                    <input
+                                    <ValidatedInput rule="minutes"
                                       type="number"
-                                      min={1}
                                       value={receta.tiempo_prep ?? 30}
                                       onChange={(e) => {
                                         const nuevas = [...recetas];
@@ -546,9 +499,8 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                                   </div>
                                   <span className="text-white/40">•</span>
                                   <div className="flex items-center gap-1">
-                                    <input
+                                    <ValidatedInput rule="servings"
                                       type="number"
-                                      min={1}
                                       value={receta.porciones ?? 4}
                                       onChange={(e) => {
                                         const nuevas = [...recetas];
@@ -580,7 +532,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                             </div>
 
                             {/* Botón cambiar imagen (Modo Edición) */}
-                            {isAdmin && modoEdicion && modoActual === "foto" && (
+                            {canEdit && modoEdicion && modoActual === "foto" && (
                               <button
                                 type="button"
                                 onClick={() => abrirSelectorImagen(index)}
@@ -591,13 +543,13 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                                   <circle cx="8.5" cy="8.5" r="1.5" />
                                   <polyline points="21 15 16 10 5 21" />
                                 </svg>
-                                <span>Cambiar imagen</span>
+                                <span>Cambiar imagen · máx. 5 MB</span>
                               </button>
                             )}
                           </div>
 
                           {/* Enlace de YouTube de esta receta (Modo Edición) */}
-                          {isAdmin && modoEdicion && (
+                          {canEdit && modoEdicion && (
                             <div className="p-3 bg-neutral-light/70 rounded-xl border border-blue-200">
                               <div className="flex items-center justify-between mb-1">
                                 <label className="text-[11px] font-bold text-neutral-700">
@@ -613,7 +565,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                                   </span>
                                 )}
                               </div>
-                              <input
+                              <ValidatedInput rule="youtube"
                                 type="text"
                                 value={receta.video_url || ""}
                                 onChange={(e) => {
@@ -622,7 +574,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                                   setRecetas(nuevas);
                                   marcarCambio();
                                 }}
-                                placeholder="https://www.youtube.com/watch?v=... o https://youtu.be/..."
+                                placeholder="https://www.youtube.com/watch?v=..."
                                 className="w-full text-xs font-mono px-2.5 py-1.5 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
                               <div className="mt-2 flex items-center justify-between text-[10px]">
@@ -651,8 +603,8 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                     })()}
 
                     {/* Título de la Receta (Editable autoajustable) */}
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="title"
+                      isEditing={canEdit && modoEdicion}
                       value={receta.titulo}
                       onChange={(val) => {
                         const nuevas = [...recetas];
@@ -672,8 +624,8 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
 
                     {/* Descripción corta (Editable autoajustable) */}
                     <div className="mt-2">
-                      <EditableField
-                        isEditing={isAdmin && modoEdicion}
+                      <EditableField rule="subtitle"
+                        isEditing={canEdit && modoEdicion}
                         value={receta.descripcion_corta || ""}
                         onChange={(val) => {
                           const nuevas = [...recetas];
@@ -723,7 +675,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                       </button>
                     )}
 
-                    {isAdmin && modoEdicion ? (
+                    {canEdit && modoEdicion ? (
                       <button
                         type="button"
                         onClick={() => abrirDrawerPasos(index)}
@@ -748,7 +700,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
             })}
 
             {/* Tarjeta "+ Nueva receta" (Modo Edición) */}
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <button
                 type="button"
                 onClick={agregarNuevaReceta}
@@ -774,7 +726,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         onChange={handleArchivoSeleccionado}
         className="hidden"
       />
@@ -823,12 +775,12 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
           {/* Video de YouTube de la receta individual */}
           {recetaActiva && (
             <div className="mb-4">
-              {isAdmin && modoEdicion && (
+              {canEdit && modoEdicion && (
                 <div className="mb-3 p-3 bg-neutral-light/70 rounded-xl border border-border">
                   <label className="text-[11px] font-bold text-neutral-600 block mb-1">
                     Enlace de YouTube de esta receta (opcional):
                   </label>
-                  <input
+                  <ValidatedInput rule="youtube"
                     type="text"
                     value={recetaActiva.video_url || ""}
                     onChange={(e) => {
@@ -877,7 +829,7 @@ export function RecetasManager({ initialData }: RecetasManagerProps) {
                 </div>
 
                 {/* Textarea del paso */}
-                <textarea
+                <ValidatedTextarea rule="step"
                   rows={2}
                   value={paso}
                   onChange={(e) => actualizarPaso(pasoIdx, e.target.value)}

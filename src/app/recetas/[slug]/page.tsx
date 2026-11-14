@@ -156,11 +156,6 @@ export default async function RecipeDetailPage({ params }: Props) {
                 </Badge>
               )}
 
-              {recipe.tipo_queso && (
-                <Badge variant="secondary">
-                  Queso: {recipe.tipo_queso}
-                </Badge>
-              )}
             </div>
 
             <h1 className="font-headline text-3xl sm:text-4xl font-bold text-primary">

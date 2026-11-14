@@ -1,5 +1,7 @@
+import { contentPermission } from "@/lib/server/contentPermission";
 import { NextResponse } from "next/server";
-import { actualizarSeccion, eliminarSeccion, moverSeccion } from "@/lib/db/contenidoRepo";
+import { actualizarSeccion, eliminarSeccion, moverSeccion, obtenerSeccion } from "@/lib/db/contenidoRepo";
+import { validateContentPayload } from "@/lib/adminPayloadValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +10,9 @@ interface Params {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const denied = contentPermission(request);
+  if (denied) return denied;
+
   const { id } = await params;
 
   let cuerpo: {
@@ -21,6 +26,10 @@ export async function PATCH(request: Request, { params }: Params) {
     cuerpo = await request.json();
   } catch {
     return NextResponse.json({ error: "El cuerpo debe ser JSON válido." }, { status: 400 });
+  }
+
+  if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) {
+    return NextResponse.json({ error: "Formato de sección inválido." }, { status: 400 });
   }
 
   // Reordenamiento: se maneja aquí para no multiplicar rutas.
@@ -44,6 +53,9 @@ export async function PATCH(request: Request, { params }: Params) {
     }
   }
 
+  const validationError = validateContentPayload({ ...obtenerSeccion(id), ...cuerpo }, true);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
+
   const seccion = actualizarSeccion(id, {
     titulo: typeof cuerpo.titulo === "string" ? cuerpo.titulo.trim() : undefined,
     descripcion:
@@ -63,6 +75,9 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const denied = contentPermission(_request);
+  if (denied) return denied;
+
   const { id } = await params;
 
   if (!eliminarSeccion(id)) {

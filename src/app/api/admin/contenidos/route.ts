@@ -1,10 +1,15 @@
+import { contentPermission } from "@/lib/server/contentPermission";
 import { NextResponse } from "next/server";
 import { crearContenido } from "@/lib/db/contenidoRepo";
 import { TIPOS_CONTENIDO, type TipoContenido } from "@/types/contenido";
+import { validateContentPayload } from "@/lib/adminPayloadValidation";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const denied = contentPermission(request);
+  if (denied) return denied;
+
   let cuerpo: Record<string, unknown>;
 
   try {
@@ -13,6 +18,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "El cuerpo debe ser JSON válido." }, { status: 400 });
   }
 
+  const validationError = validateContentPayload(cuerpo);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
   const seccionId = typeof cuerpo.seccion_id === "string" ? cuerpo.seccion_id : "";
   if (!seccionId) {
     return NextResponse.json({ error: "Falta la sección a la que pertenece." }, { status: 400 });

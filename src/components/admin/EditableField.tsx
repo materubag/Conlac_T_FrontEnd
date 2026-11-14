@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React from "react";
+import { ValidatedInput, ValidatedTextarea } from "./ValidatedFields";
+import { getAdminRule, type AdminFieldRule } from "@/lib/adminValidation";
 
 interface EditableFieldProps {
   isEditing: boolean;
   value: string;
   onChange: (value: string) => void;
+  rule: AdminFieldRule;
   label?: string;
   className?: string;
   renderStatic?: () => React.ReactNode;
   placeholder?: string;
+  required?: boolean;
   // retrocompatibilidad
   type?: "input" | "textarea";
   rows?: number;
@@ -19,27 +23,13 @@ export function EditableField({
   isEditing,
   value,
   onChange,
+  rule,
   label = "Clic para editar",
   className = "",
   renderStatic,
   placeholder = "Escribe aquí...",
+  required = false,
 }: EditableFieldProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const autoResize = () => {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = "auto";
-      el.style.height = `${Math.max(el.scrollHeight, 28)}px`;
-    }
-  };
-
-  useEffect(() => {
-    if (isEditing) {
-      autoResize();
-    }
-  }, [value, isEditing]);
-
   if (!isEditing) {
     if (renderStatic) return <>{renderStatic()}</>;
     return <span className={className}>{value}</span>;
@@ -57,17 +47,24 @@ export function EditableField({
         <div className="absolute top-full left-3 -mt-0.5 border-4 border-transparent border-t-blue-600" />
       </div>
 
-      <textarea
-        ref={textareaRef}
+      {getAdminRule(rule).min !== undefined ? <ValidatedInput
+        required={required}
+        rule={rule}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className={`${className} w-full bg-transparent border-2 border-dashed border-blue-400 hover:border-blue-600 focus:border-blue-600 focus:outline-none rounded-xl p-2 transition-colors leading-relaxed block`}
+      /> : <ValidatedTextarea
+        required={required}
+        rule={rule}
+        autoResize
         rows={1}
         value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
-          autoResize();
-        }}
+        aria-label={label}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className={`${className} w-full overflow-hidden resize-none bg-transparent border-2 border-dashed border-blue-400 hover:border-blue-600 focus:border-blue-600 focus:bg-white focus:outline-none rounded-xl p-2 transition-colors leading-relaxed block`}
-      />
+        className={`${className} w-full overflow-hidden resize-none bg-transparent border-2 border-dashed border-blue-400 hover:border-blue-600 focus:border-blue-600 focus:outline-none rounded-xl p-2 transition-colors leading-relaxed block`}
+      />}
     </div>
   );
 }

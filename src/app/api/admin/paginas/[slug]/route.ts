@@ -1,5 +1,7 @@
+import { contentPermission } from "@/lib/server/contentPermission";
 import { NextRequest, NextResponse } from "next/server";
 import { guardarPaginaConfig, obtenerPaginaConfig } from "@/lib/db/paginasRepo";
+import { validatePagePayload } from "@/lib/adminPayloadValidation";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -31,9 +33,14 @@ export async function POST(
   request: NextRequest,
   { params }: RouteParams
 ) {
+  const denied = contentPermission(request);
+  if (denied) return denied;
+
   try {
     const { slug } = await params;
     const body = await request.json();
+    const validationError = validatePagePayload(slug, body);
+    if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
     if (!body || typeof body.titulo !== "string") {
       return NextResponse.json(
@@ -42,12 +49,13 @@ export async function POST(
       );
     }
 
-    const guardada = guardarPaginaConfig(slug, {
+    const datos = {
       eyebrow: body.eyebrow || "",
       titulo: body.titulo,
       subtitulo: body.subtitulo || "",
       contenido: body.contenido || {},
-    });
+    };
+    const guardada = guardarPaginaConfig(slug, datos);
 
     return NextResponse.json({
       ok: true,
@@ -62,4 +70,3 @@ export async function POST(
     );
   }
 }
-

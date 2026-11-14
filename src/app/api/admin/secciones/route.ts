@@ -1,5 +1,7 @@
+import { contentPermission } from "@/lib/server/contentPermission";
 import { NextResponse } from "next/server";
 import { crearSeccion, listarSecciones } from "@/lib/db/contenidoRepo";
+import { validateContentPayload } from "@/lib/adminPayloadValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +10,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = contentPermission(request);
+  if (denied) return denied;
+
   let cuerpo: { titulo?: unknown; descripcion?: unknown; publicado?: unknown };
 
   try {
@@ -16,6 +21,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "El cuerpo debe ser JSON válido." }, { status: 400 });
   }
 
+  const validationError = validateContentPayload(cuerpo, true);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
   const titulo = typeof cuerpo.titulo === "string" ? cuerpo.titulo.trim() : "";
   if (titulo.length < 3) {
     return NextResponse.json(

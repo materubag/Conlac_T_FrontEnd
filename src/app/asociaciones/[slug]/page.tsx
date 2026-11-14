@@ -8,6 +8,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AssociationDetailManager } from "@/components/associations/AssociationDetailManager";
 import { Button } from "@/components/ui/Button";
 import { obtenerPaginaConfig } from "@/lib/db/paginasRepo";
+import { filtrarProductosVisibles } from "@/lib/db/productVisibilityRepo";
 import type { Asociacion, Producto } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -149,7 +150,7 @@ export default async function AssociationDetailPage({ params }: Props) {
     nombre: config.contenido?.nombre || config.titulo || rawAssoc.nombre,
   };
 
-  const products = await fetchAssociationProducts(association.slug || association.id || slug);
+  const products = filtrarProductosVisibles(await fetchAssociationProducts(association.slug || association.id || slug));
 
   return (
     <div className="py-12 sm:py-16 bg-background">
