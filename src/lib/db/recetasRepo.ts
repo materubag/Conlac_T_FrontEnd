@@ -187,6 +187,11 @@ function filaAReceta(fila: FilaReceta): RecetaEditable {
   };
 }
 
+export function listarRecetasExistentes(soloPublicadas = true): RecetaEditable[] {
+  const filas = getDb().prepare(`SELECT * FROM recetas_editables ${soloPublicadas ? "WHERE publicado = 1" : ""} ORDER BY orden ASC, creado_en ASC`).all() as unknown as FilaReceta[];
+  return filas.map(filaAReceta);
+}
+
 export function obtenerPaginaRecetas(soloPublicadas = false): PaginaRecetasData {
   const db = getDb();
   inicializarSemillas();

@@ -2,6 +2,7 @@ import { contentPermission } from "@/lib/server/contentPermission";
 import { NextRequest, NextResponse } from "next/server";
 import { guardarPaginaConfig, obtenerPaginaConfig } from "@/lib/db/paginasRepo";
 import { validatePagePayload } from "@/lib/adminPayloadValidation";
+import { guardarInicio } from "@/lib/db/homeRepo";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -55,7 +56,7 @@ export async function POST(
       subtitulo: body.subtitulo || "",
       contenido: body.contenido || {},
     };
-    const guardada = guardarPaginaConfig(slug, datos);
+    const guardada = slug === "home" ? guardarInicio(datos, body.testimonios) : guardarPaginaConfig(slug, datos);
 
     return NextResponse.json({
       ok: true,

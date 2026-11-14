@@ -1,44 +1,16 @@
-import React from "react";
-import { Hero } from "@/components/home/Hero";
-import { TrustSection } from "@/components/home/TrustSection";
-import { FeaturedProducts } from "@/components/home/FeaturedProducts";
-import { CategoryAccessCards } from "@/components/home/CategoryAccessCards";
-import { TestimonialsSection } from "@/components/home/TestimonialsSection";
-import { StoreCTA } from "@/components/home/StoreCTA";
+import { HomeManager } from "@/components/home/HomeManager";
+import { obtenerPaginaConfig } from "@/lib/db/paginasRepo";
+import { homeDefaults } from "@/lib/homeDefaults";
+import { getStorePageData, selectHomeProducts } from "@/lib/server/storeCatalog";
+import { getHomeAccessCards, getHomeTestimonials } from "@/lib/server/homeContent";
+import type { HomeContent } from "@/types/home";
 
-/**
- * ============================================================
- * PÁGINA DE INICIO (PORTADA) - CONLAC-T
- * Consorcio de Lácteos de Tungurahua
- * ============================================================
- * 
- * Estructura de la portada para Semanas 1 y 2:
- * 1. HERO: Transmite identidad de quesos artesanales de Pilahuín.
- * 2. PRODUCTOS DESTACADOS: Grilla dinámica que consume lib/data.ts.
- * 3. PROCEDENCIA / IDENTIDAD: "Confianza desde el Origen".
- * 4. ACCESO MODULAR: Asociaciones, Recetas y Turismo.
- * 5. CTA TIENDA: Invitación hacia el catálogo completo.
- */
-export default function HomePage() {
-  return (
-    <>
-      {/* 1. Hero Principal */}
-      <Hero />
+export const dynamic = "force-dynamic";
 
-      {/* 2. Productos Destacados */}
-      <FeaturedProducts />
-
-      {/* 3. Confianza y Procedencia */}
-      <TrustSection />
-
-      {/* 4. Tarjetas de Acceso a Secciones */}
-      <CategoryAccessCards />
-
-      {/* 5. Testimonios Reales de la Comunidad */}
-      <TestimonialsSection />
-
-      {/* 6. Llamado a la Acción Final */}
-      <StoreCTA />
-    </>
-  );
+export default async function HomePage() {
+  const initialConfig = obtenerPaginaConfig<HomeContent>("home", homeDefaults);
+  const [store, cards, testimonials] = await Promise.all([
+    getStorePageData(), getHomeAccessCards(), getHomeTestimonials(),
+  ]);
+  return <HomeManager initialConfig={initialConfig} products={selectHomeProducts(store.products)} cards={cards} testimonials={testimonials} />;
 }
