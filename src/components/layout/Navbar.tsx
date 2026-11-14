@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { MAIN_NAV_ITEMS } from "@/config/navigation";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
-import { CartIcon, MenuIcon, CloseIcon, UserIcon } from "@/components/ui/Icons";
+import { CartIcon, MenuIcon, CloseIcon, SearchIcon } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -166,13 +166,13 @@ export const Navbar: React.FC = () => {
           ) : <div className="hidden sm:flex items-center gap-2">
             {!isAuthenticated ? (
               <Button
-                href="/login"
+                href="/seguimiento"
                 variant="outlined"
                 size="sm"
                 className="min-h-10 gap-2 rounded-xl px-4"
               >
-                <UserIcon />
-                Ingresar
+                <SearchIcon />
+                Buscar pedido
               </Button>
             ) : (
               <>
@@ -267,14 +267,14 @@ export const Navbar: React.FC = () => {
             {!isAuthenticated ? (
               <div className="grid grid-cols-1 gap-2">
                 <Button
-                  href="/login"
+                  href="/seguimiento"
                   variant="primary"
                   size="md"
                   fullWidth
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <UserIcon />
-                  Ingresar
+                  <SearchIcon />
+                  Buscar pedido
                 </Button>
               </div>
             ) : (

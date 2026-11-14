@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { siteConfig } from "@/lib/config";
 import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
@@ -37,7 +36,6 @@ const SHIPPING_ZONES = [
 
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, clearCart } = useCart();
-  const { user, profile, isAuthenticated, getAccessToken } = useAuth();
 
   // Estados del formulario
   const [nombre, setNombre] = useState("");
@@ -47,20 +45,7 @@ export default function CheckoutPage() {
   const [metodoEntrega, setMetodoEntrega] = useState<"delivery" | "pickup">("pickup");
   const [zonaEnvioId, setZonaEnvioId] = useState(SHIPPING_ZONES[0].id);
   const [direccionEntrega, setDireccionEntrega] = useState("");
-  const [metodoPago, setMetodoPago] = useState<"transferencia" | "payphone">("transferencia");
   const [notasCliente, setNotasCliente] = useState("");
-
-  // Precargar datos del usuario si está autenticado
-  useEffect(() => {
-    if (user) {
-      if (!nombre) {
-        setNombre(profile?.full_name || user.user_metadata?.full_name || "");
-      }
-      if (!email && user.email) {
-        setEmail(user.email);
-      }
-    }
-  }, [user, profile, nombre, email]);
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -115,7 +100,7 @@ export default function CheckoutPage() {
         metodo_entrega: metodoEntrega,
         zona_envio_id: metodoEntrega === "delivery" ? zonaEnvioId : undefined,
         direccion_entrega: metodoEntrega === "delivery" ? direccionEntrega.trim() : undefined,
-        metodo_pago: metodoPago,
+        metodo_pago: "transferencia",
         notas_cliente: notasCliente.trim() || undefined,
         items: orderItems,
       };
@@ -124,12 +109,6 @@ export default function CheckoutPage() {
         "Content-Type": "application/json",
         Accept: "application/json",
       };
-
-      // Adjuntar token JWT si el usuario tiene sesión activa
-      const token = await getAccessToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
 
       const res = await fetch(`${siteConfig.backendUrl}/orders`, {
         method: "POST",
@@ -218,36 +197,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Botón PayPhone si el backend entregó URL */}
-            {createdOrder.metodo_pago === "payphone" && createdOrder.payphone_url && (
-              <div className="p-4 rounded-xl bg-[#F8F4E9] border border-tertiary/70 text-center space-y-3">
-                <p className="text-xs font-semibold text-primary">
-                  Pasarela de pago PayPhone generada para tu pedido:
-                </p>
-                <Button
-                  href={createdOrder.payphone_url}
-                  variant="primary"
-                  size="md"
-                  isExternal
-                  fullWidth
-                >
-                  Pagar ahora con PayPhone
-                </Button>
-              </div>
-            )}
-
-            {/* Mensaje PayPhone si no se proporcionó URL */}
-            {createdOrder.metodo_pago === "payphone" && !createdOrder.payphone_url && (
-              <div className="p-4 rounded-xl bg-[#F8F4E9] border border-tertiary/70 text-center space-y-2">
-                <p className="text-xs font-semibold text-primary">
-                  Pago PayPhone en proceso
-                </p>
-                <p className="text-xs text-neutral-muted">
-                  El enlace directo de cobro será coordinado con la administración de CONLAC-T para la confirmación de tu pedido.
-                </p>
-              </div>
-            )}
-
             {/* Instrucciones para transferencia */}
             {createdOrder.metodo_pago === "transferencia" && (
               <div className="p-5 rounded-2xl bg-background border border-border/80 text-xs text-neutral-muted space-y-2">
@@ -279,16 +228,7 @@ export default function CheckoutPage() {
                 <ArrowRightIcon className="w-4 h-4" />
               </Button>
 
-              {isAuthenticated && (
-                <Button
-                  href="/mis-pedidos"
-                  variant="outlined"
-                  size="md"
-                  fullWidth
-                >
-                  <span>Ver en Mis Pedidos</span>
-                </Button>
-              )}
+
 
               <Button
                 href={whatsappOrderMsg}
@@ -376,28 +316,6 @@ export default function CheckoutPage() {
               <h2 className="font-headline text-xl font-bold text-primary border-b border-border pb-3">
                 1. Datos del Cliente
               </h2>
-
-              {/* Banner de estado de sesión (Invitado vs Autenticado) */}
-              {isAuthenticated ? (
-                <div className="rounded-xl bg-tertiary/10 border border-tertiary/30 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
-                  <div className="text-primary">
-                    <span className="font-bold">Sesión iniciada:</span> Realizando pedido como{" "}
-                    <span className="font-semibold text-tertiary">{profile?.full_name || user?.email}</span> ({user?.email}).
-                  </div>
-                  <Link href="/mis-pedidos" className="text-tertiary hover:underline font-bold self-start sm:self-auto shrink-0">
-                    Ver mis pedidos →
-                  </Link>
-                </div>
-              ) : (
-                <div className="rounded-xl bg-surface-alt/60 border border-border p-3.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
-                  <div className="text-neutral-muted">
-                    <span className="font-semibold text-primary">Modo Invitado:</span> Puedes comprar sin registrarte. Los detalles de tu pedido se enviarán a tu correo y podrás rastrearlo con tu código.
-                  </div>
-                  <Link href="/login?redirect=/checkout" className="text-tertiary hover:underline font-bold self-start sm:self-auto shrink-0">
-                    ¿Tienes cuenta? Ingresa aquí →
-                  </Link>
-                </div>
-              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -572,60 +490,9 @@ export default function CheckoutPage() {
                 3. Método de Pago
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label
-                  className={`p-4 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
-                    metodoPago === "transferencia"
-                      ? "border-primary bg-[#F8F4E9] ring-2 ring-primary"
-                      : "border-border bg-background hover:border-tertiary"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="transferencia"
-                      checked={metodoPago === "transferencia"}
-                      onChange={() => setMetodoPago("transferencia")}
-                      className="text-primary focus:ring-tertiary"
-                    />
-                    <div>
-                      <span className="font-headline font-bold text-sm text-primary block">
-                        Transferencia Bancaria
-                      </span>
-                      <span className="text-xs text-neutral-muted">
-                        Coordinación directa / Depósito bancario
-                      </span>
-                    </div>
-                  </div>
-                </label>
-
-                <label
-                  className={`p-4 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
-                    metodoPago === "payphone"
-                      ? "border-primary bg-[#F8F4E9] ring-2 ring-primary"
-                      : "border-border bg-background hover:border-tertiary"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="payphone"
-                      checked={metodoPago === "payphone"}
-                      onChange={() => setMetodoPago("payphone")}
-                      className="text-primary focus:ring-tertiary"
-                    />
-                    <div>
-                      <span className="font-headline font-bold text-sm text-primary block">
-                        PayPhone (Tarjetas)
-                      </span>
-                      <span className="text-xs text-neutral-muted">
-                        Tarjetas de débito o crédito
-                      </span>
-                    </div>
-                  </div>
-                </label>
+              <div className="rounded-xl border border-primary/20 bg-background p-4">
+                <p className="font-headline text-base font-bold text-primary">Transferencia bancaria</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-muted">Coordina los datos bancarios y el comprobante de tu pedido por WhatsApp.</p>
               </div>
 
               <div>

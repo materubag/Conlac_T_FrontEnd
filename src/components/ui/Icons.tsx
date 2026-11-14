@@ -5,6 +5,12 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
   size?: number;
 }
 
+export const SearchIcon: React.FC<IconProps> = ({ className = "h-5 w-5 shrink-0", size = 20, ...props }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true" {...props}>
+    <circle cx="10.5" cy="10.5" r="7" /><path d="m16 16 5 5" />
+  </svg>
+);
+
 export const UserIcon: React.FC<IconProps> = ({ className = "h-5 w-5 shrink-0", size = 20, ...props }) => (
   <svg aria-hidden="true" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <circle cx="12" cy="7" r="3" />

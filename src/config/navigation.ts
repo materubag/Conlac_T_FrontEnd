@@ -58,7 +58,7 @@ export const FOOTER_NAV_SECTIONS = {
   institucional: [
     { name: "Quiénes Somos", href: "/nosotros" },
     { name: "Cómo Comprar", href: "/como-comprar" },
-    { name: "Carrito de Compras", href: "/carrito" },
+    { name: "Acceso de gestión", href: "/login" },
     { name: "Sellos Sanitarios y Calidad", href: "/nosotros#calidad" },
     { name: "Contacto y Ubicación", href: "/contacto" },
   ],
