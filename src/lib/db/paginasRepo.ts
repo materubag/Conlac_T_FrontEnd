@@ -1,4 +1,5 @@
 import { getDb, ahora } from "./sqlite";
+import { separateImages } from "./media";
 
 export interface PaginaEditableConfig<T = Record<string, unknown>> {
   slug: string;
@@ -46,7 +47,7 @@ export function obtenerPaginaConfig<T = Record<string, unknown>>(
       defaults.eyebrow,
       defaults.titulo,
       defaults.subtitulo,
-      JSON.stringify(defaults.contenido),
+      JSON.stringify(separateImages(db, defaults.contenido)),
       ahoraIso
     );
     return {
@@ -54,7 +55,7 @@ export function obtenerPaginaConfig<T = Record<string, unknown>>(
       eyebrow: defaults.eyebrow,
       titulo: defaults.titulo,
       subtitulo: defaults.subtitulo,
-      contenido: defaults.contenido,
+      contenido: separateImages(db, defaults.contenido),
       actualizado_en: ahoraIso,
     };
   }
@@ -83,7 +84,9 @@ export function guardarPaginaConfig<T = Record<string, unknown>>(
   data: { eyebrow: string; titulo: string; subtitulo: string; contenido: T }
 ): PaginaEditableConfig<T> {
   const db = getDb();
-  const ahoraIso = ahora();
+  const previous = db.prepare("SELECT actualizado_en FROM paginas_editables WHERE slug=?").get(slug) as { actualizado_en: string } | undefined;
+  const ahoraIso = new Date(Math.max(Date.now(), Date.parse(previous?.actualizado_en ?? "") + 1 || 0)).toISOString();
+  const contenido = separateImages(db, data.contenido);
 
   const stmt = db.prepare(`
     INSERT INTO paginas_editables (slug, eyebrow, titulo, subtitulo, contenido_json, actualizado_en)
@@ -101,7 +104,7 @@ export function guardarPaginaConfig<T = Record<string, unknown>>(
     data.eyebrow,
     data.titulo,
     data.subtitulo,
-    JSON.stringify(data.contenido),
+    JSON.stringify(contenido),
     ahoraIso
   );
 
@@ -110,7 +113,7 @@ export function guardarPaginaConfig<T = Record<string, unknown>>(
     eyebrow: data.eyebrow,
     titulo: data.titulo,
     subtitulo: data.subtitulo,
-    contenido: data.contenido,
+    contenido,
     actualizado_en: ahoraIso,
   };
 }

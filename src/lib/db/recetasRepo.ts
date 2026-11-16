@@ -1,4 +1,5 @@
 import { getDb, ahora, nuevoId } from "./sqlite";
+import { separateImages } from "./media";
 
 export interface RecetaEditable {
   id: string;
@@ -298,7 +299,7 @@ export function guardarPaginaRecetas(datos: {
       receta.tipo_queso ?? null,
       receta.tiempo_prep ?? 30,
       receta.porciones ?? 4,
-      receta.imagen_url ?? null,
+      separateImages(db, receta.imagen_url ?? null),
       receta.gradient ?? "linear-gradient(135deg,#d4a373,#8a5a3a)",
       receta.video_url ?? null,
       JSON.stringify(receta.pasos || []),

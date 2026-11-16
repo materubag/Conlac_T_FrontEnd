@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { migrateInlineImages } from "./media";
 
 // Almacén local de contenidos y páginas editables.
 // Es provisional: el backend todavía no expone estas entidades, así que el
@@ -16,6 +17,7 @@ let instancia: DatabaseSync | null = null;
 function crearEsquema(db: DatabaseSync): void {
   db.exec(`
     PRAGMA journal_mode = WAL;
+    PRAGMA busy_timeout = 5000;
     PRAGMA foreign_keys = ON;
 
     CREATE TABLE IF NOT EXISTS secciones (
@@ -92,8 +94,10 @@ function crearEsquema(db: DatabaseSync): void {
 export function getDb(): DatabaseSync {
   if (!instancia) {
     mkdirSync(DB_DIR, { recursive: true });
-    instancia = new DatabaseSync(DB_FILE);
-    crearEsquema(instancia);
+    const db = new DatabaseSync(DB_FILE);
+    crearEsquema(db);
+    migrateInlineImages(db);
+    instancia = db;
   }
   return instancia;
 }
