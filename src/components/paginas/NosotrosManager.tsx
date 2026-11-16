@@ -1,5 +1,6 @@
 "use client";
 
+import { adminResponseError } from "@/lib/adminValidation";
 import React, { useState } from "react";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
@@ -7,11 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
   ArrowRightIcon,
-  ChefHatIcon,
   MountainIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  UsersIcon,
 } from "@/components/ui/Icons";
 import { useAuth } from "@/context/AuthContext";
 import { AdminBadgeHelp, AdminPageBar } from "@/components/admin/AdminPageBar";
@@ -47,7 +44,7 @@ interface Props {
 }
 
 export function NosotrosManager({ initialData }: Props) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -80,12 +77,13 @@ export function NosotrosManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Página de Nosotros guardada exitosamente");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error al guardar los cambios";
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -93,7 +91,7 @@ export function NosotrosManager({ initialData }: Props) {
 
   return (
     <div className="relative min-h-screen bg-background">
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName="Nosotros"
           isEditing={modoEdicion}
@@ -125,8 +123,8 @@ export function NosotrosManager({ initialData }: Props) {
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary via-primary/90 to-primary/25" />
             <div className="max-w-3xl">
               <div className="inline-block">
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="short"
+                  isEditing={canEdit && modoEdicion}
                   value={eyebrow}
                   onChange={(val) => {
                     setEyebrow(val);
@@ -139,8 +137,8 @@ export function NosotrosManager({ initialData }: Props) {
               </div>
 
               <div className="mt-4">
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="title"
+                  isEditing={canEdit && modoEdicion}
                   value={titulo}
                   onChange={(val) => {
                     setTitulo(val);
@@ -157,8 +155,8 @@ export function NosotrosManager({ initialData }: Props) {
               </div>
 
               <div className="mt-6">
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="subtitle"
+                  isEditing={canEdit && modoEdicion}
                   value={subtitulo}
                   onChange={(val) => {
                     setSubtitulo(val);
@@ -176,7 +174,7 @@ export function NosotrosManager({ initialData }: Props) {
                 />
               </div>
 
-              {isAdmin && modoEdicion && (
+              {canEdit && modoEdicion && (
                 <div className="mt-4">
                   <AdminBadgeHelp message="Edita la historia, misión, testimonios y cifras de impacto de CONLAC-T." />
                 </div>
@@ -208,8 +206,8 @@ export function NosotrosManager({ initialData }: Props) {
                 <div className="flex items-center gap-3">
                   <MountainIcon className="h-8 w-8 shrink-0 text-primary" />
                   <div className="w-full">
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="short"
+                      isEditing={canEdit && modoEdicion}
                       value={c.leche_altura_titulo || "Leche de altura"}
                       onChange={(val) => {
                         setC({ ...c, leche_altura_titulo: val });
@@ -223,8 +221,8 @@ export function NosotrosManager({ initialData }: Props) {
                         </p>
                       )}
                     />
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="subtitle"
+                      isEditing={canEdit && modoEdicion}
                       value={c.leche_altura_subtitulo || "Pastoreo libre a más de 3.000 msnm"}
                       onChange={(val) => {
                         setC({ ...c, leche_altura_subtitulo: val });
@@ -248,8 +246,8 @@ export function NosotrosManager({ initialData }: Props) {
                 Nuestra raíz comunitaria
               </span>
 
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={c.historia_titulo}
                 onChange={(val) => {
                   setC({ ...c, historia_titulo: val });
@@ -264,8 +262,8 @@ export function NosotrosManager({ initialData }: Props) {
                 )}
               />
 
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="longText"
+                isEditing={canEdit && modoEdicion}
                 value={c.historia_p1}
                 onChange={(val) => {
                   setC({ ...c, historia_p1: val });
@@ -282,8 +280,8 @@ export function NosotrosManager({ initialData }: Props) {
                 )}
               />
 
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="longText"
+                isEditing={canEdit && modoEdicion}
                 value={c.historia_p2}
                 onChange={(val) => {
                   setC({ ...c, historia_p2: val });
@@ -316,8 +314,8 @@ export function NosotrosManager({ initialData }: Props) {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {c.stats.map((stat, idx) => (
                 <div key={idx} className="p-6 rounded-2xl bg-surface border border-border text-center">
-                  <EditableField
-                    isEditing={isAdmin && modoEdicion}
+                  <EditableField rule="statistic"
+                    isEditing={canEdit && modoEdicion}
                     value={stat.value}
                     onChange={(val) => {
                       const copy = [...c.stats];
@@ -334,8 +332,8 @@ export function NosotrosManager({ initialData }: Props) {
                     )}
                   />
                   <div className="mt-2">
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="short"
+                      isEditing={canEdit && modoEdicion}
                       value={stat.label}
                       onChange={(val) => {
                         const copy = [...c.stats];
@@ -347,8 +345,8 @@ export function NosotrosManager({ initialData }: Props) {
                       className="text-sm font-bold text-primary block"
                     />
                   </div>
-                  <EditableField
-                    isEditing={isAdmin && modoEdicion}
+                  <EditableField rule="detail"
+                    isEditing={canEdit && modoEdicion}
                     value={stat.sublabel}
                     onChange={(val) => {
                       const copy = [...c.stats];
@@ -367,8 +365,8 @@ export function NosotrosManager({ initialData }: Props) {
           {/* Testimonios */}
           <section className="space-y-8">
             <div className="text-center max-w-2xl mx-auto">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="short"
+                isEditing={canEdit && modoEdicion}
                 value={c.testimonios_eyebrow || "Confianza & Comunidad"}
                 onChange={(val) => {
                   setC({ ...c, testimonios_eyebrow: val });
@@ -384,8 +382,8 @@ export function NosotrosManager({ initialData }: Props) {
               />
 
               <div className="mt-2">
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="title"
+                  isEditing={canEdit && modoEdicion}
                   value={c.testimonios_titulo || "Lo que dicen quienes consumen y apoyan CONLAC-T"}
                   onChange={(val) => {
                     setC({ ...c, testimonios_titulo: val });
@@ -405,8 +403,8 @@ export function NosotrosManager({ initialData }: Props) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {c.testimonials.map((test, idx) => (
                 <div key={idx} className="p-6 rounded-2xl bg-surface border border-border flex flex-col justify-between space-y-4">
-                  <EditableField
-                    isEditing={isAdmin && modoEdicion}
+                  <EditableField rule="description"
+                    isEditing={canEdit && modoEdicion}
                     value={test.quote}
                     onChange={(val) => {
                       const copy = [...c.testimonials];
@@ -426,8 +424,8 @@ export function NosotrosManager({ initialData }: Props) {
                   />
 
                   <div className="pt-2 border-t border-border">
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="title"
+                      isEditing={canEdit && modoEdicion}
                       value={test.name}
                       onChange={(val) => {
                         const copy = [...c.testimonials];
@@ -438,8 +436,8 @@ export function NosotrosManager({ initialData }: Props) {
                       label="Nombre autor"
                       className="text-xs font-bold text-primary"
                     />
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="detail"
+                      isEditing={canEdit && modoEdicion}
                       value={test.role}
                       onChange={(val) => {
                         const copy = [...c.testimonials];

@@ -1,12 +1,11 @@
 "use client";
 
+import { adminResponseError, imageFileError, imageValueError, IMAGE_ACCEPT } from "@/lib/adminValidation";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { ProductCard } from "@/components/home/ProductCard";
 import { useAuth } from "@/context/AuthContext";
 import { AdminBadgeHelp, AdminPageBar } from "@/components/admin/AdminPageBar";
@@ -26,7 +25,7 @@ interface Props {
 }
 
 export function TiendaManager({ initialConfig, products: serverProducts, asociacion, error }: Props) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,12 +75,13 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Catálogo y productos guardados en SQLite");
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error al guardar los cambios";
       console.error(err);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -98,9 +98,14 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
     const index = targetImageIndexRef.current;
     if (!file || index === null || !productos[index]) return;
 
+    const imageError = imageFileError(file);
+    if (imageError) { mostrarToast(imageError); e.target.value = ""; return; }
+
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
+      const imageError = imageValueError(dataUrl);
+      if (imageError) { mostrarToast(imageError); return; }
       const nuevos = [...productos];
       nuevos[index] = { ...nuevos[index], fotos: [dataUrl] };
       setProductos(nuevos);
@@ -124,6 +129,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
       asociacion: "Asociación Comunitaria CONLAC-T",
       stock: 25,
       disponible: true,
+      oculto: false,
     };
     setProductos([...productos, nuevo]);
     marcarCambio();
@@ -153,6 +159,18 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
     mostrarToast("Producto eliminado");
   };
 
+  const alternarVisibilidad = (index: number) => {
+    setProductos((actuales) => actuales.map((producto, i) =>
+      i === index ? { ...producto, oculto: !producto.oculto } : producto
+    ));
+    marcarCambio();
+  };
+
+  const enModoEdicion = canEdit && modoEdicion;
+  const coincideAsociacion = (producto: Producto) => !asociacion || producto.asociacion_id === asociacion.id ||
+    producto.asociacion_id === asociacion.slug || producto.asociacion === asociacion.nombre;
+  const hayProductosVisibles = productos.some((producto) => !producto.oculto && producto.stock > 0 && coincideAsociacion(producto));
+
   const moverIzquierda = (index: number) => {
     if (index === 0) return;
     const nuevos = [...productos];
@@ -178,12 +196,12 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         onChange={handleArchivoSeleccionado}
         className="hidden"
       />
 
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName="Tienda"
           isEditing={modoEdicion}
@@ -211,8 +229,8 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
           />
 
           <div className="max-w-2xl mb-10">
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="short"
+              isEditing={canEdit && modoEdicion}
               value={eyebrow}
               onChange={(val) => {
                 setEyebrow(val);
@@ -223,8 +241,8 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
             />
 
             <div className="mt-2">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={titulo}
                 onChange={(val) => {
                   setTitulo(val);
@@ -241,8 +259,8 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
             </div>
 
             <div className="mt-3">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="subtitle"
+                isEditing={canEdit && modoEdicion}
                 value={subtitulo}
                 onChange={(val) => {
                   setSubtitulo(val);
@@ -262,8 +280,8 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
               </Button>
             )}
 
-            {isAdmin && modoEdicion && (
-              <AdminBadgeHelp message="Puedes editar títulos, precios, fotos, variedades y añadir o eliminar productos directamente." />
+            {canEdit && modoEdicion && (
+              <AdminBadgeHelp message="Puedes editar los productos y controlar su visibilidad sin cambiar el stock. Pulsa Guardar cambios para publicar." />
             )}
           </div>
 
@@ -282,13 +300,21 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
           )}
 
           {/* Grid de Productos */}
+          {!enModoEdicion && !hayProductosVisibles && !error && (
+            <p className="rounded-2xl border border-border bg-surface p-6 text-sm text-neutral-muted">
+              No hay productos para mostrar en este momento.
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {productos.map((product, index) => {
+              if (!enModoEdicion && (product.oculto || !(product.stock > 0))) return null;
+              if (!enModoEdicion && !coincideAsociacion(product)) return null;
+
               const imageSrc =
                 product.fotos?.[0] || "/placeholders/product-queso-fresco.svg";
 
               // Si NO es modo admin edición, renderizamos el ProductCard original
-              if (!isAdmin || !modoEdicion) {
+              if (!canEdit || !modoEdicion) {
                 return <ProductCard key={product.id} product={product} />;
               }
 
@@ -362,7 +388,30 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                       onClick={() => abrirSelectorImagen(index)}
                       className="absolute inset-x-2 bottom-2 py-1 px-2 rounded-lg bg-[#111c17]/90 text-white text-[11px] font-semibold text-center hover:bg-[#111c17] transition shadow-xs"
                     >
-                      Cambiar foto
+                      Cambiar foto · máx. 5 MB
+                    </button>
+                  </div>
+
+                  <div className="mb-3 rounded-xl border border-border bg-background p-3">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={!product.oculto}
+                      aria-label={`Mostrar en tienda: ${product.nombre}`}
+                      onClick={() => alternarVisibilidad(index)}
+                      className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                    >
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-primary">
+                        <svg aria-hidden="true" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                          <circle cx="12" cy="12" r="3" />
+                          {product.oculto && <path d="m3 3 18 18" />}
+                        </svg>
+                        {product.oculto ? "Oculto al público" : "Mostrar en tienda"}
+                      </span>
+                      <span aria-hidden="true" className={`inline-flex h-6 w-11 shrink-0 items-center rounded-full border p-0.5 transition-colors ${product.oculto ? "border-tertiary bg-tertiary/30" : "border-primary bg-primary"}`}>
+                        <span className={`h-4 w-4 rounded-full bg-surface shadow-sm transition-transform ${product.oculto ? "translate-x-0" : "translate-x-5"}`} />
+                      </span>
                     </button>
                   </div>
 
@@ -370,7 +419,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                   <div className="space-y-2 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
                       {/* Tipo / Badge */}
-                      <EditableField
+                      <EditableField rule="short"
                         isEditing={true}
                         value={product.tipo_queso || "Queso Artesanal"}
                         onChange={(val) => {
@@ -384,7 +433,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                       />
 
                       {/* Nombre */}
-                      <EditableField
+                      <EditableField rule="title"
                         isEditing={true}
                         value={product.nombre}
                         onChange={(val) => {
@@ -398,7 +447,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                       />
 
                       {/* Asociación */}
-                      <EditableField
+                      <EditableField rule="title"
                         isEditing={true}
                         value={product.asociacion || "CONLAC-T"}
                         onChange={(val) => {
@@ -419,7 +468,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                           <label className="text-[10px] text-neutral-muted block font-semibold mb-0.5">
                             Presentación:
                           </label>
-                          <EditableField
+                          <EditableField rule="short"
                             isEditing={true}
                             value={product.peso || "500 g"}
                             onChange={(val) => {
@@ -438,7 +487,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                           <label className="text-[10px] text-neutral-muted block font-semibold mb-0.5">
                             Precio ($):
                           </label>
-                          <EditableField
+                          <EditableField rule="price"
                             isEditing={true}
                             value={String(product.precio)}
                             onChange={(val) => {
@@ -458,7 +507,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
                         <label className="text-[10px] text-neutral-muted block font-semibold mb-0.5">
                           Unidades en stock:
                         </label>
-                        <EditableField
+                        <EditableField rule="stock"
                           isEditing={true}
                           value={String(product.stock ?? 10)}
                           onChange={(val) => {
@@ -478,7 +527,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
             })}
 
             {/* Tarjeta "+ Añadir Producto" */}
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <button
                 type="button"
                 onClick={agregarProducto}

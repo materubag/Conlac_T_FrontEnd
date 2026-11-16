@@ -1,9 +1,9 @@
 "use client";
 
+import { ValidatedInput } from "@/components/admin/ValidatedFields";
 import React from "react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { EditableField } from "@/components/admin/EditableField";
 import { getVideoEmbedUrl } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ interface VideoSectionManagerProps {
 
 export function VideoSectionManager({
   isAdmin,
-  isEditing,
+  isEditing: requestedEditing,
   eyebrow,
   onEyebrowChange,
   titulo,
@@ -43,6 +43,7 @@ export function VideoSectionManager({
   onDirty,
   defaultVideoTemplate,
 }: VideoSectionManagerProps) {
+  const isEditing = isAdmin && requestedEditing;
   // Si no está en modo edición y no hay videos válidos para mostrar, ocultar la sección
   const videosVisibles = videos.filter((v) => getVideoEmbedUrl(v.url) !== null);
   if (!isEditing && videosVisibles.length === 0) {
@@ -102,7 +103,7 @@ export function VideoSectionManager({
         {/* Cabecera de la sección */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="max-w-2xl">
-            <EditableField
+            <EditableField rule="short"
               isEditing={isEditing}
               value={eyebrow}
               onChange={onEyebrowChange}
@@ -111,7 +112,7 @@ export function VideoSectionManager({
             />
 
             <div className="mt-2">
-              <EditableField
+              <EditableField rule="title"
                 isEditing={isEditing}
                 value={titulo}
                 onChange={onTituloChange}
@@ -126,7 +127,7 @@ export function VideoSectionManager({
             </div>
 
             <div className="mt-2">
-              <EditableField
+              <EditableField rule="subtitle"
                 isEditing={isEditing}
                 value={subtitulo}
                 onChange={onSubtituloChange}
@@ -146,7 +147,7 @@ export function VideoSectionManager({
             <div className="shrink-0">
               <Button
                 type="button"
-                variant="outline"
+                variant="outlined"
                 size="sm"
                 onClick={agregarVideo}
                 className="bg-red-50 text-red-700 border-red-300 hover:bg-red-100 hover:border-red-400 font-semibold shadow-sm"
@@ -284,7 +285,7 @@ export function VideoSectionManager({
                     <div>
                       {/* Título del video */}
                       <div className="mb-2">
-                        <EditableField
+                        <EditableField rule="title"
                           isEditing={isEditing}
                           value={vid.titulo}
                           onChange={(val) => {
@@ -306,23 +307,23 @@ export function VideoSectionManager({
                           <label className="text-[11px] font-bold text-neutral-600 block mb-1">
                             Enlace de YouTube:
                           </label>
-                          <input
+                          <ValidatedInput rule="youtube"
                             type="text"
                             value={vid.url || ""}
                             onChange={(e) => {
                               actualizarVideo(index, { url: e.target.value });
                             }}
-                            placeholder="https://www.youtube.com/watch?v=... o https://youtu.be/..."
+                            placeholder="https://www.youtube.com/watch?v=..."
                             className="w-full text-xs font-mono px-2.5 py-1.5 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                           <p className="text-[10px] text-neutral-muted mt-1">
-                            Soporta videos normales, enlaces cortos (youtu.be), Shorts y listas.
+                            Solo https://www.youtube.com/ con un video válido (watch, embed, shorts o live).
                           </p>
                         </div>
                       )}
 
                       {/* Descripción del video */}
-                      <EditableField
+                      <EditableField rule="description"
                         isEditing={isEditing}
                         value={vid.descripcion || ""}
                         onChange={(val) => {

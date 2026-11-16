@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/config";
-import { normalizeBackendProduct, productosMock } from "@/lib/data";
+import { getStorePageData } from "@/lib/server/storeCatalog";
+import { esProductoVisible, obtenerProductosOcultos } from "@/lib/db/productVisibilityRepo";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -20,52 +21,14 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-async function fetchProductFromBackend(slugOrId: string): Promise<{
+async function fetchCatalogProduct(slugOrId: string): Promise<{
   product: Producto | null;
   error: string | null;
   isNotFound: boolean;
 }> {
-  const apiUrl = `${siteConfig.backendUrl}/products/${encodeURIComponent(slugOrId)}`;
-
-  try {
-    const res = await fetch(apiUrl, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (res.status === 404) {
-      return { product: null, error: null, isNotFound: true };
-    }
-
-    if (!res.ok) {
-      return {
-        product: null,
-        error: `El servidor backend respondió con código HTTP ${res.status} (${res.statusText})`,
-        isNotFound: false,
-      };
-    }
-
-    const data: Producto = await res.json();
-    return {
-      product: {
-        ...normalizeBackendProduct(data),
-        fotos: Array.isArray(data.fotos) && data.fotos.length > 0
-          ? data.fotos
-          : ["/placeholders/product-queso-fresco.svg"],
-      },
-      error: null,
-      isNotFound: false,
-    };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Error de conexión";
-    return {
-      product: null,
-      error: `No se pudo conectar con el backend (${message}).`,
-      isNotFound: false,
-    };
-  }
+  const { products, error } = await getStorePageData();
+  const product = products.find((item) => item.id === slugOrId || item.slug === slugOrId) ?? null;
+  return { product, error: product ? null : error, isNotFound: !product && !error };
 }
 
 async function fetchAssociationFromBackend(associationIdOrSlug: string): Promise<Asociacion | null> {
@@ -88,8 +51,8 @@ async function fetchAssociationFromBackend(associationIdOrSlug: string): Promise
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const { product } = await fetchProductFromBackend(slug);
-  if (!product) return { title: "Producto no encontrado" };
+  const { product } = await fetchCatalogProduct(slug);
+  if (!product || !esProductoVisible(product, obtenerProductosOcultos())) return { title: "Producto no encontrado" };
 
   return {
     title: `${product.nombre} - ${product.asociacion || "CONLAC-T"}`,
@@ -99,12 +62,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const resultado = await fetchProductFromBackend(slug);
-
-  // Sin backend disponible recurrimos al catálogo local para que el detalle
-  // siga siendo navegable al desplegarse solo el frontend.
-  const fallback = productosMock.find((p) => p.id === slug || p.slug === slug);
-  const product = resultado.product ?? fallback ?? null;
+  const resultado = await fetchCatalogProduct(slug);
+  const product = resultado.product;
+  if (product && !esProductoVisible(product, obtenerProductosOcultos())) notFound();
   const error = product ? null : resultado.error;
 
   if (!product && resultado.isNotFound) {

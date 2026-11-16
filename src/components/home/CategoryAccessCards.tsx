@@ -3,36 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { ArrowRightIcon, UsersIcon, ChefHatIcon, MapPinIcon } from "@/components/ui/Icons";
+import { HomeField, HomeSectionHeading, useHomeEditing } from "./HomeEditing";
+import type { HomeAccessCard } from "@/types/home";
 
-const accessCategories = [
-  {
-    title: "Asociaciones Productoras",
-    subtitle: "Comunidades y Familias",
-    description: "Conoce a los socios y socias de Pilahuín, Chibuleo, San Pedro y Nueva Vida que lideran la producción láctea local.",
-    href: "/asociaciones",
-    icon: UsersIcon,
-    image: "/demo/ASOC-comunidad.jpg",
-    badge: "4 Asociaciones",
-  },
-  {
-    title: "Recetas con Queso",
-    subtitle: "Gastronomía Andina",
-    description: "Descubre platos típicos, locro de papa, empanadas y sugerencias de maridaje con nuestros quesos artesanales.",
-    href: "/recetas",
-    icon: ChefHatIcon,
-    image: "/demo/REC-locro.jpg",
-    badge: "Tradición Culinaria",
-  },
-  {
-    title: "Turismo Comunitario",
-    subtitle: "Rutas y Parajes",
-    description: "Visita nuestras queserías en el páramo andino y disfruta de senderos agroecológicos en las faldas de los volcanes.",
-    href: "/turismo",
-    icon: MapPinIcon,
-    image: "/demo/TUR-vicunas.jpg",
-    badge: "Visitas Guiadas",
-  },
-];
+const categoryIcons = { asociaciones: UsersIcon, recetas: ChefHatIcon, turismo: MapPinIcon };
+const countLabels = { asociaciones: ["asociación", "asociaciones"], recetas: ["receta", "recetas"], turismo: ["ruta", "rutas"] };
 
 /**
  * ============================================================
@@ -42,7 +17,8 @@ const accessCategories = [
  * Enlaces visuales modulares hacia las secciones transversales
  * del proyecto de vinculación CONLAC-T.
  */
-export const CategoryAccessCards: React.FC = () => {
+export function CategoryAccessCards({ cards }: { cards: HomeAccessCard[] }) {
+  const { config, isEditing } = useHomeEditing();
   return (
     <section
       aria-labelledby="category-access-heading"
@@ -50,41 +26,35 @@ export const CategoryAccessCards: React.FC = () => {
     >
       <Container>
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-          <span className="text-xs font-label uppercase tracking-widest text-tertiary font-semibold">
-            Descubre más de CONLAC-T
-          </span>
-          <h2
-            id="category-access-heading"
-            className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-headline font-bold text-primary"
-          >
-            Nuestra Gente, Sabores y Territorio
-          </h2>
-          <p className="mt-3 text-sm sm:text-base text-neutral-muted">
-            Más que una tienda, somos un consorcio comunitario que promueve
-            el patrimonio cultural y agropecuario de Tungurahua.
-          </p>
+          <HomeSectionHeading section="access" id="category-access-heading" centered />
         </div>
 
+        {isEditing && <div className="mb-5 space-y-3 text-xs text-neutral-muted">
+          <p>Las tarjetas usan los títulos, las imágenes y las cantidades de cada sección. Abre la sección para editar su contenido.</p>
+          <HomeField path="contenido.access.link_label" rule="short" label="Texto del enlace de las tarjetas" className="max-w-xs text-primary font-semibold" />
+        </div>}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {accessCategories.map((cat) => {
-            const IconComponent = cat.icon;
+          {cards.map((cat) => {
+            const IconComponent = categoryIcons[cat.key];
             return (
               <Link
-                key={cat.title}
+                key={cat.key}
                 href={cat.href}
                 className="group flex flex-col overflow-hidden rounded-2xl bg-background border border-border transition-all duration-300 hover:shadow-artisan-hover hover:border-tertiary/70 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:outline-none"
               >
                 {/* Imagen / Ilustración superior */}
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-light/50">
-                  <Image
+                  {cat.image ? <Image
                     src={cat.image}
                     alt={`Ilustración de ${cat.title}`}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                  />
+                    unoptimized={cat.image.startsWith("data:")}
+                  /> : <div className="absolute inset-0 flex items-center justify-center text-primary/40"><IconComponent className="h-16 w-16" /></div>}
                   <div className="absolute top-3 left-3 rounded-full bg-surface/90 backdrop-blur-xs px-3 py-1 text-[11px] font-label font-semibold text-primary shadow-sm">
-                    {cat.badge}
+                    {cat.count} {countLabels[cat.key][cat.count === 1 ? 0 : 1]}
                   </div>
                 </div>
 
@@ -94,7 +64,7 @@ export const CategoryAccessCards: React.FC = () => {
                     <div className="flex items-center gap-2 text-tertiary">
                       <IconComponent className="h-5 w-5" />
                       <span className="text-xs font-label uppercase tracking-wider font-semibold">
-                        {cat.subtitle}
+                        {cat.eyebrow}
                       </span>
                     </div>
 
@@ -108,7 +78,7 @@ export const CategoryAccessCards: React.FC = () => {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-border/70 flex items-center justify-between text-sm font-label font-semibold text-primary group-hover:text-tertiary transition-colors">
-                    <span>Explorar sección</span>
+                    <span>{config.contenido.access.link_label}</span>
                     <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
@@ -119,4 +89,4 @@ export const CategoryAccessCards: React.FC = () => {
       </Container>
     </section>
   );
-};
+}

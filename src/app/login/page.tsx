@@ -74,9 +74,10 @@ function SupportIcon({ className = "w-5 h-5" }: { className?: string }) {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectParam = searchParams.get("redirect") || "";
+  const requestedRedirect = searchParams.get("redirect") || "";
+  const redirectParam = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//") ? requestedRedirect : "";
 
-  const { login, isAuthenticated, isAdmin, loading } = useAuth();
+  const { login, isAuthenticated, canEdit, loading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -90,13 +91,13 @@ function LoginContent() {
     if (!loading && isAuthenticated) {
       if (redirectParam) {
         router.push(redirectParam);
-      } else if (isAdmin) {
+      } else if (canEdit) {
         router.push("/administracion");
       } else {
         router.push("/tienda");
       }
     }
-  }, [loading, isAuthenticated, isAdmin, redirectParam, router]);
+  }, [loading, isAuthenticated, canEdit, redirectParam, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,14 +114,6 @@ function LoginContent() {
 
     if (!res.success) {
       setErrorMessage(res.error || "Credenciales incorrectas o usuario no encontrado.");
-    } else {
-      if (redirectParam) {
-        router.push(redirectParam);
-      } else if (email.trim().toLowerCase() === "admin@conlact.org") {
-        router.push("/administracion");
-      } else {
-        router.push("/tienda");
-      }
     }
   };
 
@@ -211,7 +204,7 @@ function LoginContent() {
                 </div>
                 <div>
                   <span className="text-xs font-label uppercase tracking-widest text-tertiary font-bold block">
-                    Acceso a la plataforma
+                    Acceso de gestión
                   </span>
                   <h1 className="font-headline text-2xl sm:text-3xl font-bold text-primary">
                     Iniciar Sesión
@@ -310,14 +303,6 @@ function LoginContent() {
                   <span>{submitting ? "Verificando con CONLAC-T..." : "Iniciar Sesión"}</span>
                   <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
-
-                {/* Enlace de Registro */}
-                <div className="text-center mt-3 text-sm text-neutral-muted font-body">
-                  ¿No tienes una cuenta aún?{" "}
-                  <Link href="/registro" className="text-primary font-bold hover:underline">
-                    Crear una cuenta
-                  </Link>
-                </div>
               </form>
             </div>
 

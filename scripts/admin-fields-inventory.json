@@ -1,0 +1,789 @@
+[
+  {
+    "file": "src/app/administracion/contenidos/page.tsx",
+    "field": "tituloSeccion",
+    "rule": "title"
+  },
+  {
+    "file": "src/app/administracion/contenidos/page.tsx",
+    "field": "descSeccion",
+    "rule": "detail"
+  },
+  {
+    "file": "src/app/administracion/contenidos/page.tsx",
+    "field": "{formulario.titulo}",
+    "rule": "title"
+  },
+  {
+    "file": "src/app/administracion/contenidos/page.tsx",
+    "field": "{formulario.descripcion}",
+    "rule": "detail"
+  },
+  {
+    "file": "src/app/administracion/contenidos/page.tsx",
+    "field": "{formulario.cuerpo}",
+    "rule": "longText"
+  },
+  {
+    "file": "src/app/administracion/contenidos/page.tsx",
+    "field": "{formulario.url}",
+    "rule": "contentUrl"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "slug",
+    "rule": "slug"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "name",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "shortDescription",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "history",
+    "rule": "longText"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "locationText",
+    "rule": "address"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "latitude",
+    "rule": "latitude"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "longitude",
+    "rule": "longitude"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "arcsaRegistration",
+    "rule": "registration"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "agrocalidadRegistration",
+    "rule": "registration"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "sanitarySealText",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "videoUrl",
+    "rule": "youtube"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "whatsapp",
+    "rule": "phone"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "instagramUrl",
+    "rule": "url"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "tiktokUrl",
+    "rule": "url"
+  },
+  {
+    "file": "src/components/associations/AssociationAdminForm.tsx",
+    "field": "facebookUrl",
+    "rule": "url"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Nombre de la asociación",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Historia y trayectoria comunitaria",
+    "rule": "longText"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Ubicación y referencia territorial",
+    "rule": "address"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Nombre del dato",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Valor o detalle",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "URL de YouTube",
+    "rule": "youtube"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Latitud",
+    "rule": "latitude"
+  },
+  {
+    "file": "src/components/associations/AssociationDetailManager.tsx",
+    "field": "Longitud",
+    "rule": "longitude"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Subtítulo del logo",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Descripción institucional",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Dirección y ubicación física",
+    "rule": "address"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Título de la columna",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Método 1",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Método 2",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Método 3",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Garantía",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/layout/Footer.tsx",
+    "field": "Texto de copyright",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/media/VideoSectionManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/media/VideoSectionManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/media/VideoSectionManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/media/VideoSectionManager.tsx",
+    "field": "Clic para editar título del video",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/media/VideoSectionManager.tsx",
+    "field": "{vid.url || \"\"}",
+    "rule": "youtube"
+  },
+  {
+    "file": "src/components/media/VideoSectionManager.tsx",
+    "field": "Clic para editar descripción del video",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Parroquia",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Miembros",
+    "rule": "members"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Nombre asociación",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/AsociacionesManager.tsx",
+    "field": "Descripción",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Número",
+    "rule": "stepNumber"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Título del paso",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Descripción",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Título del banner",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ComoComprarManager.tsx",
+    "field": "Subtítulo del banner",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Título WhatsApp",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Descripción WhatsApp",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Título Ubicación",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Dirección",
+    "rule": "address"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Horario",
+    "rule": "schedule"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Título Correo",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Descripción Correo",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/paginas/ContactoManager.tsx",
+    "field": "Correo Electrónico",
+    "rule": "email"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Badge superior",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Título principal",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Subtítulo del hero",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Título insignia",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Subtítulo insignia",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Título de historia",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Párrafo 1",
+    "rule": "longText"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Párrafo 2",
+    "rule": "longText"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Cifra",
+    "rule": "statistic"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Etiqueta",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Detalle",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Categoría testimonios",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Título testimonios",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Testimonio",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Nombre autor",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/NosotrosManager.tsx",
+    "field": "Cargo o rol",
+    "rule": "detail"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Tipo de queso",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Nombre del producto",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Asociación",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Peso / Presentación",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Precio",
+    "rule": "price"
+  },
+  {
+    "file": "src/components/paginas/TiendaManager.tsx",
+    "field": "Stock disponible",
+    "rule": "stock"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "{attraction.duracion || \"3 - 4 horas\"}",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "{attraction.dificultad || \"Moderada\"}",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "Nombre de la ruta",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "{attraction.video_url || \"\"}",
+    "rule": "youtube"
+  },
+  {
+    "file": "src/components/paginas/TurismoManager.tsx",
+    "field": "Descripción de la ruta",
+    "rule": "description"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "Clic para editar categoría",
+    "rule": "short"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "Clic para editar descripción general",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "{receta.tiempo_prep ?? 30}",
+    "rule": "minutes"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "{receta.porciones ?? 4}",
+    "rule": "servings"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "{receta.video_url || \"\"}",
+    "rule": "youtube"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "Clic para editar título",
+    "rule": "title"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "Clic para editar descripción",
+    "rule": "subtitle"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "{recetaActiva.video_url || \"\"}",
+    "rule": "youtube"
+  },
+  {
+    "file": "src/components/recetas/RecetasManager.tsx",
+    "field": "{paso}",
+    "rule": "step"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "eyebrow",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "titulo",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "subtitulo",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_accent",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_primary_label",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_whatsapp_label",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_whatsapp_message",
+    "rule": "description",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_claims.0",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_claims.1",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.hero_claims.2",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.products.eyebrow",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.products.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.products.description",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.eyebrow",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.description",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.access.eyebrow",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.access.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.access.description",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.testimonials.eyebrow",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.testimonials.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.testimonials.description",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.products.link_label",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.access.link_label",
+    "rule": "short",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.products.empty",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.testimonials.empty",
+    "rule": "subtitle",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.0.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.0.description",
+    "rule": "description",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.1.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.1.description",
+    "rule": "description",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.2.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.2.description",
+    "rule": "description",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.3.title",
+    "rule": "title",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/HomeManager.tsx",
+    "field": "contenido.trust.pillars.3.description",
+    "rule": "description",
+    "scope": "home"
+  },
+  {
+    "file": "src/components/home/TestimonialsSection.tsx",
+    "field": "testimonials[].quote",
+    "rule": "description",
+    "scope": "home-shared"
+  },
+  {
+    "file": "src/components/home/TestimonialsSection.tsx",
+    "field": "testimonials[].name",
+    "rule": "title",
+    "scope": "home-shared"
+  },
+  {
+    "file": "src/components/home/TestimonialsSection.tsx",
+    "field": "testimonials[].role",
+    "rule": "detail",
+    "scope": "home-shared"
+  }
+]

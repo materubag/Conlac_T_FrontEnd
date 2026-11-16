@@ -1,5 +1,7 @@
+import { contentPermission } from "@/lib/server/contentPermission";
 import { NextResponse } from "next/server";
-import { actualizarContenido, eliminarContenido, moverContenido } from "@/lib/db/contenidoRepo";
+import { actualizarContenido, eliminarContenido, moverContenido, obtenerContenido } from "@/lib/db/contenidoRepo";
+import { validateContentPayload } from "@/lib/adminPayloadValidation";
 import { TIPOS_CONTENIDO, type TipoContenido } from "@/types/contenido";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,9 @@ interface Params {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const denied = contentPermission(request);
+  if (denied) return denied;
+
   const { id } = await params;
 
   let cuerpo: Record<string, unknown>;
@@ -17,6 +22,10 @@ export async function PATCH(request: Request, { params }: Params) {
     cuerpo = await request.json();
   } catch {
     return NextResponse.json({ error: "El cuerpo debe ser JSON válido." }, { status: 400 });
+  }
+
+  if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) {
+    return NextResponse.json({ error: "Formato de contenido inválido." }, { status: 400 });
   }
 
   // Reordenamiento dentro de la sección.
@@ -46,6 +55,9 @@ export async function PATCH(request: Request, { params }: Params) {
       { status: 400 }
     );
   }
+
+  const validationError = validateContentPayload({ ...obtenerContenido(id), ...cuerpo });
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
   const contenido = actualizarContenido(id, {
     titulo: typeof cuerpo.titulo === "string" ? cuerpo.titulo.trim() : undefined,
@@ -79,6 +91,9 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const denied = contentPermission(_request);
+  if (denied) return denied;
+
   const { id } = await params;
 
   if (!eliminarContenido(id)) {

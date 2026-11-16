@@ -1,5 +1,6 @@
 "use client";
 
+import { ValidatedInput, ValidatedTextarea } from "@/components/admin/ValidatedFields";
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { urlDeIncrustacion } from "@/lib/video";
+import { validateAdminFields } from "@/lib/adminValidation";
 import {
   ETIQUETA_TIPO,
   TIPOS_CONTENIDO,
@@ -40,7 +42,7 @@ const FORMULARIO_VACIO: FormularioContenido = {
 
 export default function AdminContenidosPage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin, loading: cargandoSesion } = useAuth();
+  const { isAuthenticated, canEdit, loading: cargandoSesion } = useAuth();
 
   const [secciones, setSecciones] = useState<SeccionConContenidos[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -71,7 +73,7 @@ export default function AdminContenidosPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canEdit) return;
 
     let activo = true;
     pedirSecciones()
@@ -91,7 +93,7 @@ export default function AdminContenidosPage() {
     return () => {
       activo = false;
     };
-  }, [isAdmin, pedirSecciones]);
+  }, [canEdit, pedirSecciones]);
 
   /** Envuelve una llamada mutante: bloquea la UI, propaga el mensaje de error y recarga. */
   const ejecutar = useCallback(
@@ -125,6 +127,7 @@ export default function AdminContenidosPage() {
 
   const crearSeccion = async (evento: React.FormEvent) => {
     evento.preventDefault();
+    if (!validateAdminFields(evento.currentTarget)) return;
     const ok = await ejecutar(() =>
       fetch("/api/admin/secciones", {
         method: "POST",
@@ -144,6 +147,7 @@ export default function AdminContenidosPage() {
 
   const guardarContenido = async (evento: React.FormEvent, seccionId: string) => {
     evento.preventDefault();
+    if (!validateAdminFields(evento.currentTarget)) return;
 
     const cuerpo = {
       titulo: formulario.titulo.trim(),
@@ -198,7 +202,7 @@ export default function AdminContenidosPage() {
     );
   }
 
-  if (isAuthenticated && !isAdmin) {
+  if (isAuthenticated && !canEdit) {
     return (
       <div className="py-16 bg-background">
         <Container>
@@ -207,7 +211,7 @@ export default function AdminContenidosPage() {
               403 — Acceso Denegado
             </h1>
             <p className="text-sm text-neutral-muted">
-              La gestión de contenidos requiere permisos de administrador.
+              La gestión de contenidos requiere un rol admin o editor.
             </p>
             <Button href="/" variant="primary" size="md">
               Volver al inicio
@@ -269,12 +273,11 @@ export default function AdminContenidosPage() {
               <label htmlFor="tituloSeccion" className={ETIQUETA}>
                 Título <span className="text-red-500">*</span>
               </label>
-              <input
+              <ValidatedInput rule="title"
                 id="tituloSeccion"
                 className={CAMPO}
                 required
                 minLength={3}
-                maxLength={150}
                 value={tituloSeccion}
                 onChange={(e) => setTituloSeccion(e.target.value)}
                 placeholder="Ej. Buenas prácticas de ordeño"
@@ -284,10 +287,9 @@ export default function AdminContenidosPage() {
               <label htmlFor="descSeccion" className={ETIQUETA}>
                 Descripción (opcional)
               </label>
-              <input
+              <ValidatedInput rule="detail"
                 id="descSeccion"
                 className={CAMPO}
-                maxLength={300}
                 value={descripcionSeccion}
                 onChange={(e) => setDescripcionSeccion(e.target.value)}
                 placeholder="Para qué sirve esta sección"
@@ -572,12 +574,11 @@ export default function AdminContenidosPage() {
                           <label className={ETIQUETA} htmlFor={`titulo-${seccion.id}`}>
                             Título <span className="text-red-500">*</span>
                           </label>
-                          <input
+                          <ValidatedInput rule="title"
                             id={`titulo-${seccion.id}`}
                             className={CAMPO}
                             required
                             minLength={3}
-                            maxLength={150}
                             value={formulario.titulo}
                             onChange={(e) =>
                               setFormulario({ ...formulario, titulo: e.target.value })
@@ -614,10 +615,9 @@ export default function AdminContenidosPage() {
                         <label className={ETIQUETA} htmlFor={`desc-${seccion.id}`}>
                           Descripción (opcional)
                         </label>
-                        <input
+                        <ValidatedInput rule="detail"
                           id={`desc-${seccion.id}`}
                           className={CAMPO}
-                          maxLength={300}
                           value={formulario.descripcion}
                           onChange={(e) =>
                             setFormulario({ ...formulario, descripcion: e.target.value })
@@ -630,12 +630,11 @@ export default function AdminContenidosPage() {
                           <label className={ETIQUETA} htmlFor={`cuerpo-${seccion.id}`}>
                             Contenido <span className="text-red-500">*</span>
                           </label>
-                          <textarea
+                          <ValidatedTextarea rule="longText"
                             id={`cuerpo-${seccion.id}`}
                             className={`${CAMPO} resize-y`}
                             rows={5}
                             required
-                            maxLength={5000}
                             value={formulario.cuerpo}
                             onChange={(e) =>
                               setFormulario({ ...formulario, cuerpo: e.target.value })
@@ -648,7 +647,7 @@ export default function AdminContenidosPage() {
                           <label className={ETIQUETA} htmlFor={`url-${seccion.id}`}>
                             Enlace <span className="text-red-500">*</span>
                           </label>
-                          <input
+                          <ValidatedInput rule={formulario.tipo === "video" ? "youtube" : "url"}
                             id={`url-${seccion.id}`}
                             className={CAMPO}
                             type="url"

@@ -1,5 +1,6 @@
 "use client";
 
+import { adminResponseError, imageFileError, imageValueError, IMAGE_ACCEPT } from "@/lib/adminValidation";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
@@ -30,7 +31,7 @@ export function AssociationDetailManager({
   initialAssociation,
   products,
 }: AssociationDetailManagerProps) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -96,12 +97,13 @@ export function AssociationDetailManager({
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Información de la asociación guardada");
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error al guardar los cambios";
       console.error(err);
-      mostrarToast("Error al guardar cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -117,9 +119,14 @@ export function AssociationDetailManager({
     const target = targetPhotoIndexRef.current;
     if (!file) return;
 
+    const imageError = imageFileError(file);
+    if (imageError) { mostrarToast(imageError); e.target.value = ""; return; }
+
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
+      const imageError = imageValueError(dataUrl);
+      if (imageError) { mostrarToast(imageError); return; }
       const fotosActuales = [...(assoc.fotos || [])];
 
       if (target === "main") {
@@ -208,12 +215,12 @@ export function AssociationDetailManager({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         onChange={handleArchivoSeleccionado}
         className="hidden"
       />
 
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName={assoc.nombre}
           isEditing={modoEdicion}
@@ -233,7 +240,7 @@ export function AssociationDetailManager({
 
       <div className="bg-surface rounded-2xl p-6 sm:p-10 border border-border space-y-10 my-4 shadow-sm">
         {/* Banner de ayuda admin */}
-        {isAdmin && modoEdicion && (
+        {canEdit && modoEdicion && (
           <div className="mb-2">
             <AdminBadgeHelp message="Puedes editar en vivo la historia, añadir o quitar campos informativos, ajustar las coordenadas del mapa y cambiar fotos de portada o galería." />
           </div>
@@ -250,7 +257,7 @@ export function AssociationDetailManager({
             unoptimized={gallery[0].startsWith("data:")}
           />
 
-          {isAdmin && modoEdicion && (
+          {canEdit && modoEdicion && (
             <button
               type="button"
               onClick={() => abrirSelectorFoto("main")}
@@ -261,7 +268,7 @@ export function AssociationDetailManager({
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <polyline points="21 15 16 10 5 21" />
               </svg>
-              <span>Cambiar foto de portada</span>
+              <span>Cambiar foto de portada · máx. 5 MB</span>
             </button>
           )}
         </div>
@@ -273,8 +280,8 @@ export function AssociationDetailManager({
           </div>
 
           <div>
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="title"
+              isEditing={canEdit && modoEdicion}
               value={assoc.nombre}
               onChange={(val) => {
                 setAssoc({ ...assoc, nombre: val });
@@ -291,8 +298,8 @@ export function AssociationDetailManager({
           </div>
 
           <div>
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="longText"
+              isEditing={canEdit && modoEdicion}
               value={assoc.historia || ""}
               onChange={(val) => {
                 setAssoc({ ...assoc, historia: val });
@@ -312,8 +319,8 @@ export function AssociationDetailManager({
           <div className="pt-2 flex items-center gap-2 text-sm text-neutral-muted">
             <MapPinIcon className="w-4 h-4 text-tertiary shrink-0" />
             <div className="flex-1">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="address"
+                isEditing={canEdit && modoEdicion}
                 value={assoc.ubicacion_referencia || siteConfig.location.address}
                 onChange={(val) => {
                   setAssoc({ ...assoc, ubicacion_referencia: val });
@@ -332,7 +339,7 @@ export function AssociationDetailManager({
         {/* 3. Campos Informativos Dinámicos (Ficha) */}
         <div className="pt-6 border-t border-border">
           {/* Controles para añadir campos (solo visible para admin en modo edición) */}
-          {isAdmin && modoEdicion && (
+          {canEdit && modoEdicion && (
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-bold text-tertiary uppercase tracking-wider">
                 Campos informativos de la asociación
@@ -353,12 +360,12 @@ export function AssociationDetailManager({
               <div
                 key={campo.id || idx}
                 className={`relative flex flex-col justify-between gap-1.5 rounded-xl bg-neutral-light/50 border p-4 transition-all ${
-                  isAdmin && modoEdicion
+                  canEdit && modoEdicion
                     ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                     : "border-border"
                 }`}
               >
-                {isAdmin && modoEdicion && (
+                {canEdit && modoEdicion && (
                   <button
                     type="button"
                     onClick={() => eliminarCampoFicha(idx)}
@@ -373,8 +380,8 @@ export function AssociationDetailManager({
                 )}
 
                 <div className="text-xs font-label uppercase tracking-wider text-neutral-muted">
-                  <EditableField
-                    isEditing={isAdmin && modoEdicion}
+                  <EditableField rule="short"
+                    isEditing={canEdit && modoEdicion}
                     value={campo.label}
                     onChange={(val) => {
                       const copy = [...camposFicha];
@@ -389,8 +396,8 @@ export function AssociationDetailManager({
                 </div>
 
                 <div className="font-headline text-base sm:text-lg font-bold text-primary break-words">
-                  <EditableField
-                    isEditing={isAdmin && modoEdicion}
+                  <EditableField rule="detail"
+                    isEditing={canEdit && modoEdicion}
                     value={campo.value}
                     onChange={(val) => {
                       const copy = [...camposFicha];
@@ -414,13 +421,13 @@ export function AssociationDetailManager({
             <h2 className="font-headline text-xl font-bold text-primary">
               Galería Comunitaria
             </h2>
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <button
                 type="button"
                 onClick={() => abrirSelectorFoto("new")}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-dashed border-tertiary text-tertiary hover:border-primary hover:text-primary text-xs font-bold transition"
               >
-                <span>+ Añadir foto a galería</span>
+                <span>+ Añadir foto a galería · máx. 5 MB</span>
               </button>
             )}
           </div>
@@ -440,7 +447,7 @@ export function AssociationDetailManager({
                   unoptimized={foto.startsWith("data:")}
                 />
 
-                {isAdmin && modoEdicion && (
+                {canEdit && modoEdicion && (
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
                       type="button"
@@ -466,25 +473,25 @@ export function AssociationDetailManager({
         </div>
 
         {/* 5. Video Institucional (Solo se muestra a visitantes si hay un enlace válido) */}
-        {(embedUrl || (isAdmin && modoEdicion)) && (
+        {(embedUrl || (canEdit && modoEdicion)) && (
           <div className="pt-6 border-t border-border">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-headline text-xl font-bold text-primary">
                 Conoce a la Asociación
               </h2>
-              {isAdmin && modoEdicion && !embedUrl && (
+              {canEdit && modoEdicion && !embedUrl && (
                 <span className="text-xs text-neutral-muted italic bg-neutral-light/60 px-2.5 py-0.5 rounded-md">
                   Oculto para visitantes (sin enlace de video)
                 </span>
               )}
             </div>
 
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <div className="mb-4 max-w-lg">
                 <label className="text-xs font-semibold text-neutral-muted block mb-1">
                   Enlace de YouTube del video institucional (deja vacío para no mostrar):
                 </label>
-                <EditableField
+                <EditableField rule="youtube"
                   isEditing={true}
                   value={assoc.video_url || ""}
                   onChange={(val) => {
@@ -493,7 +500,7 @@ export function AssociationDetailManager({
                   }}
                   label="URL de YouTube"
                   className="text-xs text-neutral font-mono"
-                  placeholder="https://www.youtube.com/watch?v=... o https://youtu.be/..."
+                  placeholder="https://www.youtube.com/watch?v=..."
                 />
               </div>
             )}
@@ -530,7 +537,7 @@ export function AssociationDetailManager({
         <section className="min-w-0 space-y-4 border-t border-border pt-6">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-headline text-2xl font-bold text-primary">Ubicación</h2>
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <span className="text-xs text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full font-semibold">
                 📍 Edición de Coordenadas
               </span>
@@ -538,7 +545,7 @@ export function AssociationDetailManager({
           </div>
 
           {/* Formulario de coordenadas en modo edición */}
-          {isAdmin && modoEdicion && (
+          {canEdit && modoEdicion && (
             <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
               <p className="text-xs text-blue-900 leading-relaxed">
                 <strong>¿Cómo cambiar la ubicación del mapa?</strong> Ingresa la Latitud y Longitud exacta (puedes obtenerlas en Google Maps haciendo clic derecho sobre la ubicación deseada).
@@ -548,7 +555,7 @@ export function AssociationDetailManager({
                   <label className="text-[11px] font-bold text-neutral-600 block mb-1">
                     Latitud (ej: -1.298500):
                   </label>
-                  <EditableField
+                  <EditableField rule="latitude"
                     isEditing={true}
                     value={String(assoc.lat ?? -1.2985)}
                     onChange={(val) => {
@@ -564,7 +571,7 @@ export function AssociationDetailManager({
                   <label className="text-[11px] font-bold text-neutral-600 block mb-1">
                     Longitud (ej: -78.712300):
                   </label>
-                  <EditableField
+                  <EditableField rule="longitude"
                     isEditing={true}
                     value={String(assoc.lng ?? -78.7123)}
                     onChange={(val) => {

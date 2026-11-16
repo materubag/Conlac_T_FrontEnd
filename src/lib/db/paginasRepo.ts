@@ -18,6 +18,15 @@ interface FilaPagina {
   actualizado_en: string;
 }
 
+export function leerPaginaConfig<T = Record<string, unknown>>(slug: string): PaginaEditableConfig<T> | null {
+  const fila = getDb().prepare("SELECT * FROM paginas_editables WHERE slug = ?").get(slug) as unknown as FilaPagina | undefined;
+  if (!fila) return null;
+  return {
+    slug: fila.slug, eyebrow: fila.eyebrow ?? "", titulo: fila.titulo ?? "", subtitulo: fila.subtitulo ?? "",
+    contenido: fila.contenido_json ? JSON.parse(fila.contenido_json) : {}, actualizado_en: fila.actualizado_en,
+  };
+}
+
 export function obtenerPaginaConfig<T = Record<string, unknown>>(
   slug: string,
   defaults: { eyebrow: string; titulo: string; subtitulo: string; contenido: T }

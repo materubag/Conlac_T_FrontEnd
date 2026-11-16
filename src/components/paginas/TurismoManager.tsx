@@ -1,5 +1,7 @@
 "use client";
 
+import { adminResponseError, imageFileError, imageValueError, IMAGE_ACCEPT } from "@/lib/adminValidation";
+import { ValidatedInput } from "@/components/admin/ValidatedFields";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
@@ -31,7 +33,7 @@ interface Props {
 }
 
 export function TurismoManager({ initialData }: Props) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -71,12 +73,13 @@ export function TurismoManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Página de turismo guardada exitosamente");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error al guardar los cambios";
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -92,9 +95,14 @@ export function TurismoManager({ initialData }: Props) {
     const index = targetImageIndexRef.current;
     if (!file || index === null || !atractivos[index]) return;
 
+    const imageError = imageFileError(file);
+    if (imageError) { mostrarToast(imageError); e.target.value = ""; return; }
+
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
+      const imageError = imageValueError(dataUrl);
+      if (imageError) { mostrarToast(imageError); return; }
       const nuevas = [...atractivos];
       nuevas[index] = { ...nuevas[index], foto_url: dataUrl };
       setAtractivos(nuevas);
@@ -152,12 +160,12 @@ export function TurismoManager({ initialData }: Props) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         onChange={handleArchivoSeleccionado}
         className="hidden"
       />
 
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName="Turismo"
           isEditing={modoEdicion}
@@ -178,8 +186,8 @@ export function TurismoManager({ initialData }: Props) {
       <main className="py-12 sm:py-16">
         <Container>
           <div className="max-w-2xl mb-12">
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="short"
+              isEditing={canEdit && modoEdicion}
               value={eyebrow}
               onChange={(val) => {
                 setEyebrow(val);
@@ -190,8 +198,8 @@ export function TurismoManager({ initialData }: Props) {
             />
 
             <div className="mt-2">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={titulo}
                 onChange={(val) => {
                   setTitulo(val);
@@ -208,8 +216,8 @@ export function TurismoManager({ initialData }: Props) {
             </div>
 
             <div className="mt-3">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="subtitle"
+                isEditing={canEdit && modoEdicion}
                 value={subtitulo}
                 onChange={(val) => {
                   setSubtitulo(val);
@@ -225,7 +233,7 @@ export function TurismoManager({ initialData }: Props) {
               />
             </div>
 
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <AdminBadgeHelp message="Puedes editar títulos, descripciones, cambiar fotos o agregar videos de YouTube para cada lugar turístico." />
             )}
           </div>
@@ -251,13 +259,13 @@ export function TurismoManager({ initialData }: Props) {
                 <article
                   key={attraction.id}
                   className={`flex flex-col justify-between overflow-hidden rounded-2xl bg-surface border p-6 shadow-sm transition-all relative ${
-                    isAdmin && modoEdicion
+                    canEdit && modoEdicion
                       ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                       : "border-border hover:border-tertiary/70"
                   }`}
                 >
                   {/* Herramientas admin flotantes */}
-                  {isAdmin && modoEdicion && (
+                  {canEdit && modoEdicion && (
                     <div className="absolute top-3 right-3 z-30 flex items-center gap-1 bg-surface/95 border border-border rounded-full px-2 py-1 shadow-md">
                       <button
                         type="button"
@@ -366,9 +374,9 @@ export function TurismoManager({ initialData }: Props) {
 
                       {/* Badges superiores (Duración / Dificultad) */}
                       <div className="absolute top-3 left-3 flex gap-2 z-20">
-                        {isAdmin && modoEdicion ? (
+                        {canEdit && modoEdicion ? (
                           <div className="flex items-center gap-2 bg-[#111c17]/85 backdrop-blur-xs p-1.5 rounded-xl border border-white/20 shadow-sm">
-                            <input
+                            <ValidatedInput rule="short"
                               type="text"
                               value={attraction.duracion || "3 - 4 horas"}
                               onChange={(e) => {
@@ -381,7 +389,7 @@ export function TurismoManager({ initialData }: Props) {
                               placeholder="Duración..."
                               title="Duración del recorrido"
                             />
-                            <input
+                            <ValidatedInput rule="short"
                               type="text"
                               value={attraction.dificultad || "Moderada"}
                               onChange={(e) => {
@@ -408,7 +416,7 @@ export function TurismoManager({ initialData }: Props) {
                       </div>
 
                       {/* Botón cambiar imagen (Modo Edición) */}
-                      {isAdmin && modoEdicion && modoActual === "foto" && (
+                      {canEdit && modoEdicion && modoActual === "foto" && (
                         <button
                           type="button"
                           onClick={() => abrirSelectorImagen(index)}
@@ -419,15 +427,15 @@ export function TurismoManager({ initialData }: Props) {
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
-                          <span>Cambiar imagen</span>
+                          <span>Cambiar imagen · máx. 5 MB</span>
                         </button>
                       )}
                     </div>
 
                     {/* Título de la ruta */}
                     <div>
-                      <EditableField
-                        isEditing={isAdmin && modoEdicion}
+                      <EditableField rule="title"
+                        isEditing={canEdit && modoEdicion}
                         value={attraction.nombre}
                         onChange={(val) => {
                           const copy = [...atractivos];
@@ -446,7 +454,7 @@ export function TurismoManager({ initialData }: Props) {
                     </div>
 
                     {/* Enlace de YouTube de este lugar turístico (Modo Edición) */}
-                    {isAdmin && modoEdicion && (
+                    {canEdit && modoEdicion && (
                       <div className="p-3 bg-neutral-light/70 rounded-xl border border-blue-200">
                         <div className="flex items-center justify-between mb-1">
                           <label className="text-[11px] font-bold text-neutral-700">
@@ -462,7 +470,7 @@ export function TurismoManager({ initialData }: Props) {
                             </span>
                           )}
                         </div>
-                        <input
+                        <ValidatedInput rule="youtube"
                           type="text"
                           value={attraction.video_url || ""}
                           onChange={(e) => {
@@ -471,7 +479,7 @@ export function TurismoManager({ initialData }: Props) {
                             setAtractivos(copy);
                             marcarCambio();
                           }}
-                          placeholder="https://www.youtube.com/watch?v=... o https://youtu.be/..."
+                          placeholder="https://www.youtube.com/watch?v=..."
                           className="w-full text-xs font-mono px-2.5 py-1.5 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <div className="mt-2 flex items-center justify-between text-[10px]">
@@ -498,8 +506,8 @@ export function TurismoManager({ initialData }: Props) {
 
                     {/* Descripción de la ruta */}
                     <div>
-                      <EditableField
-                        isEditing={isAdmin && modoEdicion}
+                      <EditableField rule="description"
+                        isEditing={canEdit && modoEdicion}
                         value={attraction.descripcion}
                         onChange={(val) => {
                           const copy = [...atractivos];
@@ -551,7 +559,7 @@ export function TurismoManager({ initialData }: Props) {
             })}
 
             {/* Tarjeta + Nueva Ruta */}
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <button
                 type="button"
                 onClick={agregarAtractivo}

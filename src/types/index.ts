@@ -32,6 +32,7 @@ export interface Producto {
   asociacion_id?: string;    // ID de la asociación (relación products.association_id -> associations.id)
   stock: number;
   disponible: boolean;
+  oculto?: boolean; // Visibilidad editorial, independiente de las existencias.
   presentaciones?: PresentacionProducto[];
   variante_id?: string;
 }
@@ -199,7 +200,7 @@ export interface OrderCreateRequest {
   metodo_entrega: "delivery" | "pickup";
   zona_envio_id?: string;
   direccion_entrega?: string;
-  metodo_pago: "transferencia" | "payphone";
+  metodo_pago: "transferencia";
   notas_cliente?: string;
   items: OrderItemRequest[];
 }
@@ -212,7 +213,6 @@ export interface OrderCreateResponse {
   total: number;
   estado: string;
   metodo_pago: string;
-  payphone_url?: string | null;
   reserva_expira_en?: string | null;
 }
 
@@ -282,7 +282,7 @@ export interface ThemeConfig {
 // 3. TIPOS DE AUTENTICACIÓN Y PERFIL DE USUARIO
 // ============================================================
 
-export type UserRole = "admin" | "customer";
+export type UserRole = "admin" | "editor" | "customer";
 
 export interface UserProfile {
   id: string; // UUID de auth.users / profiles
@@ -382,4 +382,3 @@ export interface CreateAssociationRequest {
 
   isPublished: boolean;
 }
-

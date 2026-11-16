@@ -1,5 +1,6 @@
 "use client";
 
+import { adminResponseError } from "@/lib/adminValidation";
 import React, { useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -28,7 +29,7 @@ interface Props {
 }
 
 export function ContactoManager({ initialData }: Props) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,12 +62,13 @@ export function ContactoManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Página guardada exitosamente");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error al guardar los cambios";
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -78,7 +80,7 @@ export function ContactoManager({ initialData }: Props) {
 
   return (
     <div className="relative min-h-screen bg-background">
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName="Contacto"
           isEditing={modoEdicion}
@@ -100,8 +102,8 @@ export function ContactoManager({ initialData }: Props) {
         <Container className="space-y-12">
           {/* Encabezado */}
           <div className="max-w-2xl">
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="short"
+              isEditing={canEdit && modoEdicion}
               value={eyebrow}
               onChange={(val) => {
                 setEyebrow(val);
@@ -112,8 +114,8 @@ export function ContactoManager({ initialData }: Props) {
             />
 
             <div className="mt-2">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={titulo}
                 onChange={(val) => {
                   setTitulo(val);
@@ -130,8 +132,8 @@ export function ContactoManager({ initialData }: Props) {
             </div>
 
             <div className="mt-3">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="subtitle"
+                isEditing={canEdit && modoEdicion}
                 value={subtitulo}
                 onChange={(val) => {
                   setSubtitulo(val);
@@ -147,7 +149,7 @@ export function ContactoManager({ initialData }: Props) {
               />
             </div>
 
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <AdminBadgeHelp message="Modifica la información de contacto, direcciones y teléfonos directamente." />
             )}
           </div>
@@ -157,7 +159,7 @@ export function ContactoManager({ initialData }: Props) {
             {/* WhatsApp */}
             <div
               className={`p-8 rounded-2xl bg-surface border flex flex-col justify-between space-y-6 transition-all ${
-                isAdmin && modoEdicion
+                canEdit && modoEdicion
                   ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                   : "border-border"
               }`}
@@ -166,8 +168,8 @@ export function ContactoManager({ initialData }: Props) {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#25D366] text-white">
                   <WhatsAppIcon className="w-6 h-6" />
                 </div>
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="title"
+                  isEditing={canEdit && modoEdicion}
                   value={c.whatsapp_titulo}
                   onChange={(val) => {
                     setC({ ...c, whatsapp_titulo: val });
@@ -181,8 +183,8 @@ export function ContactoManager({ initialData }: Props) {
                     </h2>
                   )}
                 />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="description"
+                  isEditing={canEdit && modoEdicion}
                   value={c.whatsapp_descripcion}
                   onChange={(val) => {
                     setC({ ...c, whatsapp_descripcion: val });
@@ -206,7 +208,7 @@ export function ContactoManager({ initialData }: Props) {
             {/* Ubicación */}
             <div
               className={`p-8 rounded-2xl bg-surface border flex flex-col justify-between space-y-6 transition-all ${
-                isAdmin && modoEdicion
+                canEdit && modoEdicion
                   ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                   : "border-border"
               }`}
@@ -215,8 +217,8 @@ export function ContactoManager({ initialData }: Props) {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-inverted">
                   <MapPinIcon className="w-6 h-6" />
                 </div>
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="title"
+                  isEditing={canEdit && modoEdicion}
                   value={c.ubicacion_titulo}
                   onChange={(val) => {
                     setC({ ...c, ubicacion_titulo: val });
@@ -230,8 +232,8 @@ export function ContactoManager({ initialData }: Props) {
                     </h2>
                   )}
                 />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="address"
+                  isEditing={canEdit && modoEdicion}
                   value={c.ubicacion_direccion}
                   onChange={(val) => {
                     setC({ ...c, ubicacion_direccion: val });
@@ -243,8 +245,8 @@ export function ContactoManager({ initialData }: Props) {
                     <p className="text-sm text-neutral-muted">{c.ubicacion_direccion}</p>
                   )}
                 />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="schedule"
+                  isEditing={canEdit && modoEdicion}
                   value={c.ubicacion_horario}
                   onChange={(val) => {
                     setC({ ...c, ubicacion_horario: val });
@@ -267,7 +269,7 @@ export function ContactoManager({ initialData }: Props) {
             {/* Correo */}
             <div
               className={`p-8 rounded-2xl bg-surface border flex flex-col justify-between space-y-6 transition-all ${
-                isAdmin && modoEdicion
+                canEdit && modoEdicion
                   ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                   : "border-border"
               }`}
@@ -276,8 +278,8 @@ export function ContactoManager({ initialData }: Props) {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-tertiary text-neutral">
                   <span className="font-bold text-lg">@</span>
                 </div>
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="title"
+                  isEditing={canEdit && modoEdicion}
                   value={c.email_titulo}
                   onChange={(val) => {
                     setC({ ...c, email_titulo: val });
@@ -291,8 +293,8 @@ export function ContactoManager({ initialData }: Props) {
                     </h2>
                   )}
                 />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="description"
+                  isEditing={canEdit && modoEdicion}
                   value={c.email_descripcion}
                   onChange={(val) => {
                     setC({ ...c, email_descripcion: val });
@@ -306,8 +308,8 @@ export function ContactoManager({ initialData }: Props) {
                     <p className="text-sm text-neutral-muted">{c.email_descripcion}</p>
                   )}
                 />
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="email"
+                  isEditing={canEdit && modoEdicion}
                   value={c.email_direccion}
                   onChange={(val) => {
                     setC({ ...c, email_direccion: val });

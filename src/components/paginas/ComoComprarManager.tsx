@@ -1,5 +1,6 @@
 "use client";
 
+import { adminResponseError } from "@/lib/adminValidation";
 import React, { useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -27,7 +28,7 @@ interface Props {
 }
 
 export function ComoComprarManager({ initialData }: Props) {
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -68,12 +69,13 @@ export function ComoComprarManager({ initialData }: Props) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al guardar en el servidor");
+      if (!res.ok) throw new Error(await adminResponseError(res));
       setIsDirty(false);
       mostrarToast("Página guardada exitosamente");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error al guardar los cambios";
       console.error(error);
-      mostrarToast("Error al guardar los cambios");
+      mostrarToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -107,7 +109,7 @@ export function ComoComprarManager({ initialData }: Props) {
   return (
     <div className="relative min-h-screen bg-background">
       {/* Barra de administración (solo admin) */}
-      {isAdmin && (
+      {canEdit && (
         <AdminPageBar
           pageName="Cómo Comprar"
           isEditing={modoEdicion}
@@ -130,8 +132,8 @@ export function ComoComprarManager({ initialData }: Props) {
         <Container className="space-y-16">
           {/* Encabezado */}
           <div className="max-w-2xl">
-            <EditableField
-              isEditing={isAdmin && modoEdicion}
+            <EditableField rule="short"
+              isEditing={canEdit && modoEdicion}
               value={eyebrow}
               onChange={(val) => {
                 setEyebrow(val);
@@ -143,8 +145,8 @@ export function ComoComprarManager({ initialData }: Props) {
             />
 
             <div className="mt-2">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={titulo}
                 onChange={(val) => {
                   setTitulo(val);
@@ -162,8 +164,8 @@ export function ComoComprarManager({ initialData }: Props) {
             </div>
 
             <div className="mt-3">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="subtitle"
+                isEditing={canEdit && modoEdicion}
                 value={subtitulo}
                 onChange={(val) => {
                   setSubtitulo(val);
@@ -180,7 +182,7 @@ export function ComoComprarManager({ initialData }: Props) {
               />
             </div>
 
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <AdminBadgeHelp message="Edita los pasos, textos y el llamado a la acción directamente. Haz clic en Guardar cambios al terminar." />
             )}
           </div>
@@ -191,12 +193,12 @@ export function ComoComprarManager({ initialData }: Props) {
               <div
                 key={idx}
                 className={`p-6 rounded-2xl bg-surface border flex flex-col justify-between space-y-4 relative transition-all ${
-                  isAdmin && modoEdicion
+                  canEdit && modoEdicion
                     ? "border-blue-300 ring-2 ring-blue-500/10 hover:border-blue-500"
                     : "border-border"
                 }`}
               >
-                {isAdmin && modoEdicion && (
+                {canEdit && modoEdicion && (
                   <button
                     type="button"
                     onClick={() => eliminarPaso(idx)}
@@ -212,8 +214,8 @@ export function ComoComprarManager({ initialData }: Props) {
 
                 <div className="space-y-3">
                   <div className="w-16">
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="stepNumber"
+                      isEditing={canEdit && modoEdicion}
                       value={step.number}
                       onChange={(val) => {
                         const copy = [...steps];
@@ -228,8 +230,8 @@ export function ComoComprarManager({ initialData }: Props) {
                   </div>
 
                   <div>
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="title"
+                      isEditing={canEdit && modoEdicion}
                       value={step.title}
                       onChange={(val) => {
                         const copy = [...steps];
@@ -249,8 +251,8 @@ export function ComoComprarManager({ initialData }: Props) {
                   </div>
 
                   <div>
-                    <EditableField
-                      isEditing={isAdmin && modoEdicion}
+                    <EditableField rule="description"
+                      isEditing={canEdit && modoEdicion}
                       value={step.description}
                       onChange={(val) => {
                         const copy = [...steps];
@@ -275,7 +277,7 @@ export function ComoComprarManager({ initialData }: Props) {
             ))}
 
             {/* Botón para añadir nuevo paso */}
-            {isAdmin && modoEdicion && (
+            {canEdit && modoEdicion && (
               <button
                 type="button"
                 onClick={agregarPaso}
@@ -292,8 +294,8 @@ export function ComoComprarManager({ initialData }: Props) {
           {/* Banner CTA */}
           <div className="p-8 sm:p-12 rounded-2xl bg-surface border border-tertiary/60 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="max-w-xl w-full">
-              <EditableField
-                isEditing={isAdmin && modoEdicion}
+              <EditableField rule="title"
+                isEditing={canEdit && modoEdicion}
                 value={ctaTitulo}
                 onChange={(val) => {
                   setCtaTitulo(val);
@@ -309,8 +311,8 @@ export function ComoComprarManager({ initialData }: Props) {
                 placeholder="Título del banner..."
               />
               <div className="mt-1">
-                <EditableField
-                  isEditing={isAdmin && modoEdicion}
+                <EditableField rule="subtitle"
+                  isEditing={canEdit && modoEdicion}
                   value={ctaSubtitulo}
                   onChange={(val) => {
                     setCtaSubtitulo(val);

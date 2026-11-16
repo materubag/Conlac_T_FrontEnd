@@ -6,7 +6,6 @@ import React, {
   Suspense,
 } from "react";
 import { useSearchParams } from "next/navigation";
-import { siteConfig } from "@/lib/config";
 import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -161,7 +160,7 @@ function SeguimientoContent() {
               href: "/tienda",
             },
             {
-              label: "Seguimiento de Pedido",
+              label: "Buscar pedido",
             },
           ]}
         />
@@ -172,13 +171,12 @@ function SeguimientoContent() {
           </span>
 
           <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary">
-            Seguimiento de tu Pedido
+            Buscar pedido
           </h1>
 
           <p className="text-sm text-neutral-muted">
-            Ingresa el número de pedido proporcionado en
-            tu comprobante para verificar el estado de
-            despacho.
+            Ingresa el número o identificador de tu pedido para consultar su estado,
+            el detalle de los valores y el método de pago.
           </p>
         </div>
 
@@ -186,19 +184,25 @@ function SeguimientoContent() {
         <div className="max-w-xl mx-auto mb-10">
           <form
             onSubmit={handleSubmit}
-            className="flex gap-2"
+            className="flex flex-col gap-3 sm:flex-row sm:items-end"
           >
+            <div className="min-w-0 flex-1 space-y-2">
+            <label htmlFor="tracking-number" className="block text-left text-xs font-semibold text-primary">Número o identificador del pedido</label>
             <input
+              id="tracking-number"
               type="text"
               required
+              maxLength={100}
+              autoComplete="off"
+              disabled={loading}
               value={orderNumberInput}
               onChange={(e) =>
                 setOrderNumberInput(e.target.value)
               }
-              placeholder="Ej. 1 o eeb81f27..."
-              className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-neutral focus:border-tertiary focus:outline-none focus:ring-1 focus:ring-tertiary shadow-xs"
-              aria-label="Número de pedido"
+              placeholder="Ej. 1234 o el identificador completo"
+              className="w-full min-w-0 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-neutral focus:border-tertiary focus:outline-none focus:ring-1 focus:ring-tertiary shadow-xs"
             />
+            </div>
 
             <Button
               type="submit"
@@ -209,7 +213,7 @@ function SeguimientoContent() {
             >
               {loading
                 ? "Buscando..."
-                : "Consultar"}
+                : "Buscar pedido"}
             </Button>
           </form>
         </div>
@@ -218,7 +222,7 @@ function SeguimientoContent() {
         {error && (
           <div className="max-w-xl mx-auto mb-8 rounded-2xl bg-red-50 border border-red-200 p-6 text-center space-y-2">
             <p className="text-sm font-bold text-red-800">
-              No se encontró el pedido
+              No pudimos consultar el pedido
             </p>
 
             <p className="text-xs text-red-700">
@@ -246,7 +250,7 @@ function SeguimientoContent() {
                   Pedido #{order.numero_pedido}
                 </h2>
 
-                <span className="text-[11px] text-neutral-muted font-mono block mt-0.5">
+                <span className="text-[11px] text-neutral-muted font-mono block mt-0.5 break-all">
                   ID: {order.id}
                 </span>
               </div>

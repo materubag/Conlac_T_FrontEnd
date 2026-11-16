@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Container } from "@/components/ui/Container";
+import { validateAdminFields } from "@/lib/adminValidation";
 
 interface AdminPageBarProps {
   pageName: string;
@@ -24,33 +26,41 @@ export function AdminPageBar({
   return (
     <aside
       aria-label={`Barra de administración en vivo · ${pageName}`}
-      className="sticky top-0 z-40 bg-[#111c17] text-white border-b border-[#243d30] px-4 sm:px-8 py-2.5 shadow-md"
+      // El navbar mide h-20: la barra de edición permanece debajo de él.
+      className="sticky top-20 z-30 border-b border-tertiary/40 bg-background text-primary shadow-sm"
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+      <Container className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         {/* Indicador de estado */}
-        <div className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
+        <div className="flex min-w-0 items-center gap-3">
           <span
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${
-              isDirty ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+            aria-hidden="true"
+            className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors ${
+              isDirty ? "bg-amber-600" : "bg-primary"
             }`}
           />
-          <span className="text-neutral-200">
-            {isDirty ? "Cambios sin guardar" : `Panel de administración · ${pageName}`}
-          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-label font-semibold uppercase tracking-wider text-neutral-muted">
+              Administración · {pageName}
+            </p>
+            <p role="status" className="mt-0.5 text-xs text-neutral-muted">
+              {isSaving ? "Guardando cambios…" : isDirty ? "Tienes cambios sin guardar" : "Sin cambios pendientes"}
+            </p>
+          </div>
         </div>
 
         {/* Controles de administración */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:gap-3">
           {extraControls}
 
           {/* Toggle Modo Edición / Vista Previa */}
           <button
             type="button"
+            aria-pressed={isEditing}
             onClick={() => setIsEditing(!isEditing)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+            className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 sm:flex-none ${
               isEditing
-                ? "bg-white text-[#111c17] border-white shadow-xs"
-                : "bg-transparent text-white border-white/30 hover:bg-white/10"
+                ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                : "border-border bg-surface text-neutral hover:border-primary/40 hover:bg-neutral-light/50"
             }`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -73,8 +83,11 @@ export function AdminPageBar({
           <button
             type="button"
             disabled={isSaving}
-            onClick={onGuardar}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-[#d4a373] text-[#2b1a0d] hover:bg-[#c99563] active:scale-95 transition disabled:opacity-50 shadow-xs"
+            onClick={(event) => {
+              const root = event.currentTarget.closest("aside")?.parentElement;
+              if (root && validateAdminFields(root)) onGuardar();
+            }}
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-tertiary bg-tertiary px-4 py-2 text-xs font-bold text-neutral hover:bg-tertiary-hover transition-colors disabled:cursor-wait disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:flex-none"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
@@ -84,7 +97,7 @@ export function AdminPageBar({
             <span>{isSaving ? "Guardando..." : "Guardar cambios"}</span>
           </button>
         </div>
-      </div>
+      </Container>
     </aside>
   );
 }

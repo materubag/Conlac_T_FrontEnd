@@ -3,8 +3,8 @@ import Image from "next/image";
 import { siteConfig } from "@/lib/config";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, WhatsAppIcon, SparklesIcon } from "@/components/ui/Icons";
+import { HomeAction, HomeField, useHomeEditing } from "./HomeEditing";
 
 /**
  * ============================================================
@@ -15,8 +15,9 @@ import { ArrowRightIcon, WhatsAppIcon, SparklesIcon } from "@/components/ui/Icon
  * Transmite la identidad andina, pureza y maestría quesera de Pilahuín.
  */
 export const Hero: React.FC = () => {
+  const { config, isEditing } = useHomeEditing();
   const whatsappUrl = buildWhatsAppUrl({
-    message: "Hola CONLAC-T, vi su página web y deseo consultar sobre los quesos artesanales disponibles.",
+    message: config.contenido.hero_whatsapp_message,
   });
 
   return (
@@ -43,63 +44,40 @@ export const Hero: React.FC = () => {
           {/* Badge de identidad territorial */}
           <div className="inline-flex items-center gap-2 rounded-full border border-tertiary/60 bg-surface/80 backdrop-blur-sm px-4 py-1.5 shadow-sm">
             <SparklesIcon className="w-4 h-4 text-tertiary" />
-            <span className="text-xs font-label font-semibold tracking-wider text-primary uppercase">
-              Pilahuín · Ambato · Tungurahua
-            </span>
+            <HomeField path="eyebrow" rule="short" label="Ubicación de la portada" className="text-xs font-label font-semibold tracking-wider text-primary uppercase" />
           </div>
 
           {/* Titular Principal en Playfair Display */}
-          <h1 className="font-headline text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-primary leading-[1.15]">
-            Tradición, Oficio y el{" "}
+          {isEditing ? <div className="space-y-2">
+            <HomeField path="titulo" rule="title" label="Título de Inicio" className="font-headline text-3xl sm:text-5xl font-bold text-primary" />
+            <HomeField path="contenido.hero_accent" rule="title" label="Frase destacada del título" className="font-headline text-3xl sm:text-5xl font-bold text-tertiary" />
+          </div> : <h1 className="font-headline text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-primary leading-[1.15]">
+            {config.titulo}{" "}
             <span className="text-tertiary relative inline-block">
-              Corazón de los Andes
+              {config.contenido.hero_accent}
             </span>
-          </h1>
+          </h1>}
 
           {/* Subtítulo descriptivo */}
-          <p className="font-body text-base sm:text-lg lg:text-xl text-neutral/85 leading-relaxed max-w-2xl mx-auto">
-            Quesos artesanales de Pilahuín elaborados con leche fresca de páramo
-            por asociaciones y familias productoras locales.
-          </p>
+          <HomeField path="subtitulo" rule="subtitle" label="Descripción de la portada" as="p" className="font-body text-base sm:text-lg lg:text-xl text-neutral/85 leading-relaxed max-w-2xl mx-auto" />
 
           {/* Acciones principales (CTAs) */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Button
-              href="/tienda"
-              variant="primary"
-              size="lg"
-              className="w-full sm:w-auto shadow-md"
-            >
-              <span className="text-white">Ver productos</span>
-              <ArrowRightIcon className="w-4 h-4 text-white" />
-            </Button>
-
-            <Button
-              href={whatsappUrl}
-              variant="outlined"
-              size="lg"
-              isExternal
-              className="group w-full sm:w-auto bg-surface/60 backdrop-blur-xs"
-            >
-              <WhatsAppIcon className="w-5 h-5 text-primary group-hover:text-white" />
-              <span>Comprar por WhatsApp</span>
-            </Button>
+            <HomeAction path="contenido.hero_primary_label" href="/tienda" primary icon={<ArrowRightIcon className="w-4 h-4 shrink-0" />} />
+            <HomeAction path="contenido.hero_whatsapp_label" href={whatsappUrl} external icon={<WhatsAppIcon className="w-5 h-5 shrink-0" />} />
           </div>
+
+          {isEditing && <div className="rounded-xl border border-border bg-surface/80 p-3 text-left">
+            <p className="mb-1 text-xs font-semibold text-primary">Mensaje para pedidos por WhatsApp</p>
+            <HomeField path="contenido.hero_whatsapp_message" rule="description" label="Mensaje de WhatsApp" className="text-sm text-neutral" />
+          </div>}
 
           {/* Micro-metadata de confianza */}
           <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs font-label text-neutral-muted">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              100% Leche pura de páramo
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-tertiary" />
-              Técnicas artesanales comunitarias
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              Comercio justo directo
-            </span>
+            {config.contenido.hero_claims.map((_, index) => <div key={index} className="flex items-center gap-1.5">
+              <span aria-hidden="true" className={`w-2 h-2 shrink-0 rounded-full ${index === 1 ? "bg-tertiary" : "bg-primary"}`} />
+              <HomeField path={`contenido.hero_claims.${index}`} rule="short" label="Sello de confianza" />
+            </div>)}
           </div>
         </div>
       </Container>
