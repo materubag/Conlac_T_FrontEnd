@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Genera un servidor autocontenido en .next/standalone para la imagen Docker.
   output: "standalone",
+  // Preserve Node's SMTP implementation and make it available to diagnostics.
+  serverExternalPackages: ["nodemailer"],
+  outputFileTracingIncludes: {
+    "/api/auth/**": ["./node_modules/nodemailer/**/*"],
+  },
   images: {
     remotePatterns: [
       {

@@ -64,6 +64,7 @@ RUN addgroup -S nodejs -g 1001 && adduser -S nextjs -u 1001
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/smtp-check.cjs ./scripts/smtp-check.cjs
 
 # Carpeta de la base SQLite de contenidos. Debe montarse como volumen: sin él,
 # todo lo que el administrador publique se pierde al recrear el contenedor.
