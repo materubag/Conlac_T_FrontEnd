@@ -1,77 +1,11 @@
 import type { OrderCreateResponse } from "@/types";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-if (!BACKEND_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_BACKEND_URL no está configurada en las variables de entorno"
-  );
+import { ORDER_ID } from "@/lib/orders";
+export async function getOrderById(id: string): Promise<OrderCreateResponse> {
+  if (!ORDER_ID.test(id)) throw new Error("Ingresa el identificador completo del pedido, no el numero corto.");
+  const response = await fetch('/api/pedidos/' + encodeURIComponent(id), { cache: 'no-store' });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || 'No pudimos consultar el pedido.');
+  return body;
 }
-
-/**
- * Obtiene un pedido por su ID (UUID).
- *
- * GET /api/orders/{id}
- */
-export async function getOrderById(
-  id: string
-): Promise<OrderCreateResponse> {
-  const response = await fetch(
-    `${BACKEND_URL}/orders/${encodeURIComponent(id)}`,
-    {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    }
-  );
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error(
-        `No se encontró ningún pedido con el identificador "${id}".`
-      );
-    }
-
-    throw new Error(
-      `El servidor respondió con código HTTP ${response.status}.`
-    );
-  }
-
-  return response.json();
-}
-
-/**
- * Obtiene un pedido por su número de seguimiento.
- *
- * GET /api/orders/track/{numero}
- */
-export async function getOrderByTrackingNumber(
-  numero: string
-): Promise<OrderCreateResponse> {
-  const response = await fetch(
-    `${BACKEND_URL}/orders/track/${encodeURIComponent(numero)}`,
-    {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    }
-  );
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error(
-        `No se encontró ningún pedido con el identificador "${numero}".`
-      );
-    }
-
-    throw new Error(
-      `El servidor respondió con código HTTP ${response.status}.`
-    );
-  }
-
-  return response.json();
-}
+// Compatibility for callers: sequential order numbers are no longer accepted.
+export const getOrderByTrackingNumber = getOrderById;

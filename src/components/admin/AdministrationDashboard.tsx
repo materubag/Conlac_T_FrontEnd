@@ -20,8 +20,9 @@ const pages: DashboardEntry[] = [
   { title: "Contacto", description: "Información de contacto, dirección, horarios y ubicación de la organización.", href: "/contacto", icon: "contact" },
 ];
 const tools: DashboardEntry[] = [
+  { title: "Gestión de pedidos", description: "Verifica transferencias, prepara entregas y consulta el historial de cada pedido.", href: "/administracion/pedidos", icon: "orders", category: "Ventas", action: "Gestionar pedidos", adminOnly: true },
   { title: "Gestión de usuarios", description: "Crea cuentas admin y editor, asigna sus permisos y administra su acceso al portal.", href: "/administracion/usuarios", icon: "associations", category: "Equipo", action: "Gestionar usuarios", adminOnly: true },
-  { title: "Buscar pedidos", description: "Consulta un pedido por su número o identificador y revisa su estado y detalles.", href: "/seguimiento", icon: "orders", category: "Pedidos", action: "Buscar un pedido" },
+  { title: "Buscar pedidos", description: "Consulta un pedido con su identificador completo y revisa su estado y valores.", href: "/seguimiento", icon: "orders", category: "Pedidos", action: "Buscar un pedido" },
   { title: "Mi cuenta", description: "Revisa tus datos, verifica un nuevo correo o cambia tu contraseña mediante un código.", href: "/mi-cuenta", icon: "account", category: "Cuenta", action: "Configurar mi cuenta" },
 ];
 const footer: DashboardEntry = { title: "Pie de página", description: "Edita la información institucional y los datos de contacto que aparecen en todo el sitio.", href: "#footer-heading", icon: "footer" };

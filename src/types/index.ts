@@ -190,7 +190,7 @@ export interface CustomerDto {
 
 export interface OrderItemRequest {
   producto_id?: string;
-  variante_id: string;
+  variante_id?: string;
   cantidad: number;
   precio_unitario?: number;
 }

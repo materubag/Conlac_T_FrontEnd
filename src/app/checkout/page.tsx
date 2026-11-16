@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { siteConfig } from "@/lib/config";
+import { SHIPPING_ZONES, ORDER_LABELS, trackingPath, trackingUrl, type OrderStatus } from "@/lib/orders";
+import { BankDetails } from "@/components/checkout/BankDetails";
 import { formatPrice, buildWhatsAppUrl } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -12,30 +14,10 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ShieldCheckIcon, WhatsAppIcon, ArrowRightIcon } from "@/components/ui/Icons";
 import type { OrderCreateRequest, OrderCreateResponse } from "@/types";
 
-// Zonas de envío reales sincronizadas con la base de datos de PostgreSQL
-const SHIPPING_ZONES = [
-  {
-    id: "f0000000-0000-0000-0000-000000000001",
-    name: "Ambato Urbano (Puntos Céntricos y Domicilio)",
-    delivery_fee: 1.5,
-    delivery_days: "Martes, Jueves y Sábados",
-  },
-  {
-    id: "f0000000-0000-0000-0000-000000000003",
-    name: "Quito Metropolitano (Envío Refrigerado)",
-    delivery_fee: 4.5,
-    delivery_days: "Miércoles y Viernes",
-  },
-  {
-    id: "f0000000-0000-0000-0000-000000000004",
-    name: "Guayaquil y Costa (Transporte Especializado)",
-    delivery_fee: 6.0,
-    delivery_days: "Sábados",
-  },
-];
-
 export default function CheckoutPage() {
+  const router = useRouter();
   const { items, totalItems, subtotal, clearCart } = useCart();
+  const attempt = useRef<{ body: string; key: string } | null>(null);
 
   // Estados del formulario
   const [nombre, setNombre] = useState("");
@@ -84,7 +66,7 @@ export default function CheckoutPage() {
       // Mapear items con variante_id obligatoria
       const orderItems = items.map((item) => ({
         producto_id: item.producto_id || item.id,
-        variante_id: item.variante_id || "ba000000-0000-0000-0000-000000000001",
+        variante_id: item.variante_id,
         cantidad: item.cantidad,
         precio_unitario: item.precio,
       }));
@@ -110,17 +92,20 @@ export default function CheckoutPage() {
         Accept: "application/json",
       };
 
-      const res = await fetch(`${siteConfig.backendUrl}/orders`, {
+      const requestBody = JSON.stringify(payload);
+      if (attempt.current?.body !== requestBody) attempt.current = { body: requestBody, key: crypto.randomUUID() };
+      headers["Idempotency-Key"] = attempt.current.key;
+      const res = await fetch("/api/pedidos", {
         method: "POST",
         headers,
-        body: JSON.stringify(payload),
+        body: requestBody,
       });
 
       if (!res.ok) {
         let errDesc = `Error ${res.status} al crear el pedido`;
         try {
           const errData = await res.json();
-          if (errData.message) errDesc = errData.message;
+          if (errData.error || errData.message) errDesc = errData.error || errData.message;
         } catch {
           // ignore
         }
@@ -130,6 +115,7 @@ export default function CheckoutPage() {
       const orderData: OrderCreateResponse = await res.json();
       setCreatedOrder(orderData);
       clearCart();
+      router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error inesperado de conexión";
       setErrorMessage(msg);
@@ -143,7 +129,7 @@ export default function CheckoutPage() {
   // ============================================================
   if (createdOrder) {
     const whatsappOrderMsg = buildWhatsAppUrl({
-      message: `Hola CONLAC-T, acabo de registrar el pedido #${createdOrder.numero_pedido} por un total de ${formatPrice(createdOrder.total)}. Deseo coordinar el pago y entrega.`,
+      message: `Hola CONLAC-T, registré el pedido ${createdOrder.id} por ${formatPrice(createdOrder.total)}. Deseo coordinar el pago y entrega. Seguimiento: ${trackingUrl(createdOrder.id, window.location.origin)}`,
     });
 
     return (
@@ -158,12 +144,12 @@ export default function CheckoutPage() {
                 ¡Confirmación Exitosa!
               </span>
               <h1 className="font-headline text-3xl sm:text-4xl font-bold text-primary">
-                Pedido Registrado #{createdOrder.numero_pedido}
+                Pedido registrado
               </h1>
               <p className="text-sm text-neutral-muted">
                 Tu solicitud ha sido ingresada correctamente en el sistema de CONLAC-T con estado{" "}
                 <span className="font-semibold text-primary uppercase">
-                  {createdOrder.estado || "pendiente"}
+                  {ORDER_LABELS[createdOrder.estado as OrderStatus] || createdOrder.estado}
                 </span>.
               </p>
             </div>
@@ -174,9 +160,9 @@ export default function CheckoutPage() {
                 Detalle Financiero
               </h2>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-neutral-muted">Número de Pedido:</span>
-                  <span className="font-bold text-primary">#{createdOrder.numero_pedido}</span>
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                  <span className="text-neutral-muted">Identificador:</span>
+                  <span className="break-all font-mono text-xs font-bold text-primary sm:max-w-[65%]">{createdOrder.id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-muted">Subtotal:</span>
@@ -197,29 +183,13 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Instrucciones para transferencia */}
-            {createdOrder.metodo_pago === "transferencia" && (
-              <div className="p-5 rounded-2xl bg-background border border-border/80 text-xs text-neutral-muted space-y-2">
-                <span className="font-bold text-primary block text-sm">
-                  Instrucciones para Transferencia Bancaria:
-                </span>
-                <p>
-                  Para coordinar y confirmar la transferencia de tu pedido <strong>#{createdOrder.numero_pedido}</strong>, los datos de la cuenta bancaria institucional serán facilitados al comunicarse con la administración o vía WhatsApp.
-                </p>
-                <div className="rounded-lg bg-surface border border-border/70 p-3 mt-2 text-[11px] text-neutral space-y-1">
-                  <p><strong>Referencia del Pedido:</strong> #{createdOrder.numero_pedido} — {nombre}</p>
-                  <p><strong>Total a transferir:</strong> {formatPrice(createdOrder.total)}</p>
-                  <p className="text-neutral-muted italic">
-                    Nota: Los datos de cuenta se confirman directamente con el consorcio para garantizar la trazabilidad de los fondos a las comunidades.
-                  </p>
-                </div>
-              </div>
-            )}
+            <BankDetails />
+            <p className="text-xs text-neutral-muted">Las unidades quedan reservadas durante 24 horas mientras se verifica el pago. Conserva tu enlace de seguimiento.</p>
 
             {/* Acciones finales */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
-                href={`/seguimiento?pedido=${createdOrder.numero_pedido}`}
+                href={trackingPath(createdOrder.id)}
                 variant="primary"
                 size="md"
                 fullWidth
@@ -323,7 +293,7 @@ export default function CheckoutPage() {
                     Nombre Completo <span className="text-red-500">*</span>
                   </label>
                   <input
-                    id="nombre"
+                    id="nombre" maxLength={150}
                     type="text"
                     required
                     value={nombre}
@@ -338,7 +308,7 @@ export default function CheckoutPage() {
                     Cédula o RUC <span className="text-red-500">*</span>
                   </label>
                   <input
-                    id="cedulaRuc"
+                    id="cedulaRuc" maxLength={13} pattern="[0-9]{10}([0-9]{3})?"
                     type="text"
                     required
                     value={cedulaRuc}
@@ -353,7 +323,7 @@ export default function CheckoutPage() {
                     Teléfono / WhatsApp <span className="text-red-500">*</span>
                   </label>
                   <input
-                    id="telefono"
+                    id="telefono" maxLength={25}
                     type="tel"
                     required
                     value={telefono}
@@ -368,7 +338,7 @@ export default function CheckoutPage() {
                     Correo Electrónico (Opcional)
                   </label>
                   <input
-                    id="email"
+                    id="email" maxLength={254}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -471,7 +441,7 @@ export default function CheckoutPage() {
                       Dirección de Entrega y Referencia <span className="text-red-500">*</span>
                     </label>
                     <input
-                      id="direccionEntrega"
+                      id="direccionEntrega" maxLength={300}
                       type="text"
                       required={metodoEntrega === "delivery"}
                       value={direccionEntrega}
@@ -490,17 +460,14 @@ export default function CheckoutPage() {
                 3. Método de Pago
               </h2>
 
-              <div className="rounded-xl border border-primary/20 bg-background p-4">
-                <p className="font-headline text-base font-bold text-primary">Transferencia bancaria</p>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-muted">Coordina los datos bancarios y el comprobante de tu pedido por WhatsApp.</p>
-              </div>
+              <BankDetails />
 
               <div>
                 <label htmlFor="notasCliente" className="block text-xs font-label uppercase font-bold text-primary mb-1">
                   Notas adicionales (Opcional)
                 </label>
                 <textarea
-                  id="notasCliente"
+                  id="notasCliente" maxLength={1000}
                   rows={2}
                   value={notasCliente}
                   onChange={(e) => setNotasCliente(e.target.value)}

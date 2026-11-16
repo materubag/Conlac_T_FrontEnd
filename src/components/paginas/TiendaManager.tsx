@@ -29,6 +29,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
   const [modoEdicion, setModoEdicion] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [revision, setRevision] = useState(initialConfig.actualizado_en);
 
   const [eyebrow, setEyebrow] = useState(initialConfig.eyebrow);
   const [titulo, setTitulo] = useState(
@@ -66,6 +67,7 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          actualizado_en: revision,
           eyebrow,
           titulo,
           subtitulo,
@@ -76,6 +78,9 @@ export function TiendaManager({ initialConfig, products: serverProducts, asociac
       });
 
       if (!res.ok) throw new Error(await adminResponseError(res));
+      const saved = await res.json();
+      setRevision(saved.data.actualizado_en);
+      setProductos(saved.data.contenido.productos ?? []);
       setIsDirty(false);
       mostrarToast("Catálogo y productos guardados en SQLite");
     } catch (err) {

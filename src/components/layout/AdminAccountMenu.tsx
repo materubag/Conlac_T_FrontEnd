@@ -14,7 +14,7 @@ const entries = [
   { href: "/mi-cuenta", label: "Mi perfil y datos", icon: "profile" },
   { href: "/seguimiento", label: "Buscar pedidos", icon: "search" },
   { href: "/administracion", label: "Panel de administración", icon: "panel" },
-  { href: "/tienda", label: "Gestión de tienda", icon: "store" },
+  { href: "/administracion/pedidos", label: "Gestión de pedidos", icon: "orders" },
   { href: "/administracion/usuarios", label: "Gestión de usuarios", icon: "profile" },
 ] as const;
 
@@ -23,7 +23,7 @@ function AccountIcon({ name }: { name: typeof entries[number]["icon"] | "logout"
   return <svg aria-hidden="true" className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     {name === "search" && <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></>}
     {name === "panel" && <><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="8" width="4" height="13" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></>}
-    {name === "store" && <><path d="m3 9 2-6h14l2 6M4 9v12h16V9M9 21v-7h6v7" /><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" /></>}
+    {name === "orders" && <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V2h6v2M9 10h6m-6 4h6m-6 4h3" /></>}
     {name === "logout" && <><path d="M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M14 8l4 4-4 4M8 12h13" /></>}
   </svg>;
 }
@@ -95,7 +95,7 @@ export function AdminAccountMenu({ isOpen, onOpenChange }: AdminAccountMenuProps
             {user?.email && <p className="mt-1 break-all text-xs text-neutral-muted">{user.email}</p>}
           </div>
           <nav aria-label={`Opciones de la cuenta ${roleLabel}`} className="space-y-1">
-            {entries.filter(entry => entry.href !== "/administracion/usuarios" || isAdmin).map((entry) => (
+            {entries.filter(entry => !["/administracion/usuarios", "/administracion/pedidos"].includes(entry.href) || isAdmin).map((entry) => (
               <Link key={entry.href} href={entry.href} onClick={() => onOpenChange(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-tertiary">
                 <span className="text-primary/60"><AccountIcon name={entry.icon} /></span>
                 {entry.label}

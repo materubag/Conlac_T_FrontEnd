@@ -146,6 +146,8 @@ test('la ruta de páginas rechaza datos inválidos sin modificar SQLite', async 
   const { POST } = require('../src/app/api/admin/paginas/[slug]/route.ts');
   const send = body => POST(new Request('http://localhost/api/admin/paginas/tienda', { method: 'POST', headers:{cookie:'conlact_session=validation-session'}, body: JSON.stringify(body) }), { params: Promise.resolve({ slug: 'tienda' }) });
   const body = { ...header, contenido: { productos: [{ id: 'one', nombre: 'Queso artesanal', precio: 3.5, stock: 25 }] } };
+  const { obtenerPaginaConfig } = require('../src/lib/db/paginasRepo.ts');
+  body.actualizado_en = obtenerPaginaConfig('tienda', { ...header, contenido: { productos: [] } }).actualizado_en;
   assert.equal((await send(body)).status, 200);
   const saved = db.prepare('SELECT contenido_json FROM paginas_editables WHERE slug = ?').get('tienda').contenido_json;
   body.contenido.productos[0].precio = -1;
@@ -202,6 +204,8 @@ test('sin catálogo guardado usa todos los productos del backend y no inventa im
     const store = await getStorePageData();
     assert.deepEqual(store.products[0].fotos, ['/placeholders/product-queso-fresco.svg']);
     global.fetch = async () => { throw new Error('Backend no disponible'); };
+    const persisted = await getStorePageData(); assert.deepEqual(persisted.products, JSON.parse(JSON.stringify(store.products))); assert.equal(persisted.error, null);
+    db.prepare('DELETE FROM paginas_editables WHERE slug = ?').run('tienda');
     const unavailable = await getStorePageData(); assert.deepEqual(unavailable.products, []); assert.ok(unavailable.error);
   } finally { global.fetch = originalFetch; }
 });

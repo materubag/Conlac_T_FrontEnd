@@ -1,6 +1,8 @@
 # Debian con Docker: entrada pública en 3079
 
-Configuración para el estado actual del proyecto, revisada el 16/11/2026. Mantiene las cuentas y la edición en Next + SQLite, correo de cuentas con Nodemailer, y pedidos/consultas con Java + PostgreSQL. No migra automáticamente el frontend a los nuevos controllers privados de Java.
+Configuración revisada el 16/11/2026. Cuentas, edición, nuevos pedidos, estados y stock usan Next + SQLite; Nodemailer envía correo de cuentas y notificaciones de pedidos. Java + PostgreSQL conservan consultas de pedidos anteriores y lecturas de contenido todavía no migrado. No se conectan las cuentas SQLite a los controllers privados Java.
+
+Para actualizar desde el primer despliegue, leer [Pedidos SQLite e imágenes](PEDIDOS_SQLITE.md) antes de arrancar la nueva imagen. Incluye respaldo, migración automática de imágenes y configuración de la cuenta bancaria.
 
 ## Qué se aloja
 
@@ -17,7 +19,9 @@ Rutas públicas:
 
 - `https://TU_DOMINIO/` → Next.
 - `https://TU_DOMINIO/api/auth/...` y `/api/admin/...` → handlers actuales de Next, con SQLite.
-- `https://TU_DOMINIO/backend/api/orders` y otras lecturas públicas → Java.
+- `https://TU_DOMINIO/api/pedidos` → creación de pedidos en SQLite; consulta pública solo en `/api/pedidos/{UUID}`.
+- `/api/admin/pedidos` → gestión SQLite exclusiva de administradores.
+- Las lecturas de pedidos anteriores se realizan internamente desde Next a Java. Las rutas públicas antiguas `/backend/api/orders` y `/backend/api/pedidos` quedan bloqueadas, incluida la búsqueda incremental.
 - Autenticación/admin Java, webhooks y Actuator no se publican mediante este proxy. El webhook de tarjetas descartado queda inaccesible desde esta entrada.
 
 Solo se publica el puerto 3079; los otros tres servicios se comunican por la red privada de Compose. `BIND_IP=0.0.0.0` permite el acceso del túnel mediante la IP de Debian. Si tu cloudflared usa red de host y llega por loopback, puedes limitarlo a `127.0.0.1`. Si 3079 queda accesible fuera del túnel, restringir ese acceso con la política de red apropiada para tu servidor.
@@ -195,10 +199,10 @@ No ejecutar `docker compose down -v`, `docker volume prune` ni borrar volúmenes
 
 Esta configuración pone las dependencias necesarias a disposición del código actual. No convierte automáticamente el proyecto en un MVP terminado:
 
-- El catálogo editable SQLite y los productos/variantes PostgreSQL deben homologarse. No aceptar ventas reales si el carrito usa IDs locales o la variante de respaldo y los precios/stock no coinciden.
+- Los nuevos pedidos usan el catálogo y stock SQLite, sin variantes de respaldo ni precios confiados al navegador. Los anteriores de PostgreSQL no se importan ni se gestionan automáticamente en SQLite.
 - Las cuentas de Next permanecen en SQLite; las de Java/Supabase son otra autoridad. El proxy no expone los nuevos endpoints privados Java precisamente para no mezclarlas accidentalmente.
 - El webhook descartado de pagos está bloqueado en esta entrada. No publicar 8080 directamente ni crear otro túnel que lo exponga sin corregir ese handler.
-- Capacitación/CMS, editor, transferencias, expiraciones y panel operativo aún requieren la integración y pruebas descritas en las guías de entrega. Los archivos Docker antiguos llamaban «autónomo» a un sitio que sí dependía de Java para pedidos.
+- Los pagos por transferencia se verifican manualmente. Configurar la cuenta real desde Gestión de pedidos; el checkout muestra una advertencia mientras conserve los datos de ejemplo. Probar el flujo operativo y SMTP en el servidor antes de recibir pagos.
 - El Compose no es una migración de un PostgreSQL existente, no instala Supabase completo y no provisiona buckets remotos.
 - En el proxy se reemplaza X-Forwarded-For por su peer; con cloudflared puede agrupar varios usuarios bajo una IP para rate limiting. Antes de tráfico real configurar la IP original de Cloudflare solo desde proxies/redes confiables; no confiar en un encabezado arbitrario de Internet.
 

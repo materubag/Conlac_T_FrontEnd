@@ -1,12 +1,14 @@
 import type { Producto } from "@/types";
 import { siteConfig } from "@/lib/config";
-import { leerPaginaConfig, type PaginaEditableConfig } from "@/lib/db/paginasRepo";
+import { leerPaginaConfig, guardarPaginaConfig, type PaginaEditableConfig } from "@/lib/db/paginasRepo";
+import { getOrderStore } from "./sqliteOrders";
 
 export interface StoreContent { productos?: Producto[] }
 
 export function catalogImage(product: Producto): Producto {
   const fotos = Array.isArray(product.fotos) ? product.fotos.filter((foto) => typeof foto === "string" && foto.trim()) : [];
-  return { ...product, fotos: fotos.length ? fotos : [siteConfig.assets.productPlaceholder] };
+  return { ...product, fotos: fotos.length ? fotos : [siteConfig.assets.productPlaceholder],
+    ...(product.presentaciones ? { presentaciones: product.presentaciones.map((item, index) => index === 0 ? { ...item, stock: product.stock, precio: product.precio } : item) } : {}) };
 }
 
 export function selectHomeProducts(products: Producto[], limit = 4): Producto[] {
@@ -16,6 +18,7 @@ export function selectHomeProducts(products: Producto[], limit = 4): Producto[] 
 export async function getStorePageData(): Promise<{
   config: PaginaEditableConfig<StoreContent>; products: Producto[]; error: string | null;
 }> {
+  getOrderStore().expire();
   const saved = leerPaginaConfig<StoreContent>("tienda");
   // Una lista vacía guardada es intencional: no se repuebla con productos ficticios.
   if (Array.isArray(saved?.contenido?.productos)) {
@@ -41,10 +44,15 @@ export async function getStorePageData(): Promise<{
   } catch {
     error = "El catálogo no está disponible en este momento. Escríbenos por WhatsApp para coordinar tu pedido.";
   }
-  return {
-    config: {
+  const config = {
       slug: "tienda", eyebrow: saved?.eyebrow ?? "Catálogo Oficial", titulo: saved?.titulo ?? "Tienda de Quesos Artesanales",
       subtitulo: saved?.subtitulo ?? "Explora los quesos elaborados por las comunidades de CONLAC-T.", contenido: { productos: products },
-    }, products, error,
-  };
+    };
+  if (!error) {
+    // Preserve a catalog saved by an editor while the first backend read awaited.
+    const concurrent = leerPaginaConfig<StoreContent>("tienda");
+    const persisted = Array.isArray(concurrent?.contenido?.productos) ? concurrent! : guardarPaginaConfig("tienda", config);
+    return { config: persisted, products: persisted.contenido.productos!.map(catalogImage), error: null };
+  }
+  return { config, products, error };
 }
