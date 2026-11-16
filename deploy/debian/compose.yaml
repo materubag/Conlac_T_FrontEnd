@@ -10,7 +10,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configura POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ../../../conlact-backend/docker/init:/docker-entrypoint-initdb.d:ro
+      - ../../../conlact-backend/docker/init/00_auth_compat.sql:/docker-entrypoint-initdb.d/00_auth_compat.sql:ro
+      - ../../../conlact-backend/docker/init/01_CONLACT_Modelo_Base.sql:/docker-entrypoint-initdb.d/01_CONLACT_Modelo_Base.sql:ro
+      - ../../../conlact-backend/docker/init/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ../../../conlact-backend/docker/init/03_storage_buckets.sql:/docker-entrypoint-initdb.d/03_storage_buckets.sql:ro
+      - ../../../conlact-backend/docker/init/04_association_images.sql:/docker-entrypoint-initdb.d/04_association_images.sql:ro
+      - ../../../conlact-backend/docker/init/05_extend_testimonials.sql:/docker-entrypoint-initdb.d/05_extend_testimonials.sql:ro
+      - ../../../conlact-backend/docker/init/06_cms_and_editorial_content.sql:/docker-entrypoint-initdb.d/06_cms_and_editorial_content.sql:ro
       - ../../../conlact-backend/supabase/migrations/20261115_email_outbox_and_profiles.sql:/docker-entrypoint-initdb.d/07_email_outbox_and_profiles.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
