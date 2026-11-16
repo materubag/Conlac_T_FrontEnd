@@ -7,7 +7,10 @@ export const noStore = { "Cache-Control": "no-store" };
 
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) throw new AuthError("Solicitud no permitida.", 403);
+  // A reverse proxy can give Next an internal URL. Trust the configured public
+  // origin, never a caller-supplied Host or X-Forwarded-Host header.
+  const expectedOrigin = new URL(process.env.APP_ORIGIN || request.url).origin;
+  if (origin && origin !== expectedOrigin) throw new AuthError("Solicitud no permitida.", 403);
   if (request.headers.get("sec-fetch-site") === "cross-site") throw new AuthError("Solicitud no permitida.", 403);
 }
 export async function authBody(request: Request): Promise<Record<string, unknown>> {

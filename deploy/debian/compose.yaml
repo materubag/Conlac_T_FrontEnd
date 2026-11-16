@@ -84,6 +84,7 @@ services:
       HOSTNAME: 0.0.0.0
       BACKEND_API_URL: http://backend:8080/api
       CONTENT_DB_DIR: /app/data
+      APP_ORIGIN: ${APP_ORIGIN:?Configura APP_ORIGIN}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME}
